@@ -11,7 +11,7 @@
 - The worker exposes `sandbox-execution` as the application role that composes the maintenance package's public safety interface with `docker-cli`; it receives only the exact workspace edge, module edge, and `node:crypto` provider needed for that responsibility.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
-- The maintenance package exposes the provider-free `approvals` concept, which owns first-decision validation, idempotent replay, and persistence conflict outcomes behind an injected atomic port.
+- The maintenance package exposes `approvals`, which owns first-decision validation, idempotent replay, persistence conflict outcomes, and its Postgres adapter with the exact `pg` provider permission.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.
 - The maintenance package exposes independent `repository-understanding` and `reproductions` concepts; detection may read root files, while reproduction depends only on its injected executor contract.
 - The maintenance package exposes `safety`, which owns canonical execution and change policy plus Docker container command construction and cleanup. It uses only `node:path` for workspace/path containment and delegates bounded Docker CLI execution through an injected port.

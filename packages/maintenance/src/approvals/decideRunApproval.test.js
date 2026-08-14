@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { decideRunApproval } from "./index.js";
+import { createPostgresApprovalStore, decideRunApproval } from "./index.js";
 
 const baseInput = {
   runId: "run-1",
@@ -30,6 +30,28 @@ const replayed = await decideRunApproval({
 });
 assert.equal(replayed.status, "replayed");
 assert.equal(saveCalls, 0);
+
+const queries = [];
+const storedRow = {
+  run_id: "run-1", actor_id: "user-7", idempotency_key: "request-1",
+  decision_status: "approved", reason: null, decided_at: "2026-08-14T12:00:00.000Z",
+};
+const pool = {
+  query: async (sql, values) => {
+    queries.push({ sql, values });
+    if (sql.includes("CREATE TABLE")) return { rows: [] };
+    return { rows: [storedRow] };
+  },
+  end: async () => undefined,
+};
+const store = await createPostgresApprovalStore({ pool });
+const stored = await store.saveFirstDecision(saved);
+assert.equal(stored.status, "created");
+assert.equal(stored.decision.decidedAt, "2026-08-14T12:00:00.000Z");
+assert.match(queries[1].sql, /ON CONFLICT DO NOTHING/u);
+assert.deepEqual(queries[1].values, ["run-1", "user-7", "request-1", "approved", null, "2026-08-14T12:00:00.000Z"]);
+assert.equal((await store.get("run-1")).status, "approved");
+assert.equal(queries.filter(({ sql }) => sql.includes("CREATE TABLE")).length, 1);
 
 const conflict = await decideRunApproval({
   ...baseInput,

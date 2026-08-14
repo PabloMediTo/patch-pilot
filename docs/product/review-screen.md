@@ -7,7 +7,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Not responsible for
 
 - deciding whether a proposal is correct
-- implementing the database adapter that atomically persists an approval decision
+- owning HTTP authentication and request parsing
 - publishing a branch or pull request
 - treating Redis live events as canonical evidence
 
@@ -33,4 +33,4 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 ## Current enforcement boundary
 
-The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. The maintenance package now validates the first decision, requires rejection reasons, supports idempotent request replay, and rejects competing decisions through an atomic persistence port. API data loading, the concrete persistence adapter, live browser updates, submission handling, and visual styling remain open.
+The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. The maintenance package validates the first decision and provides parameterized Postgres persistence with one row per run and unique idempotency keys. API data loading, live Postgres verification, live browser updates, HTTP submission handling, and visual styling remain open.

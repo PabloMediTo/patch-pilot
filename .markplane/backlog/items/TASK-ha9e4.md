@@ -43,6 +43,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Registered `run-review` as a provider-free web application role with an explicit public interface.
 - Added a provider-free approval use case that accepts only the first decision for an awaiting run, requires rejection reasons, replays matching idempotency keys, and rejects competing decisions.
 - Kept atomic first-writer persistence behind an injected port and covered created, replayed, conflicting, invalid, and non-reviewable outcomes.
-- Remaining before completion: authenticated API data loading, a concrete approval persistence adapter and HTTP submission route, live SSE updates, and browser-level visual verification.
+- Added a concrete Postgres approval store with idempotent schema initialization, parameterized queries, one-decision-per-run and unique-idempotency constraints, and conflict recovery.
+- Unit tests verify SQL atomicity, parameter order, row mapping, reads, and one-time schema setup; live Postgres proof remains blocked by unavailable Docker.
+- Remaining before completion: authenticated API data loading and HTTP submission route, live SSE updates, and browser-level visual verification.
 
 ## References

@@ -155,7 +155,7 @@ export const boundaryConfig = {
         approvals: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
-          allowedExternalDependencies: [],
+          allowedExternalDependencies: ["pg"],
           allowedCoreDependencies: [],
         },
         "change-proposals": {

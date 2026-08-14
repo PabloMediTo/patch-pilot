@@ -20,7 +20,8 @@ Current reality:
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.
 - The web shell now renders a safe framework-independent review document containing timeline, plan, diff, verification evidence, and state-gated approval forms; data loading, live updates, and decision persistence remain open.
-- Approval decisions now have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts; HTTP and database adapters remain open.
+- Approval decisions now have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts; HTTP handling remains open.
+- Approval decisions now also have a concrete Postgres adapter with database-enforced first-writer and idempotency constraints; live service verification and HTTP handling remain open.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
