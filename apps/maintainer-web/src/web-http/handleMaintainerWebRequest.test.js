@@ -6,6 +6,11 @@ const asset = createInput({ url: "/assets/run-review-live.js" });
 assert.equal((await handleMaintainerWebRequest(asset)).status, "served");
 assert.equal(asset.forwarded.length, 0);
 
+const style = createInput({ url: "/assets/run-review.css" });
+assert.equal((await handleMaintainerWebRequest(style)).status, "served");
+assert.equal(style.response.headers["content-type"], "text/css; charset=utf-8");
+assert.equal(style.forwarded.length, 0);
+
 const review = createInput({ url: "/runs/run-1/review" });
 assert.equal((await handleMaintainerWebRequest(review)).status, "rendered");
 assert.equal(review.response.code, 200);

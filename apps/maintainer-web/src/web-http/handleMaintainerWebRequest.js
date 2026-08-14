@@ -2,6 +2,7 @@ import { URL } from "node:url";
 
 import { handleRunReviewRequest } from "../run-review-http/index.js";
 import { handleRunReviewLiveAsset } from "../run-review-live/index.js";
+import { handleRunReviewStyleAsset } from "../run-review-style/index.js";
 
 const API_ROUTE_PATTERN = /^\/runs\/[^/]+\/(?:timeline|approval\/(?:approve|reject))$/u;
 
@@ -15,6 +16,8 @@ export async function handleMaintainerWebRequest(input) {
   assertPorts(input);
   const assetOutcome = handleRunReviewLiveAsset(input);
   if (assetOutcome.status !== "unhandled") return assetOutcome;
+  const styleOutcome = handleRunReviewStyleAsset(input);
+  if (styleOutcome.status !== "unhandled") return styleOutcome;
   const reviewOutcome = await handleRunReviewRequest(input);
   if (reviewOutcome.status !== "unhandled") return reviewOutcome;
   if (isApiRoute(input.request.url)) {

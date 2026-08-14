@@ -59,6 +59,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added a concrete Node HTTP server with streaming HTTP/HTTPS API forwarding, upstream status/header preservation, browser-disconnect cleanup, and injected authorization/evidence ports.
 - A real loopback integration test proves that review pages stay local while approval method, path, body, status, and response pass through the web origin unchanged.
 - Registered `web-server` with only the `web-http` edge and exact `node:http`, `node:https`, and `node:url` providers.
-- Remaining before completion: main-process startup with chosen session/review-evidence providers and browser-level visual verification.
+- Added a provider-free same-origin stylesheet with semantic diff colors, responsive evidence cards, accessible focus states, and mobile layout; CSP remains restrictive and permits styles only from self.
+- Browser verification covers a two-column 1280-pixel desktop layout, single-column 375-pixel mobile layout, no page-level horizontal overflow, visible approval controls, and insertion of the live sequence-4 timeline event.
+- Registered `run-review-style` independently from rendering and live-event behavior; the dispatcher alone composes the three review routes.
+- Remaining before completion: main-process startup with chosen session and review-evidence providers.
 
 ## References

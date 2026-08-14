@@ -36,6 +36,7 @@ const html = renderRunReviewHtml(review);
 assert.match(html, /Timeline/u);
 assert.match(html, /42 tests passed/u);
 assert.match(html, /class="addition"/u);
+assert.match(html, /rel="stylesheet" href="\/assets\/run-review\.css"/u);
 assert.match(html, /Handle &lt;unsafe&gt; input/u);
 assert.doesNotMatch(html, /<script>/u);
 assert.match(html, /<button>Approve<\/button>/u);

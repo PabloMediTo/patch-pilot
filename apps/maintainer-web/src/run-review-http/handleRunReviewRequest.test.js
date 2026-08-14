@@ -17,6 +17,7 @@ assert.equal(rendered.status, "rendered");
 assert.equal(authorizedRunId, "run private");
 assert.equal(response.code, 200);
 assert.match(response.headers["content-security-policy"], /default-src 'none'/u);
+assert.match(response.headers["content-security-policy"], /style-src 'self'/u);
 assert.match(response.body, /&lt;unsafe&gt;/u);
 assert.doesNotMatch(response.body, /<unsafe>/u);
 

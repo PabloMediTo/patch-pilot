@@ -134,7 +134,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Its GET handler authorizes run access before loading evidence and serves escaped HTML under restrictive browser security headers. A same-origin EventSource client appends deduplicated timeline events using text-only DOM operations. The concrete Node web server serves those local resources and streams only timeline and approval route shapes to the API without buffering. Main-process startup, session and review-evidence providers, and browser-level verification remain planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Its GET handler authorizes run access before loading evidence and serves escaped HTML under restrictive browser security headers. A same-origin EventSource client appends deduplicated timeline events using text-only DOM operations, while a self-hosted responsive stylesheet presents desktop and mobile evidence layouts. The concrete Node web server serves those local resources and streams only timeline and approval route shapes to the API without buffering. Desktop, 375-pixel mobile, approval-control, overflow, and live-event behavior have been browser-verified; main-process startup plus session and review-evidence providers remain planned.
 
 ### Repository Workspace
 

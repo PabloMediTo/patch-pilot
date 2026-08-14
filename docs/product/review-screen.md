@@ -23,6 +23,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 - an immutable review view model
 - escaped server-deliverable HTML with timeline, plan, semantic diff lines, and test evidence
+- responsive same-origin styling for desktop and mobile review layouts
 - approve and reject form actions only while the run is awaiting its first decision
 
 ## Adjacent parts
@@ -33,4 +34,4 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 ## Current enforcement boundary
 
-The web application implements and tests the review model, HTML rendering, same-origin live timeline client, HTTP dispatcher, and concrete Node HTTP server. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The dispatcher serves the review and browser asset locally, forwards only the timeline and approval route shapes to the API, and returns a terminal 404 for unknown routes. The Node transport streams request and response bodies without buffering, preserves upstream status and headers, supports HTTP or HTTPS API origins, and tears down the upstream when the browser disconnects. The maintenance package validates and persists the first decision, while authenticated GET and POST handlers enforce run access. Main-process startup, concrete session and evidence providers, live service verification, and browser-level visual verification remain open.
+The web application implements and tests the review model, HTML rendering, same-origin live timeline client, responsive stylesheet, HTTP dispatcher, and concrete Node HTTP server. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The restrictive CSP permits only same-origin scripts, styles, connections, and form actions. The Node transport streams request and response bodies without buffering, preserves upstream status and headers, supports HTTP or HTTPS API origins, and tears down the upstream when the browser disconnects. Browser verification proves the two-column desktop layout, single-column 375-pixel layout, absence of page-level horizontal overflow, visible approval controls, and insertion of a live fourth timeline event. Main-process startup plus concrete session and evidence providers remain open; live Postgres and Redis verification remains separately blocked by unavailable Docker.
