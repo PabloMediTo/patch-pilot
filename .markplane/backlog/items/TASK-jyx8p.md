@@ -1,7 +1,7 @@
 ---
 id: TASK-jyx8p
 title: Define target workspaces and architecture registry
-status: draft
+status: done
 priority: critical
 type: chore
 effort: small
@@ -30,12 +30,15 @@ Deliver **Define target workspaces and architecture registry** within the docume
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Registered deployable shells: `maintainer-api`, `maintainer-worker`, and `maintainer-web`.
+- Registered conceptual package: `maintenance`.
+- All modules, composition files, and dependency permissions remain empty until source imports exist.
+- Verification: 23 Node tests, ESLint, npm audit, and Markplane integrity checks pass.
 
 ## References

@@ -11,6 +11,7 @@ import {
   getSourceRoots,
 } from "./eslint-boundaries/createArchitectureBoundaryConfig.mjs";
 import { validateBoundaryConfig } from "./eslint-boundaries/validateBoundaryConfig.mjs";
+import { boundaryConfig as destinationConfig } from "./boundaries.config.mjs";
 import { boundaryConfig as monorepoConfig } from "./examples/monorepo/boundaries.config.mjs";
 import { boundaryConfig as singlePackageConfig } from "./examples/single-package/boundaries.config.mjs";
 
@@ -117,6 +118,16 @@ test("both topology examples validate and produce source roots", () => {
     "apps/customer-portal/src",
     "packages/commerce/src",
     "packages/generated-api/src",
+  ]);
+});
+
+test("the destination workspaces validate and produce exact source roots", () => {
+  assert.equal(validateBoundaryConfig(destinationConfig), destinationConfig);
+  assert.deepEqual(getSourceRoots(destinationConfig), [
+    "apps/maintainer-api/src",
+    "apps/maintainer-worker/src",
+    "apps/maintainer-web/src",
+    "packages/maintenance/src",
   ]);
 });
 

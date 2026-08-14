@@ -3,8 +3,10 @@
 ## Current baseline
 
 - This repository is configured as a greenfield monorepo using npm workspaces.
-- Potential workspace locations are `apps/*` and `packages/*`.
-- No application, package, deployment unit, source root, conceptual module, or dependency permission is registered yet.
+- The deployable application shells are `apps/maintainer-api`, `apps/maintainer-worker`, and `apps/maintainer-web`.
+- The non-deployable conceptual package is `packages/maintenance`.
+- Every registered workspace uses `src/` as its production source root.
+- No production source module, composition file, or dependency permission is registered yet.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless
@@ -34,12 +36,8 @@
 
 ## Pending decisions
 
-When the first real workspace is introduced, this repository must decide explicitly:
+When production source is introduced, this repository must decide explicitly:
 
-- whether the repository as a whole is an application, library, tool, or a
-  mixed monorepo
-- which workspaces are deployment units
-- where each workspace's production source root begins
 - which workspaces and first-level modules are genuine concepts
 - which narrow technical exceptions already have a concrete lifecycle,
   deployment, security, versioning, generation, or ownership reason

@@ -4,8 +4,9 @@
 
 - The product idea and initial system boundaries are documented.
 - Delivery is organized in Markplane epics and initial tasks.
-- No product application workspace, package workspace, database schema, Temporal workflow, GitHub App, or frontend has been implemented.
-- The repository remains a greenfield monorepo with strict architecture enforcement.
+- The API, worker, and web application workspaces and the maintenance package workspace are declared and registered.
+- No production source module, database schema, Temporal workflow, GitHub App, or frontend has been implemented.
+- The repository remains a greenfield monorepo with strict architecture enforcement and no allowed dependency edges yet.
 
 ## Next milestone
 
