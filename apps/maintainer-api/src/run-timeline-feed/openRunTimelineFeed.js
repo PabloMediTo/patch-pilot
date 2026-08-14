@@ -3,7 +3,7 @@ import { listRunTimeline } from "@patch-pilot/maintenance";
 /**
  * Opens a gap-free ordered feed across persisted history and Redis live events.
  *
- * @param {{ runId: string, store: object, stream: object, emitEvent: Function }} input Timeline adapters and event receiver.
+ * @param {{ runId: string, store: object, stream: object, emitEvent: Function, afterSequence?: number }} input Timeline adapters, resume point, and event receiver.
  * @returns {Promise<{ close: Function }>} Feed lifecycle handle.
  * @throws {Error} When feed input or received events are malformed.
  */
@@ -11,7 +11,7 @@ export async function openRunTimelineFeed(input) {
   assertFeedInput(input);
   const bufferedEvents = [];
   let isCatchingUp = true;
-  let lastSequence = 0;
+  let lastSequence = input.afterSequence ?? 0;
 
   const receiveLiveEvent = (event) => {
     assertTimelineEvent(event, input.runId);
@@ -65,7 +65,9 @@ function assertFeedInput(input) {
   const hasPorts = typeof input?.store?.list === "function"
     && typeof input?.stream?.subscribe === "function"
     && typeof input?.emitEvent === "function";
-  if (!hasRunId || !hasPorts) {
+  const hasResumePoint = input?.afterSequence === undefined
+    || (Number.isInteger(input.afterSequence) && input.afterSequence >= 0);
+  if (!hasRunId || !hasPorts || !hasResumePoint) {
     throw new Error("Run timeline feed requires a run ID, adapters, and event receiver.");
   }
 }

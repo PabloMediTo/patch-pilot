@@ -8,7 +8,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 
 - scheduling workflow steps or retries
 - treating Redis as durable or canonical storage
-- serving HTTP or Server-Sent Events directly
+- running an HTTP server, routing requests, or authenticating viewers
 - deciding which workflow facts should become events
 
 ## Inputs
@@ -23,6 +23,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 - ordered persisted history for one run
 - live run-scoped event publication and subscription
 - visible partial-failure evidence when persistence succeeds but streaming fails
+- resumable Server-Sent Events frames and heartbeat comments through an injected response port
 
 ## Adjacent parts
 
@@ -48,6 +49,12 @@ The API subscribes to Redis before querying Postgres. Live events arriving durin
 
 This subscribe-before-query order closes the race in which an event could otherwise be committed after a history query but before live subscription. Closing the feed unsubscribes its run channel. A failed history query also unsubscribes before propagating the failure.
 
+## Server-Sent Events session
+
+The API role can expose the feed through an injected response port without owning a web framework. It starts a `text/event-stream` response with no-cache and keep-alive headers. Every timeline frame uses the run-local sequence as the SSE `id`, the event name `timeline`, and the canonical event as JSON data.
+
+A reconnecting client supplies its last received sequence, and catch-up skips that sequence and all older events. A heartbeat comment is written every 15 seconds after catch-up completes. Client disconnect is idempotent, cancels the heartbeat, and closes the Redis subscription; a disconnect during catch-up closes the subscription as soon as initialization finishes.
+
 ## Current verification boundary
 
-SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections. A live integration check remains required once Docker or equivalent local services are available.
+SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections. A live integration check remains required once Docker or equivalent local services are available.
