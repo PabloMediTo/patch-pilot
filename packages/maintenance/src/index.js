@@ -2,4 +2,6 @@ export {
   createImmutableRepositoryWorkspace,
   removeRepositoryWorkspace,
 } from "./repository-workspaces/index.js";
+export { detectSupportedProject } from "./repository-understanding/index.js";
+export { reproduceIssueFailure } from "./reproductions/index.js";
 export { createMaintenanceRun } from "./runs/index.js";

@@ -71,3 +71,17 @@
 - Summary: Disposable checkout creation, exact revision verification, credential removal, cleanup, and the boundary with later command isolation.
 - Read when: A task changes repository checkout, immutable revision handling, workspace paths, Git process limits, or cleanup safety.
 - Tags: product, repository, workspace, git, checkout, isolation, security
+
+### Supported Project Detection
+
+- Path: `docs/product/project-detection.md`
+- Summary: Deterministic Python/TypeScript recognition, standard test-command selection, and explicit unsupported or ambiguous outcomes.
+- Read when: A task changes supported repository shapes, manifest detection, language selection, or standard reproduction commands.
+- Tags: product, detection, python, typescript, pytest, npm
+
+### Failure Reproduction
+
+- Path: `docs/product/failure-reproduction.md`
+- Summary: Bounded-executor contract, expected-failure matching, evidence fields, and reproduction outcomes.
+- Read when: A task changes reproduction commands, failure matching, command evidence, timeout handling, or reproduction outcomes.
+- Tags: product, reproduction, evidence, tests, executor, failure

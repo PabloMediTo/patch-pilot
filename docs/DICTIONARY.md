@@ -91,6 +91,10 @@ A first-level folder inside a workspace source root that owns one coherent produ
 
 A non-deployable monorepo workspace that owns a coherent product or application concept with a focused reason to change and a public package interface.
 
+### Failure Reproduction
+
+The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the issue's expected failure fragment; unrelated command failures are kept distinct.
+
 ### Global Docs
 
 The canonical documentation files under `docs/` that define repository-wide
@@ -123,6 +127,10 @@ A disposable checkout used by one maintenance run. Its implemented Git boundary 
 ### Run Submission
 
 An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, issue, actor, and immutable base revision so later persistence and workflow adapters can process repeated deliveries idempotently.
+
+### Supported Project
+
+A repository root whose manifests and test configuration match one deterministic MVP shape: TypeScript with an npm test script, or Python with recognizable pytest configuration. Ambiguous multi-shape roots are unsupported rather than guessed.
 
 ### Verification Evidence
 

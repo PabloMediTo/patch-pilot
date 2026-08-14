@@ -136,10 +136,27 @@ export const boundaryConfig = {
             "node:util",
           ],
         },
+        "repository-understanding": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:fs/promises", "node:path"],
+        },
+        reproductions: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["repository-workspaces", "runs"],
+          allowedModuleDependencies: [
+            "repository-understanding",
+            "repository-workspaces",
+            "reproductions",
+            "runs",
+          ],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
