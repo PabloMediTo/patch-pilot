@@ -6,7 +6,9 @@
 - The deployable application shells are `apps/maintainer-api`, `apps/maintainer-worker`, and `apps/maintainer-web`.
 - The non-deployable conceptual package is `packages/maintenance`.
 - Every registered workspace uses `src/` as its production source root.
-- No production source module, composition file, or dependency permission is registered yet.
+- Each application shell exposes one `application` role module plus explicit `index.js` and `main.js` composition files.
+- The maintenance package exposes the conceptual `runs` module.
+- Composition files may depend only on their local application module; no cross-workspace or production-provider dependency is allowed yet.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless

@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "lint": "eslint . --max-warnings=0",
-    "test": "node --test eslint-local-rules.test.js eslint-boundaries.test.js",
+    "test": "node --test",
     "check": "npm run lint && npm run test",
     "markplane": "\".tools\\markplane\\markplane.exe\"",
     "markplane:check": "\".tools\\markplane\\markplane.exe\" check",

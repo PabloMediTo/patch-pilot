@@ -18,8 +18,26 @@ export const boundaryConfig = {
       packageName: "@patch-pilot/maintainer-api",
       sourceRoot: "src",
       allowedWorkspaceDependencies: [],
-      modules: {},
-      compositionFiles: {},
+      modules: {
+        application: {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
+      compositionFiles: {
+        "index.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+        "main.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
     },
     "maintainer-worker": {
       architectureRole: "application-shell",
@@ -28,8 +46,26 @@ export const boundaryConfig = {
       packageName: "@patch-pilot/maintainer-worker",
       sourceRoot: "src",
       allowedWorkspaceDependencies: [],
-      modules: {},
-      compositionFiles: {},
+      modules: {
+        application: {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
+      compositionFiles: {
+        "index.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+        "main.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
     },
     "maintainer-web": {
       architectureRole: "application-shell",
@@ -38,8 +74,26 @@ export const boundaryConfig = {
       packageName: "@patch-pilot/maintainer-web",
       sourceRoot: "src",
       allowedWorkspaceDependencies: [],
-      modules: {},
-      compositionFiles: {},
+      modules: {
+        application: {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
+      compositionFiles: {
+        "index.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+        "main.js": {
+          allowedModuleDependencies: ["application"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
     },
     maintenance: {
       architectureRole: "conceptual-package",
@@ -48,7 +102,14 @@ export const boundaryConfig = {
       packageName: "@patch-pilot/maintenance",
       sourceRoot: "src",
       allowedWorkspaceDependencies: [],
-      modules: {},
+      modules: {
+        runs: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
       compositionFiles: {},
     },
   },

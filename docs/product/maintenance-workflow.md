@@ -42,17 +42,18 @@ Own one durable maintenance run from validated repository and issue input throug
 
 ## Lifecycle
 
-1. Validate repository, issue, installation, language, and base revision.
-2. Create the isolated repository workspace.
-3. Inspect manifests, instructions, source layout, and relevant history.
-4. Reproduce the issue with a recorded command and failing evidence.
-5. Produce a bounded implementation plan.
-6. Modify only the files justified by the plan.
-7. Run focused and repository-level verification.
-8. Critique the diff, evidence, scope, and regression risk.
-9. Retry modification and verification when the critique identifies a correctable problem and the retry budget remains.
-10. Wait durably for human approval or rejection.
-11. After approval, prepare and publish the branch and pull-request proposal idempotently.
+1. Record a `submitted` run bound to the repository, issue, and immutable base revision.
+2. Validate repository, issue, installation, language, and base revision.
+3. Create the isolated repository workspace.
+4. Inspect manifests, instructions, source layout, and relevant history.
+5. Reproduce the issue with a recorded command and failing evidence.
+6. Produce a bounded implementation plan.
+7. Modify only the files justified by the plan.
+8. Run focused and repository-level verification.
+9. Critique the diff, evidence, scope, and regression risk.
+10. Retry modification and verification when the critique identifies a correctable problem and the retry budget remains.
+11. Wait durably for human approval or rejection.
+12. After approval, prepare and publish the branch and pull-request proposal idempotently.
 
 ## Retry policy
 

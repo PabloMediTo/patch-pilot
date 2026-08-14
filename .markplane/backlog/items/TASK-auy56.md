@@ -1,7 +1,7 @@
 ---
 id: TASK-auy56
 title: Bootstrap API, worker, web, and maintenance package
-status: draft
+status: done
 priority: high
 type: feature
 effort: large
@@ -30,12 +30,15 @@ Deliver **Bootstrap API, worker, web, and maintenance package** within the docum
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Bootstrapped executable composition roots and public interfaces for the API, worker, and web application shells.
+- Added the maintenance package's first conceptual module with an immutable initial run state.
+- Registered only local composition edges; cross-workspace and provider permissions remain denied.
+- Verification: ESLint, 27 Node tests, npm audit, workspace smoke starts, and Markplane integrity checks pass.
 
 ## References
