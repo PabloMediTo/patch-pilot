@@ -16,6 +16,7 @@
 - The maintenance package exposes independent `verifications` and `critiques` concepts with injected executor and reviewer ports, plus `proposal-attempts` to compose only their public interfaces into the bounded retry loop.
 - The maintenance package exposes `run-timelines`, which owns canonical Postgres event persistence and Redis fan-out and has exact `pg` and `redis` provider permissions without module dependencies.
 - The API shell exposes `run-timeline-feed` as the application role that imports the maintenance package root and composes persisted history, live subscription, and framework-independent SSE sessions; its index composes application, ingestion, and feed interfaces.
+- The API shell exposes `run-timeline-http` as a separate route/authentication role. It depends only on the public `run-timeline-feed` interface and exact `node:url` provider.
 - The maintenance package index composes all public maintenance concepts. Explicit module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.

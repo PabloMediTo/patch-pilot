@@ -8,7 +8,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 
 - scheduling workflow steps or retries
 - treating Redis as durable or canonical storage
-- running an HTTP server, routing requests, or authenticating viewers
+- running an HTTP listener or defining the application's authorization policy
 - deciding which workflow facts should become events
 
 ## Inputs
@@ -55,8 +55,14 @@ The API role can expose the feed through an injected response port without ownin
 
 A reconnecting client supplies its last received sequence, and catch-up skips that sequence and all older events. A heartbeat comment is written every 15 seconds after catch-up completes. Client disconnect is idempotent, cancels the heartbeat, and closes the Redis subscription; a disconnect during catch-up closes the subscription as soon as initialization finishes.
 
+## HTTP route
+
+The API exposes `GET /runs/:runId/timeline` through a Node-compatible request/response handler. The route decodes the run ID, validates an optional non-negative integer `Last-Event-ID`, calls an injected run-access authorization port, and starts the SSE session only after access succeeds.
+
+Unmatched paths remain available to other handlers. A matched non-GET request returns `405` with `Allow: GET`; malformed resume state returns `400`; denied access returns `401`. The handler adapts the request close event to SSE cleanup but does not start a listener or decide how user identity maps to run access.
+
 ## Current verification boundary
 
-SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections.
+SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, HTTP route/authentication gates, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections.
 
 `npm run test:timeline-integration` exercises both real providers together. It subscribes first, persists two uniquely scoped events, requires both Redis deliveries within five seconds, and compares their IDs against the ordered Postgres history. The command fails rather than skipping when services are unavailable. Its first successful execution remains required once Docker or equivalent local services are available.
