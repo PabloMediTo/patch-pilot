@@ -30,7 +30,7 @@ Decide whether target-repository commands and proposed file changes fit the fixe
 - project detection selects one of the allowed standard test commands
 - failure reproduction consumes sandbox execution evidence
 - planning and modification must pass the change assessment before review
-- the worker owns the Docker CLI process port; its composition with the maintenance package's container adapter is the next application-wiring step
+- the worker composes the Docker CLI process port with this package's policy and container adapter
 
 ## Execution limits
 
@@ -60,4 +60,4 @@ The maintenance package maps the canonical specification to Docker without expos
 
 ## Current enforcement boundary
 
-Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, and the worker-owned bounded Docker CLI process port are implemented and unit-tested. The process port invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape. Application composition and execution against a real Docker runtime remain necessary to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled.
+Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, the bounded Docker CLI process port, and their worker composition are implemented and unit-tested. The composed executor creates unpredictable container names internally, invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape. Execution against a real Docker runtime remains necessary to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled in deployed environments.

@@ -46,6 +46,9 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - Added a worker-owned Docker CLI process port that invokes exact argument vectors without a shell, enforces timeout and output bounds, and returns standard execution evidence.
 - Focused tests cover success evidence, timeout classification, output truncation, and invalid requests.
 - Registered the `docker-cli` worker role with only the exact `node:child_process` provider permission.
-- Remaining before completion: compose the worker port with the adapter and exercise it against a real runtime to prove every limit. Docker is not installed on the current machine.
+- Composed immutable policy, Docker sandbox adapter, and bounded CLI execution behind one worker command executor with internally generated container identities.
+- Verified that allowed commands traverse create, copy, attach, and cleanup while blocked commands never invoke Docker.
+- Registered only the required worker-to-maintenance workspace edge, `sandbox-execution` to `docker-cli` module edge, and `node:crypto` provider permission.
+- Remaining before completion: exercise the composed executor against a real runtime to prove every limit. Docker is not installed on the current machine.
 
 ## References

@@ -122,7 +122,7 @@ One source-control repository containing multiple declared application or packag
 
 ### MVP Safety Policy
 
-The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. Its Docker adapter maps those rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup, while the worker provides bounded shell-free Docker process execution. Application composition and live runtime proof are still required before untrusted commands can execute.
+The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. Its Docker adapter maps those rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup, and the worker composes the adapter with bounded shell-free Docker process execution. Live runtime proof is still required before untrusted commands can be enabled in deployment.
 
 ### Pull-Request Proposal
 
@@ -134,7 +134,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Repository Workspace
 
-A disposable checkout used by one maintenance run. Its implemented Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Resource, command, credential-injection, and network isolation for untrusted repository commands remain required but are not yet implemented.
+A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. The implemented sandbox copies it into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
 
 ### Run Submission
 

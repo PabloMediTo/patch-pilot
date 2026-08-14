@@ -76,7 +76,7 @@ export const boundaryConfig = {
       path: "apps/maintainer-worker",
       packageName: "@patch-pilot/maintainer-worker",
       sourceRoot: "src",
-      allowedWorkspaceDependencies: [],
+      allowedWorkspaceDependencies: ["maintenance"],
       modules: {
         application: {
           architectureRole: "application-role",
@@ -90,10 +90,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:child_process"],
         },
+        "sandbox-execution": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: ["docker-cli"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:crypto"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "docker-cli"],
+          allowedModuleDependencies: ["application", "docker-cli", "sandbox-execution"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

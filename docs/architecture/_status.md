@@ -8,6 +8,7 @@
 - Every registered workspace uses `src/` as its production source root.
 - Each application shell exposes one `application` role module plus explicit `index.js` and `main.js` composition files.
 - The worker additionally exposes the `docker-cli` application role, which owns bounded shell-free Docker process execution and alone receives the exact `node:child_process` provider permission.
+- The worker exposes `sandbox-execution` as the application role that composes the maintenance package's public safety interface with `docker-cli`; it receives only the exact workspace edge, module edge, and `node:crypto` provider needed for that responsibility.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.
@@ -18,7 +19,7 @@
 - The maintenance package exposes `run-timelines`, which owns canonical Postgres event persistence and Redis fan-out and has exact `pg` and `redis` provider permissions without module dependencies.
 - The API shell exposes `run-timeline-feed` as the application role that imports the maintenance package root and composes persisted history, live subscription, and framework-independent SSE sessions; its index composes application, ingestion, and feed interfaces.
 - The API shell exposes `run-timeline-http` as a separate route/authentication role. It depends only on the public `run-timeline-feed` interface and exact `node:url` provider.
-- The maintenance package index composes all public maintenance concepts. Explicit module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`.
+- The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless
