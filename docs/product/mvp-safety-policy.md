@@ -6,7 +6,7 @@ Decide whether target-repository commands and proposed file changes fit the fixe
 
 ## Not responsible for
 
-- implementing the container runtime that applies CPU, memory, disk, and network controls
+- owning the Docker CLI process port used by the container adapter
 - restoring dependencies with temporary network access
 - deciding whether a technically safe change is product-correct
 - granting exceptions to the MVP policy
@@ -16,20 +16,21 @@ Decide whether target-repository commands and proposed file changes fit the fixe
 - an exact executable and ordered argument vector
 - the repository workspace root and command working directory
 - proposed changed paths and added/deleted line counts
-- an isolated sandbox execution port
+- a bounded Docker CLI process port
 
 ## Outputs
 
 - an allowed or blocked execution decision with stable reason codes
 - an allowed or blocked change decision with stable reason codes
 - a canonical sandbox specification for allowed commands
+- bounded command evidence from the isolated container
 
 ## Adjacent parts
 
 - project detection selects one of the allowed standard test commands
 - failure reproduction consumes sandbox execution evidence
 - planning and modification must pass the change assessment before review
-- the worker will own the concrete container sandbox adapter
+- the worker will own the Docker CLI process port and invoke the maintenance package's container adapter
 
 ## Execution limits
 
@@ -53,6 +54,10 @@ A proposal may modify at most 10 unique files and 500 total added plus deleted l
 
 The MVP rejects changes to environment/secret files, private keys, dependency manifests, requirements files, lockfiles, migration directories, distribution output, and generated artifacts. These outcomes require rejection or a future explicit policy rather than an automatic exception.
 
+## Container adapter
+
+The maintenance package maps the canonical specification to Docker without exposing an image or limit choice to callers. It selects pinned Node.js or Python images, creates a container with CPU, memory, writable-layer disk, process, output, timeout, capability, and network limits, copies the disposable repository workspace into the size-limited container layer, attaches to the command, and forcibly removes the container afterward. It deliberately does not bind-mount the host workspace because a bind mount would bypass the container writable-layer disk quota.
+
 ## Current enforcement boundary
 
-Policy decisions and the sandbox specification are implemented and tested. A concrete container adapter is still required to prove that the runtime applies every resource and network limit. Until that adapter exists, untrusted target-repository commands remain disabled.
+Policy decisions, the sandbox specification, Docker command construction, failure handling, and forced cleanup are implemented and unit-tested. The worker still needs a bounded Docker CLI process port, and the adapter must be exercised against a real Docker runtime to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled.

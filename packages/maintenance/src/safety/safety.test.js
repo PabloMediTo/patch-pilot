@@ -6,6 +6,7 @@ import {
   assessExecutionSafety,
   createMvpSafetyPolicy,
   executeWithMvpSafety,
+  runInDockerSandbox,
 } from "./index.js";
 
 const policy = createMvpSafetyPolicy();
@@ -73,3 +74,40 @@ assert.deepEqual(
   }),
   { status: "blocked", reasons: ["too-many-lines", "forbidden-path"] },
 );
+
+const dockerCalls = [];
+const dockerResult = await runInDockerSandbox({
+  spec: {
+    cwd: join(workspaceDirectory, "packages", "api"),
+    workspaceDirectory,
+    executable: "npm",
+    args: ["test"],
+    limits: policy.execution,
+  },
+  createContainerName: () => "patch-pilot-run-1",
+  executeDocker: async (request) => {
+    dockerCalls.push(request);
+    return { exitCode: 0, hasTimedOut: false, hasTruncatedOutput: false };
+  },
+});
+assert.equal(dockerResult.exitCode, 0);
+assert.deepEqual(dockerCalls.map(({ args }) => args[0]), ["create", "cp", "start", "rm"]);
+assert.ok(dockerCalls[0].args.includes("node:24.18.0-bookworm-slim"));
+assert.ok(dockerCalls[0].args.includes("size=5368709120"));
+assert.ok(dockerCalls[0].args.includes("/workspace/packages/api"));
+
+const cleanupCalls = [];
+await assert.rejects(
+  runInDockerSandbox({
+    spec: { cwd: workspaceDirectory, workspaceDirectory, executable: "python", args: ["-m", "pytest"], limits: policy.execution },
+    createContainerName: () => "patch-pilot-run-2",
+    executeDocker: async ({ args }) => {
+      cleanupCalls.push(args[0]);
+      return args[0] === "cp"
+        ? { exitCode: 1 }
+        : { exitCode: 0, hasTimedOut: false, hasTruncatedOutput: false };
+    },
+  }),
+  /copy failed/u,
+);
+assert.deepEqual(cleanupCalls, ["create", "cp", "rm"]);

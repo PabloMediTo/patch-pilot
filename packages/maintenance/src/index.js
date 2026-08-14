@@ -19,5 +19,6 @@ export {
   assessExecutionSafety,
   createMvpSafetyPolicy,
   executeWithMvpSafety,
+  runInDockerSandbox,
 } from "./safety/index.js";
 export { verifyChangeProposal } from "./verifications/index.js";

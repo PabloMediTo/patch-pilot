@@ -11,7 +11,7 @@
 - The maintenance package exposes the conceptual `runs` module.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.
 - The maintenance package exposes independent `repository-understanding` and `reproductions` concepts; detection may read root files, while reproduction depends only on its injected executor contract.
-- The maintenance package exposes `safety`, which owns canonical execution and change policy and uses only `node:path` for workspace/path containment.
+- The maintenance package exposes `safety`, which owns canonical execution and change policy plus Docker container command construction and cleanup. It uses only `node:path` for workspace/path containment and delegates bounded Docker CLI execution through an injected port.
 - The maintenance package exposes `change-proposals`, which owns bounded plan and unified-diff proposal generation, uses `node:path` for portable repository paths, and depends only on the public `safety` interface.
 - The maintenance package exposes independent `verifications` and `critiques` concepts with injected executor and reviewer ports, plus `proposal-attempts` to compose only their public interfaces into the bounded retry loop.
 - The maintenance package exposes `run-timelines`, which owns canonical Postgres event persistence and Redis fan-out and has exact `pg` and `redis` provider permissions without module dependencies.

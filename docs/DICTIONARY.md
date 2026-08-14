@@ -122,7 +122,7 @@ One source-control repository containing multiple declared application or packag
 
 ### MVP Safety Policy
 
-The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. A concrete container adapter is still required before untrusted commands can execute.
+The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. Its Docker adapter maps those rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup; a worker process port and live runtime proof are still required before untrusted commands can execute.
 
 ### Pull-Request Proposal
 
