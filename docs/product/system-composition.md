@@ -26,4 +26,4 @@ packages/
 
 The application workspaces are deployable shells. `packages/maintenance` owns product behavior through conceptual first-level modules such as runs, repository understanding, change proposals, verification, review, approvals, and delivery. Provider-specific adapters remain with their owning concepts until real lifecycle pressure justifies extraction.
 
-The web deployment owns the browser-facing origin. Its HTTP dispatcher serves the review page and browser asset directly, and delegates only the timeline and approval route shapes to the control-plane API through an injected forwarding port. Authentication, persistence, and command handling stay with their existing API roles.
+The web deployment owns the browser-facing origin. Its concrete Node server serves the review page and browser asset through the HTTP dispatcher, and streams only the timeline and approval route shapes to the control-plane API over HTTP or HTTPS. Browser disconnects close the corresponding upstream request. Authentication, persistence, and command handling stay with their existing API roles; concrete session and review-evidence providers remain startup-composition concerns.

@@ -14,6 +14,7 @@ export const boundaryConfig = {
     "node:child_process",
     "node:crypto",
     "node:fs/promises",
+    "node:http",
     "node:os",
     "node:path",
     "node:util",
@@ -155,10 +156,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:url"],
         },
+        "web-server": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: ["web-http"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:http", "node:https", "node:url"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "run-review", "run-review-http", "run-review-live", "web-http"],
+          allowedModuleDependencies: ["application", "run-review", "run-review-http", "run-review-live", "web-http", "web-server"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

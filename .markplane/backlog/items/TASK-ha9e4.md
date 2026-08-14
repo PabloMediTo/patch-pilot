@@ -56,6 +56,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Registered provider-free `run-review-live` independently from server rendering and persistence.
 - Added a same-origin web HTTP dispatcher that serves review pages and the browser asset locally, forwards only timeline and approval route shapes through an injected API transport, and returns 404 for unknown routes.
 - Registered `web-http` with only the `run-review-http`, `run-review-live`, and exact `node:url` edges; focused tests cover local dispatch, API forwarding, and fallback behavior.
-- Remaining before completion: concrete Node listener/session/API transport composition and browser-level visual verification.
+- Added a concrete Node HTTP server with streaming HTTP/HTTPS API forwarding, upstream status/header preservation, browser-disconnect cleanup, and injected authorization/evidence ports.
+- A real loopback integration test proves that review pages stay local while approval method, path, body, status, and response pass through the web origin unchanged.
+- Registered `web-server` with only the `web-http` edge and exact `node:http`, `node:https`, and `node:url` providers.
+- Remaining before completion: main-process startup with chosen session/review-evidence providers and browser-level visual verification.
 
 ## References
