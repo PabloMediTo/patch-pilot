@@ -50,3 +50,10 @@
 - Summary: Supported repositories and bugfixes, safety limits, acceptance criteria, and excluded capabilities.
 - Read when: A task proposes functionality for the first releasable product or changes its limits.
 - Tags: product, mvp, scope, safety, python, typescript
+
+### Local Development Environment
+
+- Path: `docs/product/local-development.md`
+- Summary: Pinned Docker Compose services, endpoints, health model, and commands for local Temporal, Postgres, and Redis development.
+- Read when: You need to start, inspect, troubleshoot, or update the local stateful service environment.
+- Tags: product, local-development, docker, temporal, postgres, redis

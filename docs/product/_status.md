@@ -6,7 +6,8 @@
 - Delivery is organized in Markplane epics and initial tasks.
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
 - The maintenance package can create the initial `submitted` state for a run bound to a repository, issue, and immutable base revision.
-- No database schema, Temporal workflow, GitHub App, HTTP transport, or visual frontend has been implemented.
+- A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
+- No product database schema, Temporal workflow, GitHub App, HTTP transport, or visual frontend has been implemented.
 - Strict architecture enforcement permits only each shell's local composition-to-application edge; no cross-workspace dependency exists yet.
 
 ## Next milestone

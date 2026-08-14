@@ -11,6 +11,9 @@
     "lint": "eslint . --max-warnings=0",
     "test": "node --test",
     "check": "npm run lint && npm run test",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down",
+    "infra:status": "docker compose ps",
     "markplane": "\".tools\\markplane\\markplane.exe\"",
     "markplane:check": "\".tools\\markplane\\markplane.exe\" check",
     "markplane:sync": "\".tools\\markplane\\markplane.exe\" sync",
@@ -23,6 +26,7 @@
     "eslint-import-resolver-typescript": "4.4.5",
     "eslint-plugin-boundaries": "7.1.0",
     "eslint-plugin-import": "2.32.0",
-    "globals": "17.7.0"
+    "globals": "17.7.0",
+    "js-yaml": "^4.3.1"
   }
 }

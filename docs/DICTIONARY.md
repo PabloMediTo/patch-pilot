@@ -136,6 +136,10 @@ A review of the affected docs area after a substantive docs change to ensure
 stable terms used by that area are present in `docs/DICTIONARY.md`, important
 uses are linked where needed, and stale removed-term links are cleaned up.
 
+### Local Development Environment
+
+The repository-managed Docker Compose environment that runs the stateful services needed for local Patch Pilot development. It uses pinned images, local-only credentials, persistent developer volumes, and health checks; it is not a production deployment model. Use `npm run infra:up` to start it.
+
 ### System-Part Doc
 
 A focused doc that explicitly documents one system part.

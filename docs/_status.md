@@ -11,6 +11,7 @@ Current reality:
 - `docs/architecture/` defines the architecture model for the greenfield monorepo.
 - `boundaries.config.mjs` is the canonical executable registry for future workspaces, modules, and dependency permissions.
 - Three deployable application workspaces and the conceptual maintenance package are registered and bootstrapped with tested public interfaces; only local composition edges exist.
+- Local Temporal, Postgres, Redis, and Temporal UI services are defined in `compose.yaml` for development with pinned images and health checks.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
