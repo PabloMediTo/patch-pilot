@@ -45,6 +45,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "run-approval-http": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:url"],
+        },
         "run-timeline-http": {
           architectureRole: "application-role",
           allowedModuleDependencies: ["run-timeline-feed"],
@@ -57,6 +63,7 @@ export const boundaryConfig = {
           allowedModuleDependencies: [
             "application",
             "github-ingestion",
+            "run-approval-http",
             "run-timeline-feed",
             "run-timeline-http",
           ],

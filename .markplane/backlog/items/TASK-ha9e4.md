@@ -45,6 +45,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Kept atomic first-writer persistence behind an injected port and covered created, replayed, conflicting, invalid, and non-reviewable outcomes.
 - Added a concrete Postgres approval store with idempotent schema initialization, parameterized queries, one-decision-per-run and unique-idempotency constraints, and conflict recovery.
 - Unit tests verify SQL atomicity, parameter order, row mapping, reads, and one-time schema setup; live Postgres proof remains blocked by unavailable Docker.
-- Remaining before completion: authenticated API data loading and HTTP submission route, live SSE updates, and browser-level visual verification.
+- Added an authenticated framework-independent API handler for `POST /runs/:runId/approval/approve|reject` with required idempotency keys and actor binding.
+- Mapped created, replayed, unauthorized, invalid, method, and conflict outcomes to stable HTTP responses with focused tests.
+- Registered `run-approval-http` with only the maintenance workspace edge and exact `node:url` provider.
+- Remaining before completion: authenticated review-data loading, concrete server/session wiring, live SSE updates, and browser-level visual verification.
 
 ## References

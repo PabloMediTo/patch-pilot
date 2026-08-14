@@ -7,7 +7,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Not responsible for
 
 - deciding whether a proposal is correct
-- owning HTTP authentication and request parsing
+- implementing the surrounding HTTP server and session provider
 - publishing a branch or pull request
 - treating Redis live events as canonical evidence
 
@@ -33,4 +33,4 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 ## Current enforcement boundary
 
-The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. The maintenance package validates the first decision and provides parameterized Postgres persistence with one row per run and unique idempotency keys. API data loading, live Postgres verification, live browser updates, HTTP submission handling, and visual styling remain open.
+The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. The maintenance package validates and persists the first decision. The API now handles authenticated approve/reject POST routes, requires an idempotency key, binds the authenticated actor, and maps created, replayed, and conflict outcomes to stable HTTP responses. API review-data loading, live Postgres verification, live browser updates, concrete server/session wiring, and visual styling remain open.

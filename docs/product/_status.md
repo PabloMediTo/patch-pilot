@@ -21,6 +21,7 @@
 - The web application can build an immutable review model and safely render persisted timeline events, plan steps, semantic diff lines, verification output, and state-gated approve/reject forms. API loading, live browser updates, and approval persistence remain open.
 - The maintenance package validates human approval decisions, requires rejection reasons, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
 - Approval decisions have a concrete Postgres store with idempotent schema initialization, parameterized writes, database uniqueness constraints, and existing-decision recovery after write conflicts; live verification remains open.
+- The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 

@@ -20,6 +20,7 @@
 - The maintenance package exposes `run-timelines`, which owns canonical Postgres event persistence and Redis fan-out and has exact `pg` and `redis` provider permissions without module dependencies.
 - The API shell exposes `run-timeline-feed` as the application role that imports the maintenance package root and composes persisted history, live subscription, and framework-independent SSE sessions; its index composes application, ingestion, and feed interfaces.
 - The API shell exposes `run-timeline-http` as a separate route/authentication role. It depends only on the public `run-timeline-feed` interface and exact `node:url` provider.
+- The API shell exposes `run-approval-http` as a separate authenticated command role. It imports only the maintenance package root and exact `node:url` provider; auth, body reading, persistence, and clock remain injected ports.
 - The web shell exposes `run-review` as an independent application role with no provider or workspace dependencies; it owns the immutable review model and safe HTML presentation.
 - The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; `approvals` remains independent, and the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
