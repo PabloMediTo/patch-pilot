@@ -99,3 +99,24 @@
 - Summary: Structured plan generation, unified-diff evidence, plan-to-diff matching, and canonical safety assessment.
 - Read when: A task changes implementation planning, generated source diffs, proposal generator ports, diff parsing, or plan-to-file traceability.
 - Tags: product, proposal, plan, diff, generation, traceability, safety
+
+### Verification
+
+- Path: `docs/product/verification.md`
+- Summary: Standard project-command execution, immutable command evidence, and passed, failed, or infrastructure-failed classification.
+- Read when: A task changes proposal verification commands, executor evidence, timeout handling, output truncation, or verification outcomes.
+- Tags: product, verification, tests, evidence, command, sandbox
+
+### Critiques
+
+- Path: `docs/product/critiques.md`
+- Summary: Deterministic verification gates, structured reviewer findings, and accepted, retry, or rejected decisions.
+- Read when: A task changes proposal critique inputs, findings, blocking rules, retry eligibility, or rejection behavior.
+- Tags: product, critique, review, findings, retry, evidence
+
+### Proposal Attempts
+
+- Path: `docs/product/proposal-attempts.md`
+- Summary: Apply-verify-critique composition, immutable attempt history, plan-version advancement, and the two-retry budget.
+- Read when: A task changes modification attempts, retry orchestration, attempt history, exhaustion, or proposal revision contracts.
+- Tags: product, proposal, attempts, retry, verification, critique, versions

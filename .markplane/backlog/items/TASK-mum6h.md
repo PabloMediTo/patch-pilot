@@ -1,7 +1,7 @@
 ---
 id: TASK-mum6h
 title: Execute verification, critique, and bounded retries
-status: draft
+status: done
 priority: critical
 type: feature
 effort: large
@@ -30,12 +30,18 @@ Deliver **Execute verification, critique, and bounded retries** within the docum
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added separate `verifications`, `critiques`, and `proposal-attempts` conceptual modules.
+- Verification records immutable command, exit, output, duration, timeout, and truncation evidence for the supported project's standard command.
+- Failed verification requests a modification retry; timeout and truncated output terminate as execution failures without spending a modify retry.
+- Passing verification reaches a structured reviewer port; accepted critiques cannot contain blocking findings.
+- The attempt loop preserves every proposal, verification, and critique and permits exactly two revisions after the initial attempt.
+- Each revision must return a ready proposal with the next plan version.
+- Concrete patch application, sandbox execution, provider adapters, persistence, and Temporal Activity retry behavior remain separate later work.
 
 ## References

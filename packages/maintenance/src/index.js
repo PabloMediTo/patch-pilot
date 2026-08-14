@@ -1,4 +1,6 @@
 export { createBoundedChangeProposal } from "./change-proposals/index.js";
+export { critiqueChangeProposal } from "./critiques/index.js";
+export { executeProposalAttempts } from "./proposal-attempts/index.js";
 export {
   createImmutableRepositoryWorkspace,
   removeRepositoryWorkspace,
@@ -12,3 +14,4 @@ export {
   createMvpSafetyPolicy,
   executeWithMvpSafety,
 } from "./safety/index.js";
+export { verifyChangeProposal } from "./verifications/index.js";

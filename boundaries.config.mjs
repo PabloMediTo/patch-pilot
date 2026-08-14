@@ -123,6 +123,18 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:path"],
         },
+        critiques: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+        "proposal-attempts": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: ["critiques", "verifications"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
         runs: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
@@ -160,16 +172,25 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:path"],
         },
+        verifications: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
       },
       compositionFiles: {
         "index.js": {
           allowedModuleDependencies: [
             "change-proposals",
+            "critiques",
+            "proposal-attempts",
             "repository-understanding",
             "repository-workspaces",
             "reproductions",
             "runs",
             "safety",
+            "verifications",
           ],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],

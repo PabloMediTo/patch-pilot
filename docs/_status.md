@@ -10,17 +10,18 @@ Current reality:
 - `docs/DICTIONARY.md` is the canonical terminology file for this template's own docs and should be adapted as destination repositories grow their own stable terminology.
 - `docs/architecture/` defines the architecture model for the greenfield monorepo.
 - `boundaries.config.mjs` is the canonical executable registry for future workspaces, modules, and dependency permissions.
-- Three deployable application workspaces and the conceptual maintenance package are registered and bootstrapped with tested public interfaces; only local composition edges exist.
+- Three deployable application workspaces and the conceptual maintenance package are registered and bootstrapped with tested public interfaces and narrow declared module edges.
 - Local Temporal, Postgres, Redis, and Temporal UI services are defined in `compose.yaml` for development with pinned images and health checks.
 - Signed GitHub issue-label deliveries can now produce an authenticated run submission bound to an immutable revision.
 - The maintenance package can materialize that revision in a disposable, verified Detached-HEAD repository workspace and remove it through a guarded cleanup operation.
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Canonical MVP command and change policy is enforced before a sandbox port; a concrete container adapter is still required before target-repository commands can run.
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
+- Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
-- Product implementation has not started; the first delivery epics and tasks are tracked in Markplane.
+- Product implementation is underway through the maintenance package and application shells; persistence, durable orchestration, real provider adapters, and the review interface remain open in Markplane.
 
 Open questions:
 

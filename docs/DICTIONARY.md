@@ -91,6 +91,10 @@ A first-level folder inside a workspace source root that owns one coherent produ
 
 A non-deployable monorepo workspace that owns a coherent product or application concept with a focused reason to change and a public package interface.
 
+### Critique Decision
+
+The evidence-backed result of reviewing a ready [change proposal](#change-proposal) after verification. It accepts the proposal, requests a correctable retry, or rejects it. Passing verification is necessary but does not by itself prove that scope and regression risk are acceptable.
+
 ### Failure Reproduction
 
 The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the issue's expected failure fragment; unrelated command failures are kept distinct.
@@ -124,6 +128,10 @@ The fixed rules that decide which repository commands and proposed changes may c
 
 The GitHub-ready branch, title, description, linked issue, diff, and verification summary prepared by an approved maintenance run. The MVP creates or presents this proposal but never merges it automatically.
 
+### Proposal Attempt
+
+One visible apply-verify-critique pass for a versioned [change proposal](#change-proposal). The first pass and every retry retain their own proposal, [verification evidence](#verification-evidence), and [critique decision](#critique-decision); the MVP permits at most three attempts in total.
+
 ### Repository Workspace
 
 A disposable checkout used by one maintenance run. Its implemented Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Resource, command, credential-injection, and network isolation for untrusted repository commands remain required but are not yet implemented.
@@ -138,7 +146,7 @@ A repository root whose manifests and test configuration match one deterministic
 
 ### Verification Evidence
 
-Structured proof produced by repository checks, including commands, exit codes, test or lint summaries, and relevant logs. Human approval relies on this evidence rather than an agent claim that a fix works.
+Structured proof produced by repository checks, including the exact command, exit code, bounded output, duration, timeout, and truncation state. The implemented verifier classifies this evidence as passed, failed, or execution-failed. Human approval relies on the evidence rather than an agent claim that a fix works.
 
 ### Workspace
 
