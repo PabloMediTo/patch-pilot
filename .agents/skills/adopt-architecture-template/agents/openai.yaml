@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adopt Architecture Template"
+  short_description: "Adapt architecture enforcement to a repository"
+  default_prompt: "Use $adopt-architecture-template to install this architecture template in the target repository."

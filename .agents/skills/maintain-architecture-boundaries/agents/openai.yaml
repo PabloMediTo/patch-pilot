@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain Architecture Boundaries"
+  short_description: "Update explicit dependency maps and aligned docs"
+  default_prompt: "Use $maintain-architecture-boundaries to update the repository dependency permissions safely."

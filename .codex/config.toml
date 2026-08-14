@@ -1,0 +1,3 @@
+[profiles.repo-analyst]
+model = "gpt-5.4"
+model_instructions_file = ".codex/profiles/repo-analyst.md"

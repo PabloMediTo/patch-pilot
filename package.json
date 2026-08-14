@@ -1,0 +1,28 @@
+{
+  "name": "private-projekte",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "test": "node --test eslint-local-rules.test.js eslint-boundaries.test.js",
+    "check": "npm run lint && npm run test",
+    "markplane": "\".tools\\markplane\\markplane.exe\"",
+    "markplane:check": "\".tools\\markplane\\markplane.exe\" check",
+    "markplane:sync": "\".tools\\markplane\\markplane.exe\" sync",
+    "markplane:serve": "\".tools\\markplane\\markplane.exe\" serve --open"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@typescript-eslint/parser": "8.67.0",
+    "eslint": "9.39.5",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-boundaries": "7.1.0",
+    "eslint-plugin-import": "2.32.0",
+    "globals": "17.7.0"
+  }
+}
