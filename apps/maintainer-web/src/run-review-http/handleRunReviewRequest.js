@@ -46,7 +46,7 @@ function parseRunId(requestUrl) {
 function reviewHeaders() {
   return Object.freeze({
     "content-type": "text/html; charset=utf-8",
-    "content-security-policy": "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'none'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     "x-content-type-options": "nosniff",
   });
 }

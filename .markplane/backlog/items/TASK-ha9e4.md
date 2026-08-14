@@ -51,6 +51,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added an authenticated `GET /runs/:runId/review` handler with run-level access checks, injected evidence loading, and stable method, authorization, and missing-review outcomes.
 - Served escaped HTML with a restrictive no-script, same-origin-form content security policy and `nosniff` protection.
 - Registered `run-review-http` with only the `run-review` module edge and exact `node:url` provider.
-- Remaining before completion: concrete server/session wiring, live SSE updates, and browser-level visual verification.
+- Added a CSP-compatible same-origin browser asset that connects to `/runs/:runId/timeline`, consumes named `timeline` SSE events, and deduplicates run-local sequences.
+- Streamed repository or agent content enters the document only via `textContent`; tests reject `innerHTML` use and verify the exact named-event contract.
+- Registered provider-free `run-review-live` independently from server rendering and persistence.
+- Remaining before completion: concrete server/session wiring and browser-level visual verification.
 
 ## References

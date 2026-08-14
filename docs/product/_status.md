@@ -23,6 +23,7 @@
 - Approval decisions have a concrete Postgres store with idempotent schema initialization, parameterized writes, database uniqueness constraints, and existing-decision recovery after write conflicts; live verification remains open.
 - The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
 - The web application exposes an authenticated review GET handler that loads evidence behind a port and serves escaped HTML with a no-script, same-origin-form content security policy.
+- A same-origin browser asset connects to the authenticated timeline SSE route, listens for named `timeline` events, deduplicates sequences, and appends text-only audit entries without HTML insertion.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 

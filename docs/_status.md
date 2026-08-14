@@ -19,7 +19,7 @@ Current reality:
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.
-- The web shell now renders a safe framework-independent review document and exposes an authenticated GET handler with run-level authorization, injected evidence loading, stable rejection outcomes, and restrictive browser security headers; live updates and concrete server wiring remain open.
+- The web shell renders a safe review document, exposes an authenticated GET handler, and loads a same-origin EventSource asset that consumes named timeline events and appends deduplicated text-only entries; concrete server wiring and browser-level visual verification remain open.
 - Approval decisions now have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts; HTTP handling remains open.
 - Approval decisions now also have a concrete Postgres adapter with database-enforced first-writer and idempotency constraints; live service verification and HTTP handling remain open.
 - Approval submissions now have an authenticated framework-independent API route with required idempotency keys and stable HTTP outcome mapping; concrete server/session wiring remains open.

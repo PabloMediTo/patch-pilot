@@ -143,10 +143,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:url"],
         },
+        "run-review-live": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "run-review", "run-review-http"],
+          allowedModuleDependencies: ["application", "run-review", "run-review-http", "run-review-live"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

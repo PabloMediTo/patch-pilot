@@ -6,12 +6,12 @@
  */
 export function renderRunReviewHtml(review) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Run ${escapeHtml(review.run.id)}</title></head>
-<body><main><h1>Maintenance run ${escapeHtml(review.run.id)}</h1><p>Status: ${escapeHtml(review.run.status)}</p>
-<section aria-labelledby="timeline"><h2 id="timeline">Timeline</h2><ol>${renderTimeline(review.timeline)}</ol></section>
+<body><main data-run-id="${escapeHtml(review.run.id)}"><h1>Maintenance run ${escapeHtml(review.run.id)}</h1><p>Status: ${escapeHtml(review.run.status)}</p>
+<section aria-labelledby="timeline"><h2 id="timeline">Timeline</h2><ol data-live-timeline>${renderTimeline(review.timeline)}</ol></section>
 <section aria-labelledby="plan"><h2 id="plan">Plan</h2><ol>${renderPlan(review.plan)}</ol></section>
 <section aria-labelledby="diff"><h2 id="diff">Diff</h2><pre>${renderDiff(review.diff)}</pre></section>
 <section aria-labelledby="evidence"><h2 id="evidence">Verification: ${escapeHtml(review.verification.status)}</h2>${renderEvidence(review.verification)}</section>
-${renderDecision(review)}</main></body></html>`;
+${renderDecision(review)}</main><script src="/assets/run-review-live.js" defer></script></body></html>`;
 }
 
 /** Renders ordered audit events. */
