@@ -48,6 +48,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added an authenticated framework-independent API handler for `POST /runs/:runId/approval/approve|reject` with required idempotency keys and actor binding.
 - Mapped created, replayed, unauthorized, invalid, method, and conflict outcomes to stable HTTP responses with focused tests.
 - Registered `run-approval-http` with only the maintenance workspace edge and exact `node:url` provider.
-- Remaining before completion: authenticated review-data loading, concrete server/session wiring, live SSE updates, and browser-level visual verification.
+- Added an authenticated `GET /runs/:runId/review` handler with run-level access checks, injected evidence loading, and stable method, authorization, and missing-review outcomes.
+- Served escaped HTML with a restrictive no-script, same-origin-form content security policy and `nosniff` protection.
+- Registered `run-review-http` with only the `run-review` module edge and exact `node:url` provider.
+- Remaining before completion: concrete server/session wiring, live SSE updates, and browser-level visual verification.
 
 ## References

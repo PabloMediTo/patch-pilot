@@ -134,7 +134,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. Its implemented first slice presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Authenticated data loading, live browser updates, and decision persistence remain planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Its GET handler authorizes run access before loading evidence and serves escaped HTML under restrictive browser security headers. Live browser updates and concrete server wiring remain planned.
 
 ### Repository Workspace
 
