@@ -12,13 +12,14 @@
 - Root manifests can identify one [supported project](../DICTIONARY.md#supported-project) as Python/pytest or TypeScript/npm and select its standard test command.
 - [Failure reproduction](../DICTIONARY.md#failure-reproduction) classifies bounded executor evidence as reproduced, not reproduced, a different failure, or execution failure.
 - The [MVP safety policy](../DICTIONARY.md#mvp-safety-policy) blocks unapproved commands, out-of-workspace execution, oversized diffs, and sensitive paths, and produces a canonical no-network sandbox specification.
+- A bounded [change proposal](../DICTIONARY.md#change-proposal) can now be generated only after reproduction: it records a versioned structured plan, derives file and line evidence from a unified diff, requires exact plan-to-diff file agreement, and applies the canonical change policy.
 - No product database schema, Temporal workflow, concrete GitHub API adapter, HTTP transport, visual frontend, dependency restoration, or container command sandbox has been implemented.
 - The concrete sandbox adapter and runtime proof for CPU, memory, disk, timeout, output, and network enforcement remain open; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
-Demonstrate a read-only maintenance run that accepts a GitHub repository and issue, checks out an immutable revision in isolation, identifies a supported Python or TypeScript project, reproduces the reported failure, and records a reviewable plan with verification evidence.
+Demonstrate a read-only maintenance run that accepts a GitHub repository and issue, checks out an immutable revision in isolation, identifies a supported Python or TypeScript project, reproduces the reported failure, records a reviewable plan and diff, and produces verification evidence.
 
 ## Open questions
 

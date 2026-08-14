@@ -1,7 +1,7 @@
 ---
 id: TASK-i2xge
 title: Generate bounded implementation plan and source diff
-status: draft
+status: done
 priority: critical
 type: feature
 effort: large
@@ -29,12 +29,16 @@ Deliver **Generate bounded implementation plan and source diff** within the docu
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added a `change-proposals` conceptual module with structured plan and unified-diff generator ports.
+- Planning requires a reproduced failure and is limited to eight ordered steps with descriptions, rationales, and explicit file ownership.
+- Changed paths and added/deleted line counts are derived from git-style unified diff text rather than trusted generator metrics.
+- A proposal is rejected when planned and changed file sets differ; canonical MVP change policy produces the final ready or blocked outcome.
+- Persistence, verification, critique, and generator-provider adapters remain owned by their later tasks.
 
 ## References

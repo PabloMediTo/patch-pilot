@@ -92,3 +92,10 @@
 - Summary: Exact command allow-list, workspace containment, resource specification, change-size limits, sensitive paths, and the concrete sandbox boundary.
 - Read when: A task changes command execution, sandbox limits, network policy, output limits, diff size, forbidden paths, or safety exceptions.
 - Tags: product, safety, sandbox, execution, limits, diff, policy
+
+### Change Proposals
+
+- Path: `docs/product/change-proposals.md`
+- Summary: Structured plan generation, unified-diff evidence, plan-to-diff matching, and canonical safety assessment.
+- Read when: A task changes implementation planning, generated source diffs, proposal generator ports, diff parsing, or plan-to-file traceability.
+- Tags: product, proposal, plan, diff, generation, traceability, safety

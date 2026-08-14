@@ -73,7 +73,7 @@ The executable `boundaries.config.mjs` file that canonically declares production
 
 ### Change Proposal
 
-The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description.
+The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented first stage produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, and records the canonical safety decision; verification, critique, persistence, and pull-request description remain later stages.
 
 ### Co-Located Docs
 

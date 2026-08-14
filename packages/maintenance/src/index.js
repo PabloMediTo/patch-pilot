@@ -1,3 +1,4 @@
+export { createBoundedChangeProposal } from "./change-proposals/index.js";
 export {
   createImmutableRepositoryWorkspace,
   removeRepositoryWorkspace,

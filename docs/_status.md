@@ -16,6 +16,7 @@ Current reality:
 - The maintenance package can materialize that revision in a disposable, verified Detached-HEAD repository workspace and remove it through a guarded cleanup operation.
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Canonical MVP command and change policy is enforced before a sandbox port; a concrete container adapter is still required before target-repository commands can run.
+- Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.

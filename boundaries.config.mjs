@@ -117,6 +117,12 @@ export const boundaryConfig = {
       sourceRoot: "src",
       allowedWorkspaceDependencies: [],
       modules: {
+        "change-proposals": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: ["safety"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:path"],
+        },
         runs: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
@@ -158,6 +164,7 @@ export const boundaryConfig = {
       compositionFiles: {
         "index.js": {
           allowedModuleDependencies: [
+            "change-proposals",
             "repository-understanding",
             "repository-workspaces",
             "reproductions",
