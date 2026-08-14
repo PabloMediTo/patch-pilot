@@ -36,6 +36,11 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added a framework-independent immutable review model for run state, ordered timeline events, implementation plan, semantic diff lines, verification evidence, and an existing decision.
+- Added escaped server-deliverable HTML so untrusted repository and agent content cannot inject markup.
+- Approve and reject forms are exposed only while a run is `awaiting-approval` and has no recorded decision.
+- Focused tests cover evidence presentation, diff classification, HTML escaping, first-decision gating, and non-reviewable states.
+- Registered `run-review` as a provider-free web application role with an explicit public interface.
+- Remaining before completion: authenticated API data loading, live SSE updates, approval submission/persistence, and browser-level visual verification.
 
 ## References

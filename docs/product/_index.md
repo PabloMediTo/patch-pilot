@@ -127,3 +127,10 @@
 - Summary: Canonical Postgres event ordering, Redis live fan-out, adapter lifecycle, and persistence-before-publication failure semantics.
 - Read when: A task changes timeline event data, Postgres persistence, Redis channels, live progress, event ordering, or stream recovery.
 - Tags: product, timeline, events, postgres, redis, streaming, persistence
+
+### Review Screen
+
+- Path: `docs/product/review-screen.md`
+- Summary: Human review model and safe rendering of timeline, plan, diff, verification evidence, and approval actions.
+- Read when: A task changes review evidence presentation, diff rendering, approval availability, or web review behavior.
+- Tags: product, review, frontend, diff, evidence, approval

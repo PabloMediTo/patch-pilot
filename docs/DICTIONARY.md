@@ -132,6 +132,10 @@ The GitHub-ready branch, title, description, linked issue, diff, and verificatio
 
 One visible apply-verify-critique pass for a versioned [change proposal](#change-proposal). The first pass and every retry retain their own proposal, [verification evidence](#verification-evidence), and [critique decision](#critique-decision); the MVP permits at most three attempts in total.
 
+### Review Screen
+
+The human-facing view of one reviewable maintenance run. Its implemented first slice presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Authenticated data loading, live browser updates, and decision persistence remain planned.
+
 ### Repository Workspace
 
 A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. The implemented sandbox copies it into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
