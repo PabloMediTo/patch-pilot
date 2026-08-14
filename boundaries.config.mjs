@@ -39,10 +39,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:buffer", "node:crypto"],
         },
+        "run-timeline-feed": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "github-ingestion"],
+          allowedModuleDependencies: ["application", "github-ingestion", "run-timeline-feed"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

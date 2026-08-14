@@ -29,7 +29,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 - workers record progress after completing workflow operations
 - Postgres remains the audit and catch-up source
 - Redis fans new events out to connected API instances
-- the control-plane API will combine history queries and live subscriptions for the web interface
+- the control-plane API combines history queries and live subscriptions into one ordered feed for the web interface
 - the review screen will render attempts, diffs, verification, critiques, and approval state from timeline data
 
 ## Persistence model
@@ -42,6 +42,12 @@ Each run uses `patch-pilot:run:<run-id>:timeline`. Publication occurs only after
 
 If publication fails, the operation returns `persisted-stream-failed` with safe error evidence. The stored event remains available for catch-up and must not be rolled back merely because a live viewer missed it.
 
+## Control-plane feed
+
+The API subscribes to Redis before querying Postgres. Live events arriving during the history query are buffered. Persisted history is emitted first in sequence order, then only newer buffered events are emitted. Once caught up, the feed ignores duplicate or stale sequences and forwards newer events directly.
+
+This subscribe-before-query order closes the race in which an event could otherwise be committed after a history query but before live subscription. Closing the feed unsubscribes its run channel. A failed history query also unsubscribes before propagating the failure.
+
 ## Current verification boundary
 
-SQL allocation, mapping, ordering, publication order, run-scoped channels, failure semantics, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections. A live integration check remains required once Docker or equivalent local services are available.
+SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections. A live integration check remains required once Docker or equivalent local services are available.

@@ -22,7 +22,9 @@ export async function createRedisRunTimelineStream(options = {}) {
       }
       subscriberConnection ??= connectClient(subscriber);
       await subscriberConnection;
-      await subscriber.subscribe(createChannel(runId), (message) => receiveEvent(JSON.parse(message)));
+      const channel = createChannel(runId);
+      await subscriber.subscribe(channel, (message) => receiveEvent(JSON.parse(message)));
+      return async () => subscriber.unsubscribe(channel);
     },
     close: async () => {
       await closeClient(subscriber);

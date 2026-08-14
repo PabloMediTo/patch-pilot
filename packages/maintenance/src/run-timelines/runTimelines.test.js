@@ -100,9 +100,12 @@ await runTest("publishes and subscribes through one run-scoped Redis channel", a
   const subscriber = createRedisClientStub(calls);
   const stream = await createRedisRunTimelineStream({ publisher, subscriber });
   let received;
+  let hasUnsubscribed = false;
 
   await stream.publish({ runId: "run-7", sequence: 1 });
-  await stream.subscribe("run-7", (event) => { received = event; });
+  const unsubscribe = await stream.subscribe("run-7", (event) => { received = event; });
+  await unsubscribe();
+  hasUnsubscribed = calls.includes("unsubscribe:patch-pilot:run:run-7:timeline");
   await stream.close();
 
   assert.deepEqual(calls.slice(0, 4), [
@@ -112,6 +115,7 @@ await runTest("publishes and subscribes through one run-scoped Redis channel", a
     "subscribe:patch-pilot:run:run-7:timeline",
   ]);
   assert.deepEqual(received, { runId: "run-7", sequence: 2 });
+  assert.equal(hasUnsubscribed, true);
 });
 
 /**
@@ -129,6 +133,7 @@ function createRedisClientStub(calls) {
       calls.push(`subscribe:${channel}`);
       receiver(JSON.stringify({ runId: "run-7", sequence: 2 }));
     },
+    unsubscribe: async (channel) => { calls.push(`unsubscribe:${channel}`); },
     close: async function close() { this.isOpen = false; calls.push("close"); },
   };
 }

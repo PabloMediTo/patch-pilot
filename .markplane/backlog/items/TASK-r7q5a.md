@@ -44,6 +44,8 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - A Redis publication failure returns a visible partial-failure outcome without rolling back or hiding the Postgres event.
 - Provider imports are lazy so pure unit tests do not open network-driver handles.
 - Added focused tests for persistence-before-stream ordering, Redis failure, SQL ordering/allocation, channel isolation, and nested JSON immutability.
+- Added the API `run-timeline-feed` role, which subscribes before querying history, buffers concurrent live events, emits history first, then deduplicates by run-local sequence.
+- Feed closure and history-query failure both unsubscribe the run-scoped Redis channel.
 - Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References
