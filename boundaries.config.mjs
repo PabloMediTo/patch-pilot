@@ -9,7 +9,15 @@ export const boundaryConfig = {
     "**/*.{test,spec}.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
   ],
   testAllowedExternalDependencies: [],
-  testAllowedCoreDependencies: ["node:assert/strict", "node:crypto"],
+  testAllowedCoreDependencies: [
+    "node:assert/strict",
+    "node:child_process",
+    "node:crypto",
+    "node:fs/promises",
+    "node:os",
+    "node:path",
+    "node:util",
+  ],
   workspaces: {
     "maintainer-api": {
       architectureRole: "application-shell",
@@ -115,8 +123,27 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "repository-workspaces": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [
+            "node:child_process",
+            "node:fs/promises",
+            "node:path",
+            "node:process",
+            "node:url",
+            "node:util",
+          ],
+        },
       },
-      compositionFiles: {},
+      compositionFiles: {
+        "index.js": {
+          allowedModuleDependencies: ["repository-workspaces", "runs"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+      },
     },
   },
 };

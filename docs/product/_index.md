@@ -64,3 +64,10 @@
 - Summary: Signed GitHub App webhook authentication, explicit issue opt-in, immutable revision resolution, and run-submission output.
 - Read when: A task changes GitHub webhook handling, issue triggers, delivery identity, signature verification, or initial run submission.
 - Tags: product, github, webhook, ingestion, runs, security
+
+### Repository Workspaces
+
+- Path: `docs/product/repository-workspaces.md`
+- Summary: Disposable checkout creation, exact revision verification, credential removal, cleanup, and the boundary with later command isolation.
+- Read when: A task changes repository checkout, immutable revision handling, workspace paths, Git process limits, or cleanup safety.
+- Tags: product, repository, workspace, git, checkout, isolation, security

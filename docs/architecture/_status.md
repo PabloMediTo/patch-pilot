@@ -9,7 +9,9 @@
 - Each application shell exposes one `application` role module plus explicit `index.js` and `main.js` composition files.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
+- The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.
 - The API package index composes its application and GitHub-ingestion interfaces; other composition files remain limited to their local application module.
+- The maintenance package index composes the public `runs` and `repository-workspaces` interfaces without introducing a module-to-module edge.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless

@@ -118,7 +118,7 @@ The GitHub-ready branch, title, description, linked issue, diff, and verificatio
 
 ### Repository Workspace
 
-An isolated, disposable checkout used by one maintenance run. It is pinned to an immutable base revision and constrained by resource, command, credential, and network policies.
+A disposable checkout used by one maintenance run. Its implemented Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Resource, command, credential-injection, and network isolation for untrusted repository commands remain required but are not yet implemented.
 
 ### Run Submission
 
