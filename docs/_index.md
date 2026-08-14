@@ -40,3 +40,10 @@ This repository uses an indexed docs system.
 - Summary: Conceptual source organization, explicit dependency boundaries, JavaScript and TypeScript conventions, and ESLint enforcement.
 - Read when: A task affects repository topology, source layout, workspaces, modules, dependency direction, implementation conventions, or enforcement.
 - Tags: architecture, modules, boundaries, eslint, topology
+
+### Product
+
+- Path: `docs/product/_index.md`
+- Summary: Product intent, maintenance workflow, system composition, and MVP boundaries for the Autonomous GitHub Maintainer.
+- Read when: A task affects product behavior, maintenance runs, GitHub issue handling, agent steps, approval, delivery, or MVP scope.
+- Tags: product, maintainer, workflow, github, approval, mvp

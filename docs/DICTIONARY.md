@@ -59,9 +59,21 @@ anywhere in `docs/`.
 
 A deployable monorepo workspace that acts as a thin composition shell. It owns startup, environment and framework integration, while product behavior remains in conceptual modules or packages.
 
+### Approval Decision
+
+The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). Approval permits GitHub delivery; rejection ends the current run without publishing repository changes.
+
+### Autonomous GitHub Maintainer
+
+The planned product that turns a supported GitHub issue into a reproduced, tested, human-reviewed pull-request proposal through a durable maintenance workflow.
+
 ### Boundary Registry
 
 The executable `boundaries.config.mjs` file that canonically declares production coverage, workspaces, modules, composition files, and allowed dependency edges.
+
+### Change Proposal
+
+The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description.
 
 ### Co-Located Docs
 
@@ -92,9 +104,25 @@ The repository documentation model that separates [global docs](#global-docs)
 under `docs/` from optional [co-located docs](#co-located-docs) and uses
 structured `_index.md` files for discoverability.
 
+### Maintenance Run
+
+One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
+
 ### Monorepo
 
 One source-control repository containing multiple declared application or package workspaces. This repository reserves `apps/*` and `packages/*` as npm workspace locations, while concrete workspaces are introduced only for known concepts.
+
+### Pull-Request Proposal
+
+The GitHub-ready branch, title, description, linked issue, diff, and verification summary prepared by an approved maintenance run. The MVP creates or presents this proposal but never merges it automatically.
+
+### Repository Workspace
+
+An isolated, disposable checkout used by one maintenance run. It is pinned to an immutable base revision and constrained by resource, command, credential, and network policies.
+
+### Verification Evidence
+
+Structured proof produced by repository checks, including commands, exit codes, test or lint summaries, and relevant logs. Human approval relies on this evidence rather than an agent claim that a fix works.
 
 ### Workspace
 

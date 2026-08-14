@@ -13,6 +13,8 @@ Current reality:
 - No application or package workspace has been defined yet; product concepts will be registered only when they are known.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
+- `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
+- Product implementation has not started; the first delivery epics and tasks are tracked in Markplane.
 
 Open questions:
 
