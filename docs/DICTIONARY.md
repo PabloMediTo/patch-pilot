@@ -61,7 +61,7 @@ A deployable monorepo workspace that acts as a thin composition shell. It owns s
 
 ### Approval Decision
 
-The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). Approval permits GitHub delivery; rejection ends the current run without publishing repository changes.
+The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, replays the same idempotency key, and reports competing decisions as conflicts. Approval permits GitHub delivery; rejection ends the run without publishing repository changes. Concrete persistence and HTTP adapters remain planned.
 
 ### Autonomous GitHub Maintainer
 

@@ -41,6 +41,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Approve and reject forms are exposed only while a run is `awaiting-approval` and has no recorded decision.
 - Focused tests cover evidence presentation, diff classification, HTML escaping, first-decision gating, and non-reviewable states.
 - Registered `run-review` as a provider-free web application role with an explicit public interface.
-- Remaining before completion: authenticated API data loading, live SSE updates, approval submission/persistence, and browser-level visual verification.
+- Added a provider-free approval use case that accepts only the first decision for an awaiting run, requires rejection reasons, replays matching idempotency keys, and rejects competing decisions.
+- Kept atomic first-writer persistence behind an injected port and covered created, replayed, conflicting, invalid, and non-reviewable outcomes.
+- Remaining before completion: authenticated API data loading, a concrete approval persistence adapter and HTTP submission route, live SSE updates, and browser-level visual verification.
 
 ## References

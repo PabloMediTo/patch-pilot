@@ -11,6 +11,7 @@
 - The worker exposes `sandbox-execution` as the application role that composes the maintenance package's public safety interface with `docker-cli`; it receives only the exact workspace edge, module edge, and `node:crypto` provider needed for that responsibility.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
+- The maintenance package exposes the provider-free `approvals` concept, which owns first-decision validation, idempotent replay, and persistence conflict outcomes behind an injected atomic port.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.
 - The maintenance package exposes independent `repository-understanding` and `reproductions` concepts; detection may read root files, while reproduction depends only on its injected executor contract.
 - The maintenance package exposes `safety`, which owns canonical execution and change policy plus Docker container command construction and cleanup. It uses only `node:path` for workspace/path containment and delegates bounded Docker CLI execution through an injected port.
@@ -20,7 +21,7 @@
 - The API shell exposes `run-timeline-feed` as the application role that imports the maintenance package root and composes persisted history, live subscription, and framework-independent SSE sessions; its index composes application, ingestion, and feed interfaces.
 - The API shell exposes `run-timeline-http` as a separate route/authentication role. It depends only on the public `run-timeline-feed` interface and exact `node:url` provider.
 - The web shell exposes `run-review` as an independent application role with no provider or workspace dependencies; it owns the immutable review model and safe HTML presentation.
-- The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
+- The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; `approvals` remains independent, and the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless

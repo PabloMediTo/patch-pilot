@@ -7,7 +7,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Not responsible for
 
 - deciding whether a proposal is correct
-- persisting an approval decision
+- implementing the database adapter that atomically persists an approval decision
 - publishing a branch or pull request
 - treating Redis live events as canonical evidence
 
@@ -28,9 +28,9 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Adjacent parts
 
 - the API supplies authenticated persisted evidence and live timeline events
-- an approval endpoint will validate and persist the human action
+- the approval use case validates the first human action and delegates atomic persistence
 - GitHub delivery consumes only an approved result
 
 ## Current enforcement boundary
 
-The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. API data loading, live browser updates, approval submission handling, and visual styling remain open.
+The web application implements and tests the framework-independent view model and HTML rendering. All repository and agent-authored text is escaped before insertion. Decided or non-reviewable runs do not expose approval actions. The maintenance package now validates the first decision, requires rejection reasons, supports idempotent request replay, and rejects competing decisions through an atomic persistence port. API data loading, the concrete persistence adapter, live browser updates, submission handling, and visual styling remain open.
