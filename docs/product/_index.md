@@ -85,3 +85,10 @@
 - Summary: Bounded-executor contract, expected-failure matching, evidence fields, and reproduction outcomes.
 - Read when: A task changes reproduction commands, failure matching, command evidence, timeout handling, or reproduction outcomes.
 - Tags: product, reproduction, evidence, tests, executor, failure
+
+### MVP Safety Policy
+
+- Path: `docs/product/mvp-safety-policy.md`
+- Summary: Exact command allow-list, workspace containment, resource specification, change-size limits, sensitive paths, and the concrete sandbox boundary.
+- Read when: A task changes command execution, sandbox limits, network policy, output limits, diff size, forbidden paths, or safety exceptions.
+- Tags: product, safety, sandbox, execution, limits, diff, policy

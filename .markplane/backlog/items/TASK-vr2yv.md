@@ -35,6 +35,11 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Implemented the canonical immutable MVP execution and change policy.
+- Allowed only exact `npm test` and `python -m pytest` commands inside the declared repository workspace.
+- Added mandatory CPU, memory, disk, timeout, output, network, and filesystem sandbox specifications that callers cannot weaken.
+- Blocked oversized diffs, traversal, secrets, keys, dependency manifests, requirements, lockfiles, migrations, generated files, and distribution artifacts.
+- Verified that blocked requests never invoke the sandbox port.
+- Remaining before completion: implement and exercise a concrete container adapter that proves every runtime limit is applied. Docker is not installed on the current machine.
 
 ## References

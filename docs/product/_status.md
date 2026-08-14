@@ -11,7 +11,9 @@
 - A [repository workspace](../DICTIONARY.md#repository-workspace) can be created as a unique disposable checkout at an exact full commit SHA, with bounded non-interactive Git execution and guarded cleanup.
 - Root manifests can identify one [supported project](../DICTIONARY.md#supported-project) as Python/pytest or TypeScript/npm and select its standard test command.
 - [Failure reproduction](../DICTIONARY.md#failure-reproduction) classifies bounded executor evidence as reproduced, not reproduced, a different failure, or execution failure.
+- The [MVP safety policy](../DICTIONARY.md#mvp-safety-policy) blocks unapproved commands, out-of-workspace execution, oversized diffs, and sensitive paths, and produces a canonical no-network sandbox specification.
 - No product database schema, Temporal workflow, concrete GitHub API adapter, HTTP transport, visual frontend, dependency restoration, or container command sandbox has been implemented.
+- The concrete sandbox adapter and runtime proof for CPU, memory, disk, timeout, output, and network enforcement remain open; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone

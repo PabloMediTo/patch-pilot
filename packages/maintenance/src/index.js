@@ -5,3 +5,9 @@ export {
 export { detectSupportedProject } from "./repository-understanding/index.js";
 export { reproduceIssueFailure } from "./reproductions/index.js";
 export { createMaintenanceRun } from "./runs/index.js";
+export {
+  assessChangeSafety,
+  assessExecutionSafety,
+  createMvpSafetyPolicy,
+  executeWithMvpSafety,
+} from "./safety/index.js";

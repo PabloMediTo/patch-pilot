@@ -148,6 +148,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        safety: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:path"],
+        },
       },
       compositionFiles: {
         "index.js": {
@@ -156,6 +162,7 @@ export const boundaryConfig = {
             "repository-workspaces",
             "reproductions",
             "runs",
+            "safety",
           ],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],

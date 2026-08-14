@@ -116,6 +116,10 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 One source-control repository containing multiple declared application or package workspaces. This repository reserves `apps/*` and `packages/*` as npm workspace locations, while concrete workspaces are introduced only for known concepts.
 
+### MVP Safety Policy
+
+The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. A concrete container adapter is still required before untrusted commands can execute.
+
 ### Pull-Request Proposal
 
 The GitHub-ready branch, title, description, linked issue, diff, and verification summary prepared by an approved maintenance run. The MVP creates or presents this proposal but never merges it automatically.
