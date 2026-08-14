@@ -7,6 +7,7 @@
 - The non-deployable conceptual package is `packages/maintenance`.
 - Every registered workspace uses `src/` as its production source root.
 - Each application shell exposes one `application` role module plus explicit `index.js` and `main.js` composition files.
+- The worker additionally exposes the `docker-cli` application role, which owns bounded shell-free Docker process execution and alone receives the exact `node:child_process` provider permission.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.

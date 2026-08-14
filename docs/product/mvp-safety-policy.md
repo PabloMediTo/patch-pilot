@@ -6,7 +6,7 @@ Decide whether target-repository commands and proposed file changes fit the fixe
 
 ## Not responsible for
 
-- owning the Docker CLI process port used by the container adapter
+- starting or managing the host Docker daemon
 - restoring dependencies with temporary network access
 - deciding whether a technically safe change is product-correct
 - granting exceptions to the MVP policy
@@ -30,7 +30,7 @@ Decide whether target-repository commands and proposed file changes fit the fixe
 - project detection selects one of the allowed standard test commands
 - failure reproduction consumes sandbox execution evidence
 - planning and modification must pass the change assessment before review
-- the worker will own the Docker CLI process port and invoke the maintenance package's container adapter
+- the worker owns the Docker CLI process port; its composition with the maintenance package's container adapter is the next application-wiring step
 
 ## Execution limits
 
@@ -60,4 +60,4 @@ The maintenance package maps the canonical specification to Docker without expos
 
 ## Current enforcement boundary
 
-Policy decisions, the sandbox specification, Docker command construction, failure handling, and forced cleanup are implemented and unit-tested. The worker still needs a bounded Docker CLI process port, and the adapter must be exercised against a real Docker runtime to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled.
+Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, and the worker-owned bounded Docker CLI process port are implemented and unit-tested. The process port invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape. Application composition and execution against a real Docker runtime remain necessary to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled.

@@ -43,6 +43,9 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - Added a Docker adapter that selects pinned Node.js or Python runtimes and maps the immutable policy to network, CPU, memory, writable-layer disk, PID, capability, timeout, and output controls.
 - The adapter copies the repository into the quota-controlled container layer instead of bind-mounting the host workspace, then forcibly removes the container after success or preparation failure.
 - Unit tests cover command construction, runtime selection, working-directory mapping, command order, and cleanup after a failed copy.
-- Remaining before completion: implement the worker-owned bounded Docker CLI process port and exercise the adapter against a real runtime to prove every limit. Docker is not installed on the current machine.
+- Added a worker-owned Docker CLI process port that invokes exact argument vectors without a shell, enforces timeout and output bounds, and returns standard execution evidence.
+- Focused tests cover success evidence, timeout classification, output truncation, and invalid requests.
+- Registered the `docker-cli` worker role with only the exact `node:child_process` provider permission.
+- Remaining before completion: compose the worker port with the adapter and exercise it against a real runtime to prove every limit. Docker is not installed on the current machine.
 
 ## References

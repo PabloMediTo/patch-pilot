@@ -84,10 +84,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "docker-cli": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:child_process"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application"],
+          allowedModuleDependencies: ["application", "docker-cli"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
