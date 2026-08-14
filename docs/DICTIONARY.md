@@ -120,6 +120,10 @@ The GitHub-ready branch, title, description, linked issue, diff, and verificatio
 
 An isolated, disposable checkout used by one maintenance run. It is pinned to an immutable base revision and constrained by resource, command, credential, and network policies.
 
+### Run Submission
+
+An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, issue, actor, and immutable base revision so later persistence and workflow adapters can process repeated deliveries idempotently.
+
 ### Verification Evidence
 
 Structured proof produced by repository checks, including commands, exit codes, test or lint summaries, and relevant logs. Human approval relies on this evidence rather than an agent claim that a fix works.

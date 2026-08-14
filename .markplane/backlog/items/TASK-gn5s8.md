@@ -1,7 +1,7 @@
 ---
 id: TASK-gn5s8
 title: Create GitHub App ingestion and run submission
-status: draft
+status: done
 priority: critical
 type: feature
 effort: large
@@ -30,12 +30,16 @@ Deliver **Create GitHub App ingestion and run submission** within the documented
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added constant-time HMAC-SHA256 verification for the unmodified GitHub delivery body.
+- Added explicit `issues`/`labeled`/`patch-pilot` opt-in and validated payload extraction.
+- Added injected immutable-revision resolution and run submission ports without coupling the API shell to concrete GitHub, database, or Temporal adapters.
+- Retained delivery, installation, actor, repository, issue, and revision context in the initial run state.
+- Verification: ESLint, focused accepted/rejected/ignored ingestion tests, architecture checks, npm audit, and Markplane integrity checks pass.
 
 ## References

@@ -7,8 +7,9 @@
 - The non-deployable conceptual package is `packages/maintenance`.
 - Every registered workspace uses `src/` as its production source root.
 - Each application shell exposes one `application` role module plus explicit `index.js` and `main.js` composition files.
+- The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
 - The maintenance package exposes the conceptual `runs` module.
-- Composition files may depend only on their local application module; no cross-workspace or production-provider dependency is allowed yet.
+- The API package index composes its application and GitHub-ingestion interfaces; other composition files remain limited to their local application module.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.
 - Monorepo package workspaces represent product or application concepts unless

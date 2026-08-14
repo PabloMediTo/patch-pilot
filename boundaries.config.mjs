@@ -9,7 +9,7 @@ export const boundaryConfig = {
     "**/*.{test,spec}.{js,cjs,mjs,jsx,ts,cts,mts,tsx}",
   ],
   testAllowedExternalDependencies: [],
-  testAllowedCoreDependencies: ["node:assert/strict"],
+  testAllowedCoreDependencies: ["node:assert/strict", "node:crypto"],
   workspaces: {
     "maintainer-api": {
       architectureRole: "application-shell",
@@ -17,7 +17,7 @@ export const boundaryConfig = {
       path: "apps/maintainer-api",
       packageName: "@patch-pilot/maintainer-api",
       sourceRoot: "src",
-      allowedWorkspaceDependencies: [],
+      allowedWorkspaceDependencies: ["maintenance"],
       modules: {
         application: {
           architectureRole: "application-role",
@@ -25,10 +25,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "github-ingestion": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:buffer", "node:crypto"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application"],
+          allowedModuleDependencies: ["application", "github-ingestion"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

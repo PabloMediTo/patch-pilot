@@ -57,3 +57,10 @@
 - Summary: Pinned Docker Compose services, endpoints, health model, and commands for local Temporal, Postgres, and Redis development.
 - Read when: You need to start, inspect, troubleshoot, or update the local stateful service environment.
 - Tags: product, local-development, docker, temporal, postgres, redis
+
+### GitHub Run Ingestion
+
+- Path: `docs/product/github-ingestion.md`
+- Summary: Signed GitHub App webhook authentication, explicit issue opt-in, immutable revision resolution, and run-submission output.
+- Read when: A task changes GitHub webhook handling, issue triggers, delivery identity, signature verification, or initial run submission.
+- Tags: product, github, webhook, ingestion, runs, security

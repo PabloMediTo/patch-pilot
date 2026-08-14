@@ -7,8 +7,9 @@
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
 - The maintenance package can create the initial `submitted` state for a run bound to a repository, issue, and immutable base revision.
 - A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
-- No product database schema, Temporal workflow, GitHub App, HTTP transport, or visual frontend has been implemented.
-- Strict architecture enforcement permits only each shell's local composition-to-application edge; no cross-workspace dependency exists yet.
+- Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label, resolve an immutable base revision through an injected port, and emit an initial [run submission](../DICTIONARY.md#run-submission).
+- No product database schema, Temporal workflow, concrete GitHub API adapter, HTTP transport, or visual frontend has been implemented.
+- Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
