@@ -140,6 +140,10 @@ A disposable checkout used by one maintenance run. Its implemented Git boundary 
 
 An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, issue, actor, and immutable base revision so later persistence and workflow adapters can process repeated deliveries idempotently.
 
+### Run Timeline
+
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. The concrete adapters are implemented and unit-tested, while live local-service verification remains open.
+
 ### Supported Project
 
 A repository root whose manifests and test configuration match one deterministic MVP shape: TypeScript with an npm test script, or Python with recognizable pytest configuration. Ambiguous multi-shape roots are unsupported rather than guessed.

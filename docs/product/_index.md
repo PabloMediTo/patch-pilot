@@ -120,3 +120,10 @@
 - Summary: Apply-verify-critique composition, immutable attempt history, plan-version advancement, and the two-retry budget.
 - Read when: A task changes modification attempts, retry orchestration, attempt history, exhaustion, or proposal revision contracts.
 - Tags: product, proposal, attempts, retry, verification, critique, versions
+
+### Run Timelines
+
+- Path: `docs/product/run-timelines.md`
+- Summary: Canonical Postgres event ordering, Redis live fan-out, adapter lifecycle, and persistence-before-publication failure semantics.
+- Read when: A task changes timeline event data, Postgres persistence, Redis channels, live progress, event ordering, or stream recovery.
+- Tags: product, timeline, events, postgres, redis, streaming, persistence

@@ -14,6 +14,7 @@
 - The maintenance package exposes `safety`, which owns canonical execution and change policy and uses only `node:path` for workspace/path containment.
 - The maintenance package exposes `change-proposals`, which owns bounded plan and unified-diff proposal generation, uses `node:path` for portable repository paths, and depends only on the public `safety` interface.
 - The maintenance package exposes independent `verifications` and `critiques` concepts with injected executor and reviewer ports, plus `proposal-attempts` to compose only their public interfaces into the bounded retry loop.
+- The maintenance package exposes `run-timelines`, which owns canonical Postgres event persistence and Redis fan-out and has exact `pg` and `redis` provider permissions without module dependencies.
 - The API package index composes its application and GitHub-ingestion interfaces; other composition files remain limited to their local application module.
 - The maintenance package index composes all public maintenance concepts. Explicit module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.

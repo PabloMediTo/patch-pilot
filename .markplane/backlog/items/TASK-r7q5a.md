@@ -37,6 +37,13 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added a `run-timelines` conceptual module with concrete `pg` and `redis` provider adapters.
+- Postgres lazily installs an idempotent timeline schema and atomically allocates a unique increasing sequence per run in the same statement that inserts the event.
+- Timeline queries return canonical events ordered by their run-local sequence.
+- Redis uses one namespaced Pub/Sub channel per run and publishes only after Postgres returns the stored canonical event.
+- A Redis publication failure returns a visible partial-failure outcome without rolling back or hiding the Postgres event.
+- Provider imports are lazy so pure unit tests do not open network-driver handles.
+- Added focused tests for persistence-before-stream ordering, Redis failure, SQL ordering/allocation, channel isolation, and nested JSON immutability.
+- Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References

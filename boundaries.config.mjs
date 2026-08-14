@@ -166,6 +166,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "run-timelines": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: ["pg", "redis"],
+          allowedCoreDependencies: [],
+        },
         safety: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
@@ -189,6 +195,7 @@ export const boundaryConfig = {
             "repository-workspaces",
             "reproductions",
             "runs",
+            "run-timelines",
             "safety",
             "verifications",
           ],

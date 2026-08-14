@@ -18,6 +18,7 @@ Current reality:
 - Canonical MVP command and change policy is enforced before a sandbox port; a concrete container adapter is still required before target-repository commands can run.
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
+- Run timelines now have concrete Postgres persistence and Redis live-stream adapters with atomic per-run ordering; live service verification remains open because Docker is unavailable locally.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
