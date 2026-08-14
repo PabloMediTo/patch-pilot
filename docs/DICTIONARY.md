@@ -134,7 +134,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Its GET handler authorizes run access before loading evidence and serves escaped HTML under restrictive browser security headers. A same-origin EventSource client appends deduplicated timeline events using text-only DOM operations. Concrete server wiring and browser-level verification remain planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. Its GET handler authorizes run access before loading evidence and serves escaped HTML under restrictive browser security headers. A same-origin EventSource client appends deduplicated timeline events using text-only DOM operations. The web HTTP dispatcher serves those local resources and forwards only timeline and approval route shapes through an injected API transport. A concrete listener, session/API transport composition, and browser-level verification remain planned.
 
 ### Repository Workspace
 

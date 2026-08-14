@@ -54,6 +54,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added a CSP-compatible same-origin browser asset that connects to `/runs/:runId/timeline`, consumes named `timeline` SSE events, and deduplicates run-local sequences.
 - Streamed repository or agent content enters the document only via `textContent`; tests reject `innerHTML` use and verify the exact named-event contract.
 - Registered provider-free `run-review-live` independently from server rendering and persistence.
-- Remaining before completion: concrete server/session wiring and browser-level visual verification.
+- Added a same-origin web HTTP dispatcher that serves review pages and the browser asset locally, forwards only timeline and approval route shapes through an injected API transport, and returns 404 for unknown routes.
+- Registered `web-http` with only the `run-review-http`, `run-review-live`, and exact `node:url` edges; focused tests cover local dispatch, API forwarding, and fallback behavior.
+- Remaining before completion: concrete Node listener/session/API transport composition and browser-level visual verification.
 
 ## References

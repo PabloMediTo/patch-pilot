@@ -24,6 +24,7 @@
 - The web shell exposes `run-review` as an independent application role with no provider or workspace dependencies; it owns the immutable review model and safe HTML presentation.
 - The web shell exposes `run-review-http` for authenticated review delivery. It depends only on the public `run-review` interface and exact `node:url` provider; authorization and evidence loading remain injected ports.
 - The web shell exposes provider-free `run-review-live` for the same-origin browser SSE asset; it remains independent of server rendering and persistence modules.
+- The web shell exposes `web-http` as the same-origin route composition role. It depends only on `run-review-http`, `run-review-live`, and exact `node:url`; API forwarding remains an injected port.
 - The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; `approvals` remains independent, and the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.

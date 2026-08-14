@@ -7,7 +7,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Not responsible for
 
 - deciding whether a proposal is correct
-- implementing the surrounding HTTP server and session provider
+- implementing the concrete Node HTTP listener, session provider, or API transport
 - publishing a branch or pull request
 - treating Redis live events as canonical evidence
 
@@ -33,4 +33,4 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 ## Current enforcement boundary
 
-The web application implements and tests the review model, HTML rendering, and same-origin live timeline client. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The client listens to the API's named `timeline` SSE events, deduplicates run-local sequences, and relies on EventSource reconnection. The maintenance package validates and persists the first decision, while authenticated GET and POST handlers enforce run access. Live service verification, concrete server/session wiring, and visual styling remain open.
+The web application implements and tests the review model, HTML rendering, same-origin live timeline client, and HTTP dispatcher. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The dispatcher serves the review and browser asset locally, forwards only the timeline and approval route shapes to the API through an injected transport, and returns a terminal 404 for unknown routes. The maintenance package validates and persists the first decision, while authenticated GET and POST handlers enforce run access. Live service verification, a concrete Node listener/session/API transport composition, and browser-level visual verification remain open.
