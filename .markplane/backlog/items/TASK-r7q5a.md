@@ -47,6 +47,7 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Added the API `run-timeline-feed` role, which subscribes before querying history, buffers concurrent live events, emits history first, then deduplicates by run-local sequence.
 - Feed closure and history-query failure both unsubscribe the run-scoped Redis channel.
 - Added a framework-independent SSE session with canonical event frames, 15-second heartbeats, resume-after-sequence behavior, and idempotent disconnect cleanup including disconnects during catch-up.
+- Added `npm run test:timeline-integration`, which uses the real provider clients, requires two Redis deliveries, and compares them with ordered Postgres history. It intentionally fails rather than skipping when services are absent.
 - Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References

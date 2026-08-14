@@ -27,6 +27,14 @@ Inspect service state:
 npm run infra:status
 ```
 
+Exercise the real Postgres timeline schema and Redis Pub/Sub path:
+
+```powershell
+npm run test:timeline-integration
+```
+
+The integration command fails when either service is unavailable. Override the defaults with `PATCH_PILOT_POSTGRES_URL` and `PATCH_PILOT_REDIS_URL` when the services do not use the documented local addresses.
+
 Stop containers while retaining local database volumes:
 
 ```powershell

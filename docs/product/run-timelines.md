@@ -57,4 +57,6 @@ A reconnecting client supplies its last received sequence, and catch-up skips th
 
 ## Current verification boundary
 
-SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections. A live integration check remains required once Docker or equivalent local services are available.
+SQL allocation, mapping, ordering, publication order, run-scoped channels, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections.
+
+`npm run test:timeline-integration` exercises both real providers together. It subscribes first, persists two uniquely scoped events, requires both Redis deliveries within five seconds, and compares their IDs against the ordered Postgres history. The command fails rather than skipping when services are unavailable. Its first successful execution remains required once Docker or equivalent local services are available.

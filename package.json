@@ -10,6 +10,7 @@
   "scripts": {
     "lint": "eslint . --max-warnings=0",
     "test": "node --test",
+    "test:timeline-integration": "node integration/run-timeline.integration.mjs",
     "check": "npm run lint && npm run test",
     "infra:up": "docker compose up -d --wait",
     "infra:down": "docker compose down",
