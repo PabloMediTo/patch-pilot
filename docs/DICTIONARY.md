@@ -61,7 +61,7 @@ A deployable monorepo workspace that acts as a thin composition shell. It owns s
 
 ### Approval Decision
 
-The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, replays the same idempotency key, and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys, while the authenticated API handler and concrete server map bounded idempotent submissions to HTTP. Approval permits GitHub delivery; rejection ends the run without publishing repository changes. Live persistence verification and API main-process store wiring remain planned.
+The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, and binds the choice to the canonical base revision, diff hash, plan version, passed verification status, and verification-evidence hash. It replays the same idempotency key and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys while retaining legacy unbound rows as non-deliverable audit history; the authenticated API handler and concrete server map bounded idempotent submissions to HTTP. Approval permits GitHub delivery only for that exact evidence; rejection ends the run without publishing repository changes. Live persistence verification and API main-process store wiring remain planned.
 
 ### Autonomous GitHub Maintainer
 

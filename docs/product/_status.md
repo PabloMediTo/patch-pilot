@@ -19,8 +19,8 @@
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
 - The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
-- The maintenance package validates human approval decisions, requires rejection reasons, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
-- Approval decisions have a concrete Postgres store with idempotent schema initialization, parameterized writes, database uniqueness constraints, and existing-decision recovery after write conflicts; live verification remains open.
+- The maintenance package validates human approval decisions, requires rejection reasons, binds the decision to canonical base-revision, diff, plan-version, and passed-verification hashes, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
+- Approval decisions have a concrete Postgres store with idempotent schema evolution, parameterized writes, database uniqueness constraints, evidence-binding columns, and existing-decision recovery after write conflicts; legacy unbound rows remain readable but cannot authorize delivery. Live verification remains open.
 - The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
 - The web application exposes an authenticated review GET handler that loads evidence behind a port and serves escaped HTML with a no-script, same-origin-form content security policy.
 - A same-origin browser asset connects to the authenticated timeline SSE route, listens for named `timeline` events, deduplicates sequences, and appends text-only audit entries without HTML insertion.
@@ -35,7 +35,7 @@
 
 ## Next milestone
 
-Compose the control-plane API main process with authentication and persistence ports, while live Postgres/Redis and Docker safety verification proceed when the required runtime is available. Durable Temporal workflow orchestration follows that executable control plane.
+Implement idempotent approved-branch and draft-pull-request delivery against the exact persisted approval binding. Control-plane API authentication/store composition and live Postgres/Redis and Docker safety verification remain open where local runtime or policy decisions are still required.
 
 ## Open questions
 

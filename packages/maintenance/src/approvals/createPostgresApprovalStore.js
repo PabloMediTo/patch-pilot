@@ -5,18 +5,31 @@ CREATE TABLE IF NOT EXISTS run_approval_decisions (
   idempotency_key text NOT NULL UNIQUE,
   decision_status text NOT NULL CHECK (decision_status IN ('approved', 'rejected')),
   reason text,
-  decided_at timestamptz NOT NULL
-);`;
+  decided_at timestamptz NOT NULL,
+  base_revision text,
+  diff_hash text,
+  plan_version integer,
+  verification_status text,
+  verification_evidence_hash text
+);
+ALTER TABLE run_approval_decisions ADD COLUMN IF NOT EXISTS base_revision text;
+ALTER TABLE run_approval_decisions ADD COLUMN IF NOT EXISTS diff_hash text;
+ALTER TABLE run_approval_decisions ADD COLUMN IF NOT EXISTS plan_version integer;
+ALTER TABLE run_approval_decisions ADD COLUMN IF NOT EXISTS verification_status text;
+ALTER TABLE run_approval_decisions ADD COLUMN IF NOT EXISTS verification_evidence_hash text;`;
 
 const INSERT_SQL = `
 INSERT INTO run_approval_decisions
-  (run_id, actor_id, idempotency_key, decision_status, reason, decided_at)
-VALUES ($1, $2, $3, $4, $5, $6::timestamptz)
+  (run_id, actor_id, idempotency_key, decision_status, reason, decided_at,
+   base_revision, diff_hash, plan_version, verification_status, verification_evidence_hash)
+VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $7, $8, $9, $10, $11)
 ON CONFLICT DO NOTHING
-RETURNING run_id, actor_id, idempotency_key, decision_status, reason, decided_at;`;
+RETURNING run_id, actor_id, idempotency_key, decision_status, reason, decided_at,
+  base_revision, diff_hash, plan_version, verification_status, verification_evidence_hash;`;
 
 const SELECT_SQL = `
-SELECT run_id, actor_id, idempotency_key, decision_status, reason, decided_at
+SELECT run_id, actor_id, idempotency_key, decision_status, reason, decided_at,
+  base_revision, diff_hash, plan_version, verification_status, verification_evidence_hash
 FROM run_approval_decisions WHERE run_id = $1;`;
 
 /**
@@ -59,10 +72,24 @@ async function createPool(connectionString) {
 /** Maps a stored row to immutable domain evidence. */
 function mapDecision(row) {
   return Object.freeze({ runId: row.run_id, actorId: row.actor_id, idempotencyKey: row.idempotency_key,
-    status: row.decision_status, reason: row.reason, decidedAt: new Date(row.decided_at).toISOString() });
+    status: row.decision_status, reason: row.reason, decidedAt: new Date(row.decided_at).toISOString(),
+    reviewBinding: mapReviewBinding(row) });
+}
+
+/** Keeps legacy unbound rows readable but explicitly non-deliverable. */
+function mapReviewBinding(row) {
+  if ([row.base_revision, row.diff_hash, row.plan_version, row.verification_status,
+    row.verification_evidence_hash].some((value) => value === null || value === undefined)) return null;
+  return Object.freeze({ baseRevision: row.base_revision, diffHash: row.diff_hash,
+    planVersion: row.plan_version, verification: Object.freeze({
+      status: row.verification_status, evidenceHash: row.verification_evidence_hash,
+    }) });
 }
 
 /** Creates ordered query values without interpolating user content. */
 function decisionValues(decision) {
-  return [decision.runId, decision.actorId, decision.idempotencyKey, decision.status, decision.reason, decision.decidedAt];
+  return [decision.runId, decision.actorId, decision.idempotencyKey, decision.status, decision.reason,
+    decision.decidedAt, decision.reviewBinding.baseRevision, decision.reviewBinding.diffHash,
+    decision.reviewBinding.planVersion, decision.reviewBinding.verification.status,
+    decision.reviewBinding.verification.evidenceHash];
 }

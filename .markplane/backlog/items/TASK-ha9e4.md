@@ -70,6 +70,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added the concrete API Node listener and dispatcher for review evidence, approval commands, and timeline SSE with bounded body parsing, heartbeat scheduling, stable fallback, and safe error mapping.
 - Browser approval forms now submit Same-Origin JSON with generated idempotency keys and reload canonical evidence only after a successful decision.
 - Registered `api-http` with only the three route-role edges and `api-server` with only `api-http` plus exact Node buffer, HTTP, timer, and URL providers.
+- Bound every new approval decision to canonical base-revision, diff, plan-version, passed-verification, and verification-evidence hashes loaded from run state rather than browser input.
+- Evolved the Postgres approval schema idempotently so evidence bindings survive retries; legacy unbound decisions remain readable but deliberately cannot authorize GitHub delivery.
 - Remaining before completion: compose the control-plane API main process with concrete authentication and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

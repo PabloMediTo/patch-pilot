@@ -17,7 +17,8 @@ export async function decideRunApproval(input) {
     return Object.freeze({ status: "conflict", reason: "run-not-awaiting-approval" });
   }
 
-  const decision = createDecision(input);
+  const reviewBinding = createReviewBinding(state?.reviewBinding);
+  const decision = createDecision(input, reviewBinding);
   return normalizeSaveResult(await input.saveFirstDecision(decision), input.idempotencyKey);
 }
 
@@ -45,7 +46,7 @@ function createReplayOutcome(decision, idempotencyKey) {
 }
 
 /** Creates immutable decision evidence for atomic persistence. */
-function createDecision(input) {
+function createDecision(input, reviewBinding) {
   return Object.freeze({
     runId: input.runId,
     actorId: input.actorId,
@@ -53,6 +54,31 @@ function createDecision(input) {
     status: input.decision,
     reason: input.decision === "rejected" ? input.reason.trim() : null,
     decidedAt: input.decidedAt,
+    reviewBinding,
+  });
+}
+
+/** Binds a decision to the exact review evidence loaded from canonical state. */
+function createReviewBinding(candidate) {
+  const hasBaseRevision = typeof candidate?.baseRevision === "string"
+    && /^[0-9a-f]{40}$/u.test(candidate.baseRevision);
+  const hasDiffHash = typeof candidate?.diffHash === "string"
+    && /^[0-9a-f]{64}$/u.test(candidate.diffHash);
+  const hasPlanVersion = Number.isInteger(candidate?.planVersion) && candidate.planVersion > 0;
+  const hasPassedVerification = candidate?.verification?.status === "passed"
+    && typeof candidate.verification.evidenceHash === "string"
+    && /^[0-9a-f]{64}$/u.test(candidate.verification.evidenceHash);
+  if (!hasBaseRevision || !hasDiffHash || !hasPlanVersion || !hasPassedVerification) {
+    throw new Error("Approval requires exact passed review evidence from canonical run state.");
+  }
+  return Object.freeze({
+    baseRevision: candidate.baseRevision,
+    diffHash: candidate.diffHash,
+    planVersion: candidate.planVersion,
+    verification: Object.freeze({
+      status: candidate.verification.status,
+      evidenceHash: candidate.verification.evidenceHash,
+    }),
   });
 }
 

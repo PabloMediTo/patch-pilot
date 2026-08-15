@@ -7,7 +7,9 @@ let savedDecision;
 const server = createMaintainerApiServer({
   reviewEvidence: { authorizeRunAccess: async () => true, loadRunReviewEvidence: async () => ({ run: { id: "run-1" } }) },
   approval: { authenticateRequest: async () => ({ id: "reviewer-1" }),
-    loadApprovalState: async () => ({ runStatus: "awaiting-approval", decision: null }),
+    loadApprovalState: async () => ({ runStatus: "awaiting-approval", decision: null,
+      reviewBinding: { baseRevision: "a".repeat(40), diffHash: "b".repeat(64), planVersion: 1,
+        verification: { status: "passed", evidenceHash: "c".repeat(64) } } }),
     saveFirstDecision: async (decision) => { savedDecision = decision; return { status: "created", decision }; },
     clock: () => new Date("2026-08-15T10:00:00.000Z") },
   timeline: { authorizeRunAccess: async () => false, store: {}, stream: {} },

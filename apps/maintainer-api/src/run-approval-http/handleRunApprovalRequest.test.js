@@ -26,7 +26,9 @@ function createInput(overrides = {}) {
     response: { writeHead(code, headers) { this.code = code; this.headers = headers; }, end(body) { this.body = body; } },
     authenticateRequest: overrides.authenticateRequest ?? (async () => ({ id: "reviewer-1" })),
     readRequestBody: async () => overrides.body ?? {},
-    loadApprovalState: async () => ({ runStatus: overrides.runStatus ?? "awaiting-approval", decision: null }),
+    loadApprovalState: async () => ({ runStatus: overrides.runStatus ?? "awaiting-approval", decision: null,
+      reviewBinding: { baseRevision: "a".repeat(40), diffHash: "b".repeat(64), planVersion: 1,
+        verification: { status: "passed", evidenceHash: "c".repeat(64) } } }),
     saveFirstDecision: overrides.saveFirstDecision ?? (async (decision) => ({ status: "created", decision })),
     clock: () => new Date("2026-08-14T12:00:00.000Z"),
   };
