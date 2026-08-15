@@ -11,6 +11,7 @@ export const boundaryConfig = {
   testAllowedExternalDependencies: [],
   testAllowedCoreDependencies: [
     "node:assert/strict",
+    "node:buffer",
     "node:child_process",
     "node:crypto",
     "node:fs/promises",
@@ -239,7 +240,7 @@ export const boundaryConfig = {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
           allowedExternalDependencies: ["pg"],
-          allowedCoreDependencies: ["node:crypto"],
+          allowedCoreDependencies: ["node:buffer", "node:crypto", "node:timers", "node:url"],
         },
         "proposal-attempts": {
           architectureRole: "conceptual-module",

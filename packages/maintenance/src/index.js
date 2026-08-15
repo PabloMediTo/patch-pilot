@@ -2,6 +2,7 @@ export { createPostgresApprovalStore, decideRunApproval } from "./approvals/inde
 export { createBoundedChangeProposal } from "./change-proposals/index.js";
 export { critiqueChangeProposal } from "./critiques/index.js";
 export {
+  createGitHubAppRequest,
   createGitHubDeliveryAdapter,
   createPostgresDeliveryStore,
   publishApprovedPullRequest,

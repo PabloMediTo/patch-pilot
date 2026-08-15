@@ -103,9 +103,13 @@ The evidence-backed result of reviewing a ready [change proposal](#change-propos
 
 The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the issue's expected failure fragment; unrelated command failures are kept distinct.
 
+### GitHub App Installation Token
+
+A short-lived credential issued for one GitHub App installation. The implemented delivery transport requests a token for only the target repository and only `contents:write` plus `pull_requests:write`, treats its format as opaque, coalesces concurrent refreshes, and discards it from use one minute before GitHub's expiration. It is held in memory and sent only through authorization headers.
+
 ### GitHub Delivery
 
-The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its GitHub REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. Authenticated GitHub App transport, safe commit publication, and live proof remain planned; automatic merge is prohibited.
+The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its authenticated GitHub App transport supplies repository-scoped [installation tokens](#github-app-installation-token), while its REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. Safe commit publication and live proof remain planned; automatic merge is prohibited.
 
 ### Global Docs
 

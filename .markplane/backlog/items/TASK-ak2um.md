@@ -47,6 +47,9 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Added a GitHub REST delivery adapter that composes an approved-commit publisher with exact Git-reference and draft-pull-request operations.
 - Missing branches and PRs are created; matching resources replay; concurrent `422` creates recover through one exact reread; changed commits, non-draft or closed PRs, and ambiguous candidates fail without overwrite or duplication.
 - Adapter tests cover branch and PR creation, replay, race recovery, commit conflicts, exact request shapes, and unsafe PR state. No new import permission or architecture exception was required.
-- Remaining: implement short-lived GitHub App request transport, safe commit publication, and live Postgres/GitHub integration proof before completing this task.
+- Added an authenticated GitHub App transport with RS256 app JWTs, repository-scoped installation-token exchange, least-privilege contents/PR permissions, concurrent refresh coalescing, expiration skew, pinned API version, request timeout, and bounded JSON responses.
+- Transport tests use a real generated RSA key to verify JWT signature and claims, token scope, headers, cache reuse/refresh, query/body mapping, route restrictions, and response-byte rejection.
+- Added exact `node:buffer`, `node:timers`, and `node:url` permissions to `deliveries` and test-only `node:buffer`; the worker sandbox retains only its prior `node:crypto` permission and no cross-module edge or exception was added.
+- Remaining: implement safe commit publication and live Postgres/GitHub integration proof before completing this task.
 
 ## References
