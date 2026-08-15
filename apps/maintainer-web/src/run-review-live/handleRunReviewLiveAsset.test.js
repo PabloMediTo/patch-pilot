@@ -12,6 +12,9 @@ assert.match(response.body, /addEventListener\("timeline"/u);
 assert.match(response.body, /textContent = event\.type/u);
 assert.doesNotMatch(response.body, /innerHTML/u);
 assert.match(response.body, /data-sequence/u);
+assert.match(response.body, /crypto\.randomUUID\(\)/u);
+assert.match(response.body, /"idempotency-key"/u);
+assert.match(response.body, /event\.preventDefault\(\)/u);
 
 /** Creates a response fixture. */
 function createResponse() {

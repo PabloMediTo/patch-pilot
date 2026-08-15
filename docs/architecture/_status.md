@@ -10,6 +10,8 @@
 - The worker additionally exposes the `docker-cli` application role, which owns bounded shell-free Docker process execution and alone receives the exact `node:child_process` provider permission.
 - The worker exposes `sandbox-execution` as the application role that composes the maintenance package's public safety interface with `docker-cli`; it receives only the exact workspace edge, module edge, and `node:crypto` provider needed for that responsibility.
 - The API shell also exposes the `github-ingestion` application role, which depends on the maintenance workspace and the exact Node.js cryptography providers needed for webhook authentication.
+- The API shell exposes `api-http` as the route-composition role with only public edges to approval, review-evidence, and timeline handlers.
+- The API shell exposes `api-server` as the Node transport role with only `api-http` plus exact `node:buffer`, `node:http`, `node:timers`, and `node:url` providers for bounded bodies, listening, heartbeat lifecycle, and form decoding.
 - The maintenance package exposes the conceptual `runs` module.
 - The maintenance package exposes `approvals`, which owns first-decision validation, idempotent replay, persistence conflict outcomes, and its Postgres adapter with the exact `pg` provider permission.
 - The maintenance package also exposes `repository-workspaces`, which owns disposable Git checkout and cleanup and uses only its exact filesystem, process, path, and utility core providers.

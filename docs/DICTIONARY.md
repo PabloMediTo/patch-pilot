@@ -61,7 +61,7 @@ A deployable monorepo workspace that acts as a thin composition shell. It owns s
 
 ### Approval Decision
 
-The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, replays the same idempotency key, and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys, while the authenticated API handler binds the actor and maps outcomes to HTTP. Approval permits GitHub delivery; rejection ends the run without publishing repository changes. Live verification and concrete server wiring remain planned.
+The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, replays the same idempotency key, and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys, while the authenticated API handler and concrete server map bounded idempotent submissions to HTTP. Approval permits GitHub delivery; rejection ends the run without publishing repository changes. Live persistence verification and API main-process store wiring remain planned.
 
 ### Autonomous GitHub Maintainer
 
@@ -90,6 +90,10 @@ A first-level folder inside a workspace source root that owns one coherent produ
 ### Conceptual Package
 
 A non-deployable monorepo workspace that owns a coherent product or application concept with a focused reason to change and a public package interface.
+
+### Control-Plane API
+
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, and timeline SSE routes; authentication, Postgres/Redis adapters, and other stores remain injected until the API main process wires deployment configuration.
 
 ### Critique Decision
 
@@ -134,7 +138,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The control-plane API authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. A same-origin EventSource client appends deduplicated timeline events using text-only DOM operations, while a self-hosted responsive stylesheet presents desktop and mobile evidence layouts. The environment-configured Node web main process is implemented and browser-verified; concrete API listener composition with authentication and persisted stores remains planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process and concrete API server are implemented; API main-process authentication and persisted-store wiring remain planned.
 
 ### Repository Workspace
 

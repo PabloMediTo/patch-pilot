@@ -67,6 +67,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Refactored review delivery to consume the combined API access result, removing separate web authorization and evidence ports.
 - The environment-configured web `main.js` now validates its TCP port and starts the concrete server; a direct process smoke check proved its 404 fallback on the configured listener.
 - Registered the API `run-review-evidence-http` and web `run-review-api` roles with only their exact module and Node provider edges.
-- Remaining before completion: compose the control-plane API listener with concrete authentication and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added the concrete API Node listener and dispatcher for review evidence, approval commands, and timeline SSE with bounded body parsing, heartbeat scheduling, stable fallback, and safe error mapping.
+- Browser approval forms now submit Same-Origin JSON with generated idempotency keys and reload canonical evidence only after a successful decision.
+- Registered `api-http` with only the three route-role edges and `api-server` with only `api-http` plus exact Node buffer, HTTP, timer, and URL providers.
+- Remaining before completion: compose the control-plane API main process with concrete authentication and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

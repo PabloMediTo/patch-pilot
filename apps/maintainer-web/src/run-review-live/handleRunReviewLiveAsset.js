@@ -17,6 +17,18 @@ const CLIENT_SCRIPT = `(() => {
     item.append(type, " ", time);
     list.append(item);
   });
+  document.querySelectorAll('form[action*="/approval/"]').forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const reason = new FormData(form).get("reason");
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { "content-type": "application/json", "idempotency-key": crypto.randomUUID() },
+        body: JSON.stringify(reason === null ? {} : { reason }),
+      });
+      if (response.ok) location.reload();
+    });
+  });
 })();`;
 
 /**

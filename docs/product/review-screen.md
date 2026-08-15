@@ -7,7 +7,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Not responsible for
 
 - deciding whether a proposal is correct
-- composing the API handler with concrete authentication and persisted evidence stores
+- composing the API main process with concrete authentication and persisted evidence stores
 - publishing a branch or pull request
 - treating Redis live events as canonical evidence
 
@@ -29,10 +29,10 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 ## Adjacent parts
 
-- the API authorizes and supplies persisted evidence through `GET /runs/:runId/review-evidence`, plus live timeline events
+- the [control-plane API](../DICTIONARY.md#control-plane-api) authorizes and supplies persisted evidence through `GET /runs/:runId/review-evidence`, plus live timeline events
 - the approval use case validates the first human action and delegates atomic persistence
 - GitHub delivery consumes only an approved result
 
 ## Current enforcement boundary
 
-The web application implements and tests the review model, HTML rendering, same-origin live timeline client, responsive stylesheet, HTTP dispatcher, concrete Node HTTP server, and executable environment-configured main process. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The restrictive CSP permits only same-origin scripts, styles, connections, and form actions. For initial HTML, the server-side review client forwards only `cookie` or `authorization` to the API, bounds the response to two MiB by default, and maps authorized evidence, unauthorized access, and missing reviews without giving the web process its own session policy. Timeline and approval requests remain streaming pass-through routes. Browser verification proves desktop, mobile, approval-control, overflow, and live-event behavior. Concrete API listener composition with authentication and persisted evidence stores remains open; live Postgres and Redis verification remains separately blocked by unavailable Docker.
+The web application implements and tests the review model, HTML rendering, same-origin live timeline client, responsive stylesheet, HTTP dispatcher, concrete Node HTTP server, and executable environment-configured main process. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The restrictive CSP permits only same-origin scripts, styles, connections, and form actions. For initial HTML, the server-side review client forwards only `cookie` or `authorization` to the API, bounds the response to two MiB by default, and maps authorized evidence, unauthorized access, and missing reviews without giving the web process its own session policy. Approval forms use Same-Origin Fetch with a generated idempotency key and bounded JSON body; successful decisions reload canonical evidence. The concrete API listener dispatches review evidence, approval, and timeline SSE while keeping authentication and stores injected. API main-process composition with concrete authentication and persisted evidence stores remains open; live Postgres and Redis verification remains separately blocked by unavailable Docker.

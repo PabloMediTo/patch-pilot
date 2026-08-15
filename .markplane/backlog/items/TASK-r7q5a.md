@@ -20,7 +20,7 @@ tags:
 - redis
 position: a2
 created: 2026-08-14
-updated: 2026-08-14
+updated: 2026-08-15
 ---
 
 # Persist run timeline and stream live progress
@@ -49,6 +49,7 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Added a framework-independent SSE session with canonical event frames, 15-second heartbeats, resume-after-sequence behavior, and idempotent disconnect cleanup including disconnects during catch-up.
 - Added `npm run test:timeline-integration`, which uses the real provider clients, requires two Redis deliveries, and compares them with ordered Postgres history. It intentionally fails rather than skipping when services are absent.
 - Added the separate `run-timeline-http` API role for authenticated `GET /runs/:runId/timeline`, strict `Last-Event-ID` parsing, terminal JSON errors, and Node-compatible disconnect cleanup.
+- Composed the timeline route into the concrete Node API dispatcher and server without buffering, with transport-owned repeating heartbeat scheduling.
 - Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References

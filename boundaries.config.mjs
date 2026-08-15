@@ -28,6 +28,18 @@ export const boundaryConfig = {
       sourceRoot: "src",
       allowedWorkspaceDependencies: ["maintenance"],
       modules: {
+        "api-http": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: ["run-approval-http", "run-review-evidence-http", "run-timeline-http"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
+        "api-server": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: ["api-http"],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:buffer", "node:http", "node:timers", "node:url"],
+        },
         application: {
           architectureRole: "application-role",
           allowedModuleDependencies: [],
@@ -68,6 +80,8 @@ export const boundaryConfig = {
       compositionFiles: {
         "index.js": {
           allowedModuleDependencies: [
+            "api-http",
+            "api-server",
             "application",
             "github-ingestion",
             "run-approval-http",
