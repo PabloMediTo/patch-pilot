@@ -52,6 +52,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:url"],
         },
+        "run-review-evidence-http": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:url"],
+        },
         "run-timeline-http": {
           architectureRole: "application-role",
           allowedModuleDependencies: ["run-timeline-feed"],
@@ -65,6 +71,7 @@ export const boundaryConfig = {
             "application",
             "github-ingestion",
             "run-approval-http",
+            "run-review-evidence-http",
             "run-timeline-feed",
             "run-timeline-http",
           ],
@@ -138,6 +145,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        "run-review-api": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:buffer", "node:http", "node:https", "node:url"],
+        },
         "run-review-http": {
           architectureRole: "application-role",
           allowedModuleDependencies: ["run-review"],
@@ -164,21 +177,21 @@ export const boundaryConfig = {
         },
         "web-server": {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["web-http"],
+          allowedModuleDependencies: ["run-review-api", "web-http"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:http", "node:https", "node:url"],
         },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "run-review", "run-review-http", "run-review-live", "run-review-style", "web-http", "web-server"],
+          allowedModuleDependencies: ["application", "run-review", "run-review-api", "run-review-http", "run-review-live", "run-review-style", "web-http", "web-server"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
         "main.js": {
-          allowedModuleDependencies: ["application"],
+          allowedModuleDependencies: ["application", "web-server"],
           allowedExternalDependencies: [],
-          allowedCoreDependencies: [],
+          allowedCoreDependencies: ["node:process"],
         },
       },
     },

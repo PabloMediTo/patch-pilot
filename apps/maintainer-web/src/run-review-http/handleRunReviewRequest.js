@@ -7,7 +7,7 @@ const ROUTE_PATTERN = /^\/runs\/([^/]+)\/review$/u;
 /**
  * Handles authenticated loading and rendering of one run review.
  *
- * @param {{ request: object, response: object, authorizeRunAccess: Function, loadRunReviewEvidence: Function }} input HTTP and review ports.
+ * @param {{ request: object, response: object, loadRunReviewAccess: Function }} input HTTP and review ports.
  * @returns {Promise<object>} Route outcome.
  */
 export async function handleRunReviewRequest(input) {
@@ -15,11 +15,11 @@ export async function handleRunReviewRequest(input) {
   const runId = parseRunId(input.request.url);
   if (runId === null) return Object.freeze({ status: "unhandled" });
   if (input.request.method !== "GET") return writeText(input.response, 405, { body: "Method not allowed", headers: { allow: "GET" } });
-  const hasAccess = await input.authorizeRunAccess(Object.freeze({ runId, request: input.request }));
-  if (!hasAccess) return writeText(input.response, 401, { body: "Unauthorized" });
-  const evidence = await input.loadRunReviewEvidence(runId);
-  if (evidence === null) return writeText(input.response, 404, { body: "Review not found" });
-  const html = renderRunReviewHtml(createRunReview(evidence));
+  const access = await input.loadRunReviewAccess(Object.freeze({ runId, request: input.request }));
+  if (access.status === "unauthorized") return writeText(input.response, 401, { body: "Unauthorized" });
+  if (access.status === "missing") return writeText(input.response, 404, { body: "Review not found" });
+  if (access.status !== "available") throw new Error("Review access port returned an unknown status.");
+  const html = renderRunReviewHtml(createRunReview(access.evidence));
   input.response.writeHead(200, reviewHeaders());
   input.response.end(html);
   return Object.freeze({ status: "rendered", runId });
@@ -29,8 +29,8 @@ export async function handleRunReviewRequest(input) {
 function assertPorts(input) {
   if (typeof input?.request?.url !== "string" || typeof input?.request?.method !== "string"
     || typeof input?.response?.writeHead !== "function" || typeof input.response.end !== "function"
-    || typeof input?.authorizeRunAccess !== "function" || typeof input?.loadRunReviewEvidence !== "function") {
-    throw new Error("Review HTTP handler requires request, response, authorization, and evidence ports.");
+    || typeof input?.loadRunReviewAccess !== "function") {
+    throw new Error("Review HTTP handler requires request, response, and review access port.");
   }
 }
 

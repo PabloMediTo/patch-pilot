@@ -15,10 +15,10 @@
 - A bounded [change proposal](../DICTIONARY.md#change-proposal) can now be generated only after reproduction: it records a versioned structured plan, derives file and line evidence from a unified diff, requires exact plan-to-diff file agreement, and applies the canonical change policy.
 - Ready proposals can now produce immutable [verification evidence](../DICTIONARY.md#verification-evidence), structured [critique decisions](../DICTIONARY.md#critique-decision), and up to three visible [proposal attempts](../DICTIONARY.md#proposal-attempt) comprising the initial modification plus two retries.
 - A [run timeline](../DICTIONARY.md#run-timeline) module now provides an idempotent Postgres schema, atomic per-run event sequences, ordered history queries, and run-scoped Redis publication/subscription. The API composes these into a gap-free feed, resumable SSE session, and authenticated `GET /runs/:runId/timeline` route. Its adapters are unit-tested but still require live verification against the local services.
-- No Temporal workflow, concrete GitHub API adapter, web main-process session/evidence composition, or dependency restoration has been implemented.
+- No Temporal workflow, concrete GitHub API adapter, control-plane API listener/store composition, or dependency restoration has been implemented.
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
-- The web application can build an immutable review model, safely render persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher and concrete Node HTTP server. Main-process session/evidence composition remains open.
+- The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
 - The maintenance package validates human approval decisions, requires rejection reasons, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
 - Approval decisions have a concrete Postgres store with idempotent schema initialization, parameterized writes, database uniqueness constraints, and existing-decision recovery after write conflicts; live verification remains open.
 - The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
@@ -27,12 +27,13 @@
 - The web HTTP dispatcher serves review pages and assets locally, forwards only timeline and approval routes through an injected API transport, and terminates unknown routes with 404.
 - The web Node transport forwards request and response streams without buffering across HTTP or HTTPS, preserves upstream status and headers, and destroys the upstream request when the browser disconnects.
 - The review interface has a self-hosted responsive stylesheet under a same-origin CSP. Browser checks verify its two-column desktop and single-column 375-pixel layouts, no page-level horizontal overflow, approval controls, and live timeline insertion.
+- The API exposes an authenticated, no-store review-evidence GET handler. The web server's bounded client forwards only cookie or bearer credentials and maps available, unauthorized, and missing outcomes before rendering.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
-Verify timeline adapters against live Postgres and Redis, then expose persisted history and live events to the review interface while durable workflow orchestration is added.
+Compose the control-plane API listener with its authentication and persistence ports, while live Postgres/Redis and Docker safety verification proceed when the required runtime is available. Durable Temporal workflow orchestration follows that executable control plane.
 
 ## Open questions
 

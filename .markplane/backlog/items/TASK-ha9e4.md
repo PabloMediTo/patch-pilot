@@ -19,7 +19,7 @@ tags:
 - approval
 position: a6
 created: 2026-08-14
-updated: 2026-08-14
+updated: 2026-08-15
 ---
 
 # Build diff, evidence, and approval review screen
@@ -62,6 +62,11 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added a provider-free same-origin stylesheet with semantic diff colors, responsive evidence cards, accessible focus states, and mobile layout; CSP remains restrictive and permits styles only from self.
 - Browser verification covers a two-column 1280-pixel desktop layout, single-column 375-pixel mobile layout, no page-level horizontal overflow, visible approval controls, and insertion of the live sequence-4 timeline event.
 - Registered `run-review-style` independently from rendering and live-event behavior; the dispatcher alone composes the three review routes.
-- Remaining before completion: main-process startup with chosen session and review-evidence providers.
+- Added the API-owned authenticated `GET /runs/:runId/review-evidence` handler with stable method, unauthorized, missing, and no-store success responses.
+- Added a bounded server-side web client that forwards only cookie or bearer credentials, maps access outcomes, rejects unsupported API origins and malformed evidence, and keeps session policy out of the web deployment.
+- Refactored review delivery to consume the combined API access result, removing separate web authorization and evidence ports.
+- The environment-configured web `main.js` now validates its TCP port and starts the concrete server; a direct process smoke check proved its 404 fallback on the configured listener.
+- Registered the API `run-review-evidence-http` and web `run-review-api` roles with only their exact module and Node provider edges.
+- Remaining before completion: compose the control-plane API listener with concrete authentication and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

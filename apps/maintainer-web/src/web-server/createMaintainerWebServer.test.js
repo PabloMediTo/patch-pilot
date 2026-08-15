@@ -9,31 +9,30 @@ const api = createServer((incoming, response) => {
   incoming.on("data", (chunk) => chunks.push(chunk));
   incoming.on("end", () => {
     received.push({ method: incoming.method, url: incoming.url, body: Buffer.concat(chunks).toString() });
+    if (incoming.url.endsWith("/review-evidence")) {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify(createEvidence()));
+      return;
+    }
     response.writeHead(201, { "content-type": "application/json" });
     response.end('{"status":"created"}');
   });
 });
 await listen(api);
 
-const web = createMaintainerWebServer({
-  apiOrigin: originOf(api),
-  authorizeRunAccess: async () => true,
-  loadRunReviewEvidence: async () => createEvidence(),
-});
+const web = createMaintainerWebServer({ apiOrigin: originOf(api) });
 await listen(web);
 
 const review = await exchange(web, { method: "GET", path: "/runs/run-1/review" });
 assert.equal(review.statusCode, 200);
 assert.match(review.body, /run-1/u);
-assert.equal(received.length, 0);
+assert.deepEqual(received, [{ method: "GET", url: "/runs/run-1/review-evidence", body: "" }]);
 
 const approval = await exchange(web, {
   method: "POST", path: "/runs/run-1/approval/approve", body: "reason=looks-good",
 });
 assert.deepEqual(approval, { statusCode: 201, body: '{"status":"created"}' });
-assert.deepEqual(received, [{
-  method: "POST", url: "/runs/run-1/approval/approve", body: "reason=looks-good",
-}]);
+assert.deepEqual(received[1], { method: "POST", url: "/runs/run-1/approval/approve", body: "reason=looks-good" });
 
 await Promise.all([close(web), close(api)]);
 

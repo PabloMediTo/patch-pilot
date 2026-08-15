@@ -21,12 +21,15 @@
 - The API shell exposes `run-timeline-feed` as the application role that imports the maintenance package root and composes persisted history, live subscription, and framework-independent SSE sessions; its index composes application, ingestion, and feed interfaces.
 - The API shell exposes `run-timeline-http` as a separate route/authentication role. It depends only on the public `run-timeline-feed` interface and exact `node:url` provider.
 - The API shell exposes `run-approval-http` as a separate authenticated command role. It imports only the maintenance package root and exact `node:url` provider; auth, body reading, persistence, and clock remain injected ports.
+- The API shell exposes provider-isolated `run-review-evidence-http` for authenticated, no-store review evidence reads with only exact `node:url`; authorization and persistence remain injected ports.
 - The web shell exposes `run-review` as an independent application role with no provider or workspace dependencies; it owns the immutable review model and safe HTML presentation.
 - The web shell exposes `run-review-http` for authenticated review delivery. It depends only on the public `run-review` interface and exact `node:url` provider; authorization and evidence loading remain injected ports.
 - The web shell exposes provider-free `run-review-live` for the same-origin browser SSE asset; it remains independent of server rendering and persistence modules.
 - The web shell exposes provider-free `run-review-style` for the same-origin responsive stylesheet; presentation styling remains independent of live-event behavior and server rendering.
+- The web shell exposes `run-review-api` as the bounded server-side evidence client. It uses only exact Node buffer, HTTP, HTTPS, and URL providers and forwards only cookie or bearer credentials.
 - The web shell exposes `web-http` as the same-origin route composition role. It depends only on `run-review-http`, `run-review-live`, and exact `node:url`; API forwarding remains an injected port.
-- The web shell exposes `web-server` as the Node runtime role. It depends only on `web-http` and the exact `node:http`, `node:https`, and `node:url` providers needed to create the listener and streaming API transport.
+- The web shell exposes `web-server` as the Node runtime role. It depends only on `web-http`, `run-review-api`, and the exact `node:http`, `node:https`, and `node:url` providers needed to create the listener and streaming API transport.
+- The web `main.js` now composes application identity and `web-server`, reads only its host, port, and API origin through exact `node:process`, validates the TCP port, and starts the listener.
 - The maintenance package index composes all public maintenance concepts. Explicit package-module edges remain limited to `change-proposals` → `safety` and `proposal-attempts` → `verifications`/`critiques`; `approvals` remains independent, and the worker's `sandbox-execution` role adds only its application-level edge to `docker-cli`.
 - Repository topology, repository role, workspace architectural role, and deployment status remain separate decisions.
 - Monorepo application workspaces are deployable composition shells.

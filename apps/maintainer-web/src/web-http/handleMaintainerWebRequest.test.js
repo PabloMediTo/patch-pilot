@@ -33,8 +33,7 @@ function createInput(overrides = {}) {
   return {
     request: { method: overrides.method ?? "GET", url: overrides.url ?? "/" },
     response: createResponse(), forwarded,
-    authorizeRunAccess: async () => true,
-    loadRunReviewEvidence: async () => createEvidence(),
+    loadRunReviewAccess: async () => ({ status: "available", evidence: createEvidence() }),
     forwardApiRequest: async (exchange) => { forwarded.push(exchange); },
   };
 }

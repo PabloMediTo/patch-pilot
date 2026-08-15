@@ -2,12 +2,13 @@ import { createServer, request as sendHttpRequest } from "node:http";
 import { request as sendHttpsRequest } from "node:https";
 import { URL } from "node:url";
 
+import { createRunReviewApiClient } from "../run-review-api/index.js";
 import { handleMaintainerWebRequest } from "../web-http/index.js";
 
 /**
  * Creates the concrete Node HTTP server for the browser-facing web origin.
  *
- * @param {{ apiOrigin: string, authorizeRunAccess: Function, loadRunReviewEvidence: Function }} input Runtime ports and API location.
+ * @param {{ apiOrigin: string, maxReviewResponseBytes?: number }} input API connection policy.
  * @returns {import("node:http").Server} Unstarted Node HTTP server.
  */
 export function createMaintainerWebServer(input) {
@@ -19,22 +20,19 @@ export function createMaintainerWebServer(input) {
 
 /** Validates and freezes the runtime integration. */
 function createRuntimePorts(input) {
-  if (typeof input?.authorizeRunAccess !== "function" || typeof input?.loadRunReviewEvidence !== "function") {
-    throw new Error("Web server requires authorization and review evidence ports.");
-  }
   const apiOrigin = new URL(input.apiOrigin);
   if (apiOrigin.protocol !== "http:" && apiOrigin.protocol !== "https:") {
     throw new Error("Web server API origin must use HTTP or HTTPS.");
   }
-  return Object.freeze({ ...input, apiOrigin });
+  const reviewApi = createRunReviewApiClient({ apiOrigin: apiOrigin.href, maxResponseBytes: input.maxReviewResponseBytes });
+  return Object.freeze({ apiOrigin, loadRunReviewAccess: reviewApi.loadRunReviewAccess });
 }
 
 /** Composes one Node exchange with the framework-independent dispatcher. */
 async function handleRequest(request, response, ports) {
   await handleMaintainerWebRequest({
     request, response,
-    authorizeRunAccess: ports.authorizeRunAccess,
-    loadRunReviewEvidence: ports.loadRunReviewEvidence,
+    loadRunReviewAccess: ports.loadRunReviewAccess,
     forwardApiRequest: (exchange) => forwardApiRequest(exchange, ports.apiOrigin),
   });
 }
