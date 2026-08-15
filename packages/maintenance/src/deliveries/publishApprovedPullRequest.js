@@ -63,7 +63,8 @@ function createDeliveryIntent(input) {
   return Object.freeze({ runId: input.runId, installationId: input.installationId,
     repository: input.repository, issueNumber: input.issueNumber, baseBranch: input.baseBranch,
     branchName: createBranchName(input.runId), proposalBinding,
-    title: input.proposal.title.trim(), body: input.proposal.body.trim() });
+    title: input.proposal.title.trim(), body: input.proposal.body.trim(),
+    approvedAt: input.approval?.decidedAt });
 }
 
 /** Creates a safe deterministic Git reference without exposing the run identity. */
@@ -77,7 +78,9 @@ function assessApproval(approval, proposalBinding) {
   if (approval?.status !== "approved") {
     return Object.freeze({ status: "blocked", reason: "approval-required" });
   }
-  return hasMatchingBinding(approval.reviewBinding, proposalBinding)
+  const hasDecisionTime = typeof approval.decidedAt === "string"
+    && Number.isFinite(Date.parse(approval.decidedAt));
+  return hasDecisionTime && hasMatchingBinding(approval.reviewBinding, proposalBinding)
     ? null
     : Object.freeze({ status: "blocked", reason: "approval-evidence-mismatch" });
 }
@@ -111,7 +114,7 @@ function createBranchRequest(intent, sourceDiff) {
   return Object.freeze({ runId: intent.runId, installationId: intent.installationId,
     repository: intent.repository, branchName: intent.branchName,
     baseRevision: intent.proposalBinding.baseRevision, diffHash: intent.proposalBinding.diffHash,
-    sourceDiff });
+    approvedAt: intent.approvedAt, sourceDiff });
 }
 
 /** Validates the immutable head produced by branch publication. */

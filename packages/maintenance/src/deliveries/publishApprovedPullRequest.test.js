@@ -18,7 +18,8 @@ const baseInput = {
   baseBranch: "main",
   proposal: { ...proposalBinding, sourceDiff, title: "Fix boundary condition", body: "Verified fix",
     verification: proposalBinding.verification },
-  approval: { status: "approved", reviewBinding: proposalBinding },
+  approval: { status: "approved", decidedAt: "2026-08-15T11:55:00.000Z",
+    reviewBinding: proposalBinding },
   clock: () => new Date("2026-08-15T12:00:00.000Z"),
 };
 
@@ -37,6 +38,7 @@ assert.deepEqual(calls.map(({ type }) => type), ["branch", "pull-request", "save
 assert.equal(saved.branchName, `patch-pilot/${createHash("sha256").update(baseInput.runId, "utf8")
   .digest("hex").slice(0, 24)}`);
 assert.equal(calls[0].request.sourceDiff, sourceDiff);
+assert.equal(calls[0].request.approvedAt, "2026-08-15T11:55:00.000Z");
 assert.equal(calls[1].request.draft, true);
 assert.match(calls[1].request.body, /Fixes #42$/u);
 assert.equal(saved.pullRequest.number, 84);
@@ -58,6 +60,10 @@ const legacyApproval = await publishApprovedPullRequest(createInput({
   approval: { status: "approved", reviewBinding: null },
 }));
 assert.deepEqual(legacyApproval, { status: "blocked", reason: "approval-evidence-mismatch" });
+const undatedApproval = await publishApprovedPullRequest(createInput({
+  approval: { status: "approved", reviewBinding: proposalBinding },
+}));
+assert.deepEqual(undatedApproval, { status: "blocked", reason: "approval-evidence-mismatch" });
 const changedDiff = await publishApprovedPullRequest(createInput({
   proposal: { ...baseInput.proposal, sourceDiff: `${sourceDiff}\n+later change` },
 }));

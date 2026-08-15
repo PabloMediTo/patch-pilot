@@ -3,6 +3,7 @@ export { createBoundedChangeProposal } from "./change-proposals/index.js";
 export { critiqueChangeProposal } from "./critiques/index.js";
 export {
   createGitHubAppRequest,
+  createGitHubCommitPublisher,
   createGitHubDeliveryAdapter,
   createPostgresDeliveryStore,
   publishApprovedPullRequest,

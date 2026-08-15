@@ -50,6 +50,8 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Added an authenticated GitHub App transport with RS256 app JWTs, repository-scoped installation-token exchange, least-privilege contents/PR permissions, concurrent refresh coalescing, expiration skew, pinned API version, request timeout, and bounded JSON responses.
 - Transport tests use a real generated RSA key to verify JWT signature and claims, token scope, headers, cache reuse/refresh, query/body mapping, route restrictions, and response-byte rejection.
 - Added exact `node:buffer`, `node:timers`, and `node:url` permissions to `deliveries` and test-only `node:buffer`; the worker sandbox retains only its prior `node:crypto` permission and no cross-module edge or exception was added.
-- Remaining: implement safe commit publication and live Postgres/GitHub integration proof before completing this task.
+- Added a deterministic GitHub Git-database commit publisher that rechecks the approved diff hash, reads the exact base commit/tree/blobs, strictly applies regular UTF-8 text hunks, and creates a base-derived tree plus single-parent commit using the persisted approval time.
+- Publisher tests cover modified, new, and deleted files, exact request bodies, deterministic retry payloads, pre-request hash rejection, changed base context, truncated trees, and binary content. No new provider permission, module edge, or architecture exception was required.
+- Remaining: compose the complete authenticated delivery runtime and obtain live Postgres/GitHub integration proof before completing this task.
 
 ## References
