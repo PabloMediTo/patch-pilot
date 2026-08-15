@@ -20,7 +20,7 @@ Authenticate GitHub App webhook deliveries and translate an explicit issue opt-i
 
 ## Outputs
 
-- an accepted initial run bound to the GitHub delivery, installation, repository, issue, actor, and resolved immutable base revision
+- an accepted initial run bound to the GitHub delivery, installation, repository, default branch, issue, actor, and resolved immutable base revision
 - an ignored result for valid deliveries that do not explicitly request a run
 - an error for an invalid signature or malformed triggering payload
 
@@ -35,4 +35,4 @@ Authenticate GitHub App webhook deliveries and translate an explicit issue opt-i
 
 The signature is calculated over the untouched UTF-8 body with HMAC-SHA256 and compared in constant time. Payload parsing happens only after verification.
 
-Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. The GitHub delivery identifier becomes part of the run identity so the persistence adapter can make repeated deliveries idempotent.
+Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. The GitHub delivery identifier becomes part of the run identity so the persistence adapter can make repeated deliveries idempotent. The submitted run also retains the default branch resolved with the immutable base revision so later pull-request delivery uses the reviewed target rather than reinterpreting repository defaults.

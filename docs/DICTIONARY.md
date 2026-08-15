@@ -103,6 +103,10 @@ The evidence-backed result of reviewing a ready [change proposal](#change-propos
 
 The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the issue's expected failure fragment; unrelated command failures are kept distinct.
 
+### GitHub Delivery
+
+The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Concrete GitHub App and Postgres delivery adapters remain planned; automatic merge is prohibited.
+
 ### Global Docs
 
 The canonical documentation files under `docs/` that define repository-wide
@@ -130,7 +134,7 @@ The fixed rules that decide which repository commands and proposed changes may c
 
 ### Pull-Request Proposal
 
-The GitHub-ready branch, title, description, linked issue, diff, and verification summary prepared by an approved maintenance run. The MVP creates or presents this proposal but never merges it automatically.
+The GitHub-ready branch, title, description, linked issue, diff, and verification summary prepared by an approved maintenance run. The implemented [GitHub delivery](#github-delivery) use case validates the exact approval binding and prepares deterministic branch and draft-pull-request requests behind injected ports. The MVP never merges the proposal automatically.
 
 ### Proposal Attempt
 
@@ -146,7 +150,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, issue, actor, and immutable base revision so later persistence and workflow adapters can process repeated deliveries idempotently.
+An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, default branch, issue, actor, and immutable base revision so later persistence, workflow, and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently.
 
 ### Run Timeline
 

@@ -65,6 +65,13 @@
 - Read when: A task changes GitHub webhook handling, issue triggers, delivery identity, signature verification, or initial run submission.
 - Tags: product, github, webhook, ingestion, runs, security
 
+### GitHub Delivery
+
+- Path: `docs/product/github-delivery.md`
+- Summary: Exact approval-evidence gate, deterministic branch naming, draft-pull-request publication, and idempotent retry semantics.
+- Read when: A task changes approved branch publication, pull-request creation, delivery evidence, or GitHub delivery retries.
+- Tags: product, github, delivery, approval, pull-request, idempotency
+
 ### Repository Workspaces
 
 - Path: `docs/product/repository-workspaces.md`

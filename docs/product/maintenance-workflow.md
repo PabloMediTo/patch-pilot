@@ -67,3 +67,7 @@ Own one durable maintenance run from validated repository and issue input throug
 Approval is valid only for the exact base revision, diff hash, plan version, and verification result shown to the reviewer. Any subsequent code change invalidates the prior approval and requires review again.
 
 The implemented approval use case loads that binding from canonical run state rather than accepting it from the browser. It records the full base commit, source-diff hash, positive plan version, passed verification status, and verification-evidence hash with the first decision. A missing, malformed, or non-passing binding cannot be approved. Legacy decisions without this binding remain readable audit history but are not valid input for GitHub delivery.
+
+## Delivery gate
+
+The implemented provider-free [GitHub delivery](github-delivery.md) use case recomputes the exact diff hash and compares every approval-binding field before invoking an external port. It derives one deterministic branch from the run identity, requires idempotent branch and draft-pull-request operations, links the issue, and persists delivery evidence through an atomic port. It never requests merge or a non-draft pull request.

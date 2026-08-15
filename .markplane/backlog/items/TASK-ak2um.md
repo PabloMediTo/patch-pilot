@@ -37,5 +37,10 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 
 - Approval decisions now persist an exact canonical review binding: base revision, diff hash, plan version, passed verification status, and verification-evidence hash.
 - GitHub delivery must compare its proposal against that binding and reject legacy unbound decisions before creating any branch or pull request.
+- Added a provider-free delivery use case that recomputes the diff hash, enforces the complete approval binding, and blocks rejected, legacy, failed, or mutated evidence before side effects.
+- Derived a safe deterministic `patch-pilot/<hash>` branch from the run identity and retained the submitted repository default branch as the reviewed pull-request base.
+- Required idempotent branch and draft-pull-request ports, forced issue linking and `draft: true`, and normalized matching durable and concurrent retries.
+- Registered `deliveries` as a conceptual maintenance module with only the exact `node:crypto` provider; focused tests cover creation, replay, conflict, approval rejection, evidence mutation, and unsafe provider output.
+- Remaining: implement the concrete GitHub App adapter and atomic Postgres delivery store, then run live integration proof before completing this task.
 
 ## References

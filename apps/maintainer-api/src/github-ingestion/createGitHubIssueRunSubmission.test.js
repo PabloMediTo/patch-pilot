@@ -34,6 +34,7 @@ assert.deepEqual(submittedRuns, [
     installationId: 17,
     repository: "octo/example",
     issueNumber: 42,
+    defaultBranch: "main",
     baseRevision: "abc123",
     actorId: 23,
     sourceDeliveryId: "delivery-123",

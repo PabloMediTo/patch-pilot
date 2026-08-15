@@ -63,6 +63,7 @@ function createRunFromDelivery(deliveryId, request, baseRevision) {
     installationId: request.installationId,
     repository: request.repository,
     issueNumber: request.issueNumber,
+    defaultBranch: request.defaultBranch,
     baseRevision,
     actorId: request.actorId,
     sourceDeliveryId: deliveryId,

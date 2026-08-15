@@ -5,7 +5,7 @@
 - The product idea and initial system boundaries are documented.
 - Delivery is organized in Markplane epics and initial tasks.
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
-- The maintenance package can create the initial `submitted` state for a run bound to a repository, issue, and immutable base revision.
+- The maintenance package can create the initial `submitted` state for a run bound to a repository, issue, default branch, and immutable base revision while preserving compatibility with non-GitHub callers that omit the branch.
 - A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
 - Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label, resolve an immutable base revision through an injected port, and emit an initial [run submission](../DICTIONARY.md#run-submission).
 - A [repository workspace](../DICTIONARY.md#repository-workspace) can be created as a unique disposable checkout at an exact full commit SHA, with bounded non-interactive Git execution and guarded cleanup.
@@ -30,16 +30,16 @@
 - The API exposes an authenticated, no-store review-evidence GET handler. The web server's bounded client forwards only cookie or bearer credentials and maps available, unauthorized, and missing outcomes before rendering.
 - The API now has a concrete Node listener and dispatcher for review evidence, approvals, and timeline SSE. It owns a 64-KiB default approval-body limit, JSON/form parsing, heartbeat scheduling, stable 404 responses, and safe 400/500 termination while domain providers remain injected.
 - Browser approval actions now prevent native form submission, generate an idempotency key, send bounded JSON through the same origin, and reload canonical evidence only after success.
+- A provider-free [GitHub delivery](../DICTIONARY.md#github-delivery) use case now gates publication against the exact approval binding, hashes the current diff, derives one safe deterministic branch, requires a linked draft pull request, and normalizes durable or concurrent retries. Concrete GitHub and Postgres delivery adapters remain open.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
-Implement idempotent approved-branch and draft-pull-request delivery against the exact persisted approval binding. Control-plane API authentication/store composition and live Postgres/Redis and Docker safety verification remain open where local runtime or policy decisions are still required.
+Implement the concrete GitHub App branch/pull-request adapter and atomic Postgres delivery store behind the provider-free delivery ports. Control-plane API authentication/store composition and live Postgres/Redis and Docker safety verification remain open where local runtime or policy decisions are still required.
 
 ## Open questions
 
 - Which LLM provider and model policy will be used for the MVP?
 - Will the first environment use self-hosted Temporal or Temporal Cloud?
 - Which container runtime and outbound dependency-download policy are available in deployment?
-- Should approved delivery immediately open a draft pull request or first expose a final proposal for a second confirmation?

@@ -235,6 +235,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
+        deliveries: {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:crypto"],
+        },
         "proposal-attempts": {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: ["critiques", "verifications"],
@@ -297,6 +303,7 @@ export const boundaryConfig = {
             "approvals",
             "change-proposals",
             "critiques",
+            "deliveries",
             "proposal-attempts",
             "repository-understanding",
             "repository-workspaces",
