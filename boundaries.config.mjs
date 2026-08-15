@@ -238,7 +238,7 @@ export const boundaryConfig = {
         deliveries: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
-          allowedExternalDependencies: [],
+          allowedExternalDependencies: ["pg"],
           allowedCoreDependencies: ["node:crypto"],
         },
         "proposal-attempts": {

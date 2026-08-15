@@ -28,7 +28,7 @@ Publish one exactly approved [pull-request proposal](../DICTIONARY.md#pull-reque
 
 - [GitHub run ingestion](github-ingestion.md) retains the installation, repository, default branch, issue, and immutable base revision
 - the [maintenance workflow](maintenance-workflow.md) invokes delivery only after approval
-- Postgres will implement the atomic delivery-record port
+- Postgres implements the atomic delivery-record port
 - a concrete GitHub App adapter will implement branch publication and draft-pull-request creation
 
 ## Evidence gate
@@ -45,4 +45,6 @@ The branch port receives the immutable base revision, exact diff, and diff hash.
 
 Delivery first checks durable evidence. A record matching the complete intent replays without provider calls; a different record conflicts. When no record exists, both provider ports must be idempotent: a retry after branch or pull-request creation can safely ensure the same resources again. The final delivery write uses an atomic created-or-existing contract, so a concurrent writer with the same intent becomes a replay while a different writer becomes a conflict.
 
-The provider-free use case and focused tests are implemented. The concrete GitHub App adapter and Postgres delivery store remain planned.
+The concrete Postgres store creates its schema idempotently and records the complete delivery, approval binding, immutable head, and draft-pull-request identity in one row per run. Database checks reinforce positive identifiers and plan versions, full revision and evidence-hash lengths, passed verification, and `draft: true`. Repository/branch and repository/pull-request uniqueness protect deterministic provider identities. An insert conflict reloads the run record for a matching replay; a conflicting provider identity belonging to another run remains an explicit conflict.
+
+The provider-free use case, Postgres store, and focused tests are implemented. Live Postgres verification and the concrete GitHub App adapter remain planned.

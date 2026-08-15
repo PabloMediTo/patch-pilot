@@ -41,6 +41,9 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Derived a safe deterministic `patch-pilot/<hash>` branch from the run identity and retained the submitted repository default branch as the reviewed pull-request base.
 - Required idempotent branch and draft-pull-request ports, forced issue linking and `draft: true`, and normalized matching durable and concurrent retries.
 - Registered `deliveries` as a conceptual maintenance module with only the exact `node:crypto` provider; focused tests cover creation, replay, conflict, approval rejection, evidence mutation, and unsafe provider output.
-- Remaining: implement the concrete GitHub App adapter and atomic Postgres delivery store, then run live integration proof before completing this task.
+- Added an atomic Postgres delivery store with one complete evidence row per run, parameterized writes, idempotent schema initialization, provider-identity uniqueness, and database checks for immutable revisions, hashes, passed verification, and draft-only pull requests.
+- Store tests cover created records, reads, same-run recovery, cross-run unique conflicts, row mapping, stable parameter order, and one-time schema setup.
+- Extended the `deliveries` architecture permission with the exact `pg` provider; no cross-module edge or technical exception was added.
+- Remaining: implement the concrete GitHub App adapter and run live Postgres/GitHub integration proof before completing this task.
 
 ## References
