@@ -1,7 +1,11 @@
 export { createPostgresApprovalStore, decideRunApproval } from "./approvals/index.js";
 export { createBoundedChangeProposal } from "./change-proposals/index.js";
 export { critiqueChangeProposal } from "./critiques/index.js";
-export { createPostgresDeliveryStore, publishApprovedPullRequest } from "./deliveries/index.js";
+export {
+  createGitHubDeliveryAdapter,
+  createPostgresDeliveryStore,
+  publishApprovedPullRequest,
+} from "./deliveries/index.js";
 export { executeProposalAttempts } from "./proposal-attempts/index.js";
 export {
   createImmutableRepositoryWorkspace,

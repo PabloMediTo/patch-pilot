@@ -44,6 +44,9 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Added an atomic Postgres delivery store with one complete evidence row per run, parameterized writes, idempotent schema initialization, provider-identity uniqueness, and database checks for immutable revisions, hashes, passed verification, and draft-only pull requests.
 - Store tests cover created records, reads, same-run recovery, cross-run unique conflicts, row mapping, stable parameter order, and one-time schema setup.
 - Extended the `deliveries` architecture permission with the exact `pg` provider; no cross-module edge or technical exception was added.
-- Remaining: implement the concrete GitHub App adapter and run live Postgres/GitHub integration proof before completing this task.
+- Added a GitHub REST delivery adapter that composes an approved-commit publisher with exact Git-reference and draft-pull-request operations.
+- Missing branches and PRs are created; matching resources replay; concurrent `422` creates recover through one exact reread; changed commits, non-draft or closed PRs, and ambiguous candidates fail without overwrite or duplication.
+- Adapter tests cover branch and PR creation, replay, race recovery, commit conflicts, exact request shapes, and unsafe PR state. No new import permission or architecture exception was required.
+- Remaining: implement short-lived GitHub App request transport, safe commit publication, and live Postgres/GitHub integration proof before completing this task.
 
 ## References

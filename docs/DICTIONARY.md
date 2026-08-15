@@ -105,7 +105,7 @@ The evidence-backed attempt to demonstrate the bug reported by an issue. Patch P
 
 ### GitHub Delivery
 
-The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete delivery evidence and constrains provider identities against collisions. The concrete GitHub App adapter and live persistence proof remain planned; automatic merge is prohibited.
+The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its GitHub REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. Authenticated GitHub App transport, safe commit publication, and live proof remain planned; automatic merge is prohibited.
 
 ### Global Docs
 
