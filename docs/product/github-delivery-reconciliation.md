@@ -29,7 +29,7 @@ Compare an authenticated GitHub `pull_request` webhook with immutable [GitHub de
 
 - [GitHub run ingestion](github-ingestion.md) owns raw-body signature verification and webhook-envelope extraction
 - [GitHub delivery](github-delivery.md) creates the immutable provider evidence being compared
-- Postgres will implement the atomic observation port
+- Postgres implements the atomic observation port
 - the maintenance workflow can translate matched lifecycle observations or divergence into later run events
 
 ## Reconciliation rules
@@ -40,4 +40,10 @@ Installation, repository, GitHub URL, head branch, immutable head revision, and 
 
 Events other than `pull_request`, unsupported actions, and untracked pull requests are ignored without an observation write. One GitHub delivery identity may create one observation; an exact redelivery replays, while different evidence under the same identity conflicts. This follows GitHub's guidance to validate webhook signatures, inspect event and action, and use `X-GitHub-Delivery` as the replay identity.
 
-The provider-free reconciliation use case, focused tests, and delivery lookup by repository/pull-request identity are implemented. Raw signed HTTP ingestion and concrete observation persistence remain planned.
+## Persistence
+
+The Postgres observation store creates one immutable row per GitHub delivery identity. Parameterized first-writer insertion records the complete pull-request lifecycle state, provider-identity comparison, difference list, and observation time. Database constraints enforce supported actions, valid pull-request state, full revisions, and agreement between matched/diverged status and the difference list.
+
+When insertion loses a uniqueness race, the store reloads the winning row so the reconciliation use case can distinguish an exact replay from conflicting evidence. A missing winner after a rejected insert is treated as a persistence conflict rather than silently accepted.
+
+The provider-free reconciliation use case, focused tests, delivery lookup, and atomic Postgres observation persistence are implemented. Raw signed HTTP ingestion remains planned.

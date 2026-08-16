@@ -39,7 +39,9 @@ Deliver **Reconcile GitHub delivery results and webhooks** within the documented
 - Matching identity records normal state/draft/merge observations; installation, repository, URL, head/base branch, or head-revision changes are explicit provider drift and never trigger mutation.
 - Unrelated events, unsupported actions, and untracked pull requests are ignored; GitHub redelivery replays through `X-GitHub-Delivery`, while conflicting reuse is rejected.
 - Extended the delivery Postgres adapter with parameterized lookup by repository and pull-request number.
+- Added atomic Postgres observation persistence with complete immutable evidence, database-level domain constraints, and first-writer recovery for replay/conflict classification.
 - Focused tests cover matched open/merged state, changed-head drift, ignored and untracked events, replay, conflict, and malformed provider evidence.
-- Remaining: add atomic Postgres observation persistence and signed control-plane webhook ingestion.
+- Store tests cover parameterized writes, immutable row mapping, one-time schema initialization, existing-row recovery, unresolved conflicts, and lifecycle closure.
+- Remaining: connect reconciliation to signed control-plane webhook ingestion.
 
 ## References

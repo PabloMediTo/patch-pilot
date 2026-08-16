@@ -5,6 +5,7 @@ export {
   createGitHubAppRequest,
   createGitHubCommitPublisher,
   createGitHubDeliveryAdapter,
+  createPostgresDeliveryObservationStore,
   createPostgresDeliveryStore,
   publishApprovedPullRequest,
   reconcileGitHubPullRequest,
