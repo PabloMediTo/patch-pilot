@@ -19,15 +19,15 @@ Current reality:
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.
-- The web shell renders a safe, responsive review document, loads same-origin style and EventSource assets, and starts an environment-configured Node server. Its bounded API client forwards only cookie or bearer credentials to the authenticated no-store review-evidence endpoint, while timeline and approval routes stream through unchanged. Desktop, mobile, overflow, controls, live insertion, and direct main-process startup are verified; API main-process authentication/store wiring remains open.
-- The API shell now owns a concrete Node listener and dispatcher for review evidence, approval, and timeline SSE, including bounded JSON/form parsing and heartbeat scheduling. Its application runtime composes shared authentication and canonical review-snapshot, timeline, and approval stores into the required query ports; environment-backed store creation and listener lifecycle remain open in the executable main process.
-- Approval decisions now have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts; HTTP handling remains open.
-- Approval decisions now also have a concrete Postgres adapter with database-enforced first-writer and idempotency constraints; live service verification and HTTP handling remain open.
-- Approval submissions now have an authenticated framework-independent API route with required idempotency keys and stable HTTP outcome mapping; concrete server/session wiring remains open.
+- The web shell renders a safe, responsive review document, loads same-origin style and EventSource assets, and starts an environment-configured Node server. Its bounded API client forwards only cookie or bearer credentials to the authenticated no-store review-evidence endpoint, while timeline and approval routes stream through unchanged. Desktop, mobile, overflow, controls, live insertion, and both deployment compositions are verified; live provider verification remains open.
+- The API shell now has an executable environment-backed deployment that composes shared authentication, one Postgres pool, canonical review-snapshot/timeline/approval stores, one Redis stream, GitHub pull-request reconciliation, the Node listener, and signal-driven idempotent shutdown. Durable issue-to-Temporal submission remains open.
+- Approval decisions have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts.
+- Approval decisions also have a concrete Postgres adapter with database-enforced first-writer and idempotency constraints; only live service verification remains open.
+- Approval submissions have an authenticated API route with required idempotency keys, stable HTTP outcomes, shared deployment authentication, and environment-backed store wiring.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
-- Product implementation is underway through the maintenance package and application shells; durable orchestration, remaining provider adapters, and the review interface remain open in Markplane.
+- Product implementation is underway through the maintenance package and application shells; durable orchestration and remaining live provider verification remain open in Markplane.
 
 Open questions:
 

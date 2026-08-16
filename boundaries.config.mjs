@@ -49,8 +49,8 @@ export const boundaryConfig = {
         },
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["api-authentication", "api-server", "run-review-query"],
-          allowedExternalDependencies: [],
+          allowedModuleDependencies: ["api-authentication", "api-server", "github-delivery", "run-review-query"],
+          allowedExternalDependencies: ["pg"],
           allowedCoreDependencies: [],
         },
         "github-ingestion": {
@@ -117,7 +117,7 @@ export const boundaryConfig = {
         "main.js": {
           allowedModuleDependencies: ["application"],
           allowedExternalDependencies: [],
-          allowedCoreDependencies: [],
+          allowedCoreDependencies: ["node:process"],
         },
       },
     },

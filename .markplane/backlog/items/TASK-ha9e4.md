@@ -1,7 +1,7 @@
 ---
 id: TASK-ha9e4
 title: Build diff, evidence, and approval review screen
-status: draft
+status: done
 priority: critical
 type: feature
 effort: large
@@ -30,9 +30,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
@@ -82,6 +82,10 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added the provider-free API `run-review-query` role, which joins immutable review snapshots with ordered timeline history and an optional approval decision without duplicating canonical records.
 - The API application runtime now derives both review-evidence reads and exact approval state from the same three injected stores; missing decisions remain omitted so the web model preserves first-decision actions.
 - Registered the query role and its single application edge, with focused tests for complete, undecided, missing-review, invalid-port, and exact-binding outcomes.
-- Remaining before completion: wire environment-backed stores, live stream, executable listener, and lifecycle in the API main process; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added the executable API deployment with one shared Postgres pool, one Redis stream, environment validation, listener startup, and idempotent HTTP/provider shutdown.
+- Pull-request webhooks now reach the persisted reconciliation path from the real main-process composition; issue-to-Temporal dispatch remains a separate workflow milestone.
+- The API main process handles `SIGINT` and `SIGTERM`, closes long-lived SSE connections, and reports provider cleanup failures through its exit code.
+- Focused runtime proof covers signed webhook dispatch, configured listener startup, approved-delivery exposure, repeated shutdown, and exactly-once Redis/Postgres closure.
+- Completed after the review UI, authenticated API, canonical evidence composition, environment-backed stores, executable lifecycle, architecture/docs alignment, and all checks passed. Live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

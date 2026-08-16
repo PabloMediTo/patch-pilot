@@ -25,6 +25,7 @@
 - The API shell exposes `run-approval-http` as a separate authenticated command role. It imports only the maintenance package root and exact `node:url` provider; auth, body reading, persistence, and clock remain injected ports.
 - The API shell exposes provider-isolated `run-review-evidence-http` for authenticated, no-store review evidence reads with only exact `node:url`; authorization and persistence remain injected ports.
 - The API shell exposes provider-free `run-review-query` to join review-snapshot, timeline, and approval store interfaces without owning persistence; `application` depends on this role to supply evidence and exact approval state to the server.
+- The API `application` role now owns deployment composition and imports only the `github-delivery` public interface plus exact `pg`; it creates one shared pool for all API Postgres stores. API `main.js` uses only `application` and exact `node:process` for listener startup and shutdown signals.
 - The web shell exposes `run-review` as an independent application role with no provider or workspace dependencies; it owns the immutable review model and safe HTML presentation.
 - The web shell exposes `run-review-http` for authenticated review delivery. It depends only on the public `run-review` interface and exact `node:url` provider; authorization and evidence loading remain injected ports.
 - The web shell exposes provider-free `run-review-live` for the same-origin browser SSE asset; it remains independent of server rendering and persistence modules.

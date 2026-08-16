@@ -65,6 +65,13 @@
 - Read when: A task changes control-plane user authentication, bearer credentials, actor identity, run access, or API deployment security.
 - Tags: product, api, authentication, authorization, bearer, security
 
+### Control-Plane Runtime
+
+- Path: `docs/product/control-plane-runtime.md`
+- Summary: Executable API composition, environment contract, shared Postgres/Redis resources, listener startup, and deterministic shutdown.
+- Read when: A task changes API startup, environment values, provider lifecycle, listener behavior, or deployment shutdown.
+- Tags: product, api, runtime, postgres, redis, lifecycle, deployment
+
 ### GitHub Run Ingestion
 
 - Path: `docs/product/github-ingestion.md`
