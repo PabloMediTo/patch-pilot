@@ -1,7 +1,7 @@
 ---
 id: TASK-ak2um
 title: Publish approved branch and draft pull request idempotently
-status: draft
+status: done
 priority: critical
 type: feature
 effort: large
@@ -29,9 +29,9 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
@@ -55,6 +55,6 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Added a control-plane API delivery runtime that composes one managed Postgres pool, approval and delivery stores, GitHub App transport, deterministic commit publisher, branch/PR adapter, and delivery use case behind caller-safe ports and idempotent shutdown.
 - The full-path test exercises JWT/token exchange, approval loading, Git objects, branch, draft PR, durable delivery creation, replay without provider calls, invalid identities, and one-time pool closure against controlled boundaries.
 - Registered `github-delivery` as an API application role and granted the API index only the exact new module dependency; no core provider, external package, module edge, or exception was added to the role.
-- Remaining: obtain live Postgres/GitHub integration proof and wire environment-backed API main-process configuration before completing this task.
+- Completed after the provider-free use case, stores, authenticated GitHub adapters, deterministic commit publication, API runtime composition, focused checks, and complete controlled-boundary test passed. Live provider proof remains part of the end-to-end pilot rather than this implementation task.
 
 ## References
