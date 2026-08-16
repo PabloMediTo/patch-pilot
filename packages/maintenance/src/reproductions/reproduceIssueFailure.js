@@ -13,6 +13,7 @@ export async function reproduceIssueFailure(input) {
   }
 
   const execution = await input.executeCommand({
+    workspaceDirectory: input.project.workspaceDirectory,
     cwd: input.project.workspaceDirectory,
     ...input.project.command,
   });
@@ -74,8 +75,9 @@ function createReproductionOutcome(evidence, expectedFailure) {
  * @throws {Error} When no concrete failure fragment is supplied.
  */
 function assertExpectedFailure(expectedFailure) {
-  if (typeof expectedFailure !== "string" || expectedFailure.trim() === "") {
-    throw new Error("Reproduction requires a non-empty expected failure fragment.");
+  if (typeof expectedFailure !== "string" || expectedFailure.trim() === ""
+    || expectedFailure.length > 500) {
+    throw new Error("Reproduction requires a bounded expected failure fragment.");
   }
 }
 

@@ -99,9 +99,13 @@ The deployable application boundary that authenticates users, accepts commands, 
 
 The evidence-backed result of reviewing a ready [change proposal](#change-proposal) after verification. It accepts the proposal, requests a correctable retry, or rejects it. Passing verification is necessary but does not by itself prove that scope and regression risk are acceptable.
 
+### Expected Failure Fragment
+
+The bounded text that identifies the issue's reported failure in test output. A run requester must place exactly one non-empty fragment of at most 500 characters between `<!-- patch-pilot:expected-failure -->` and `<!-- /patch-pilot:expected-failure -->` in the opted-in GitHub issue. Patch Pilot persists the trimmed text instead of guessing from general issue prose and accepts [failure reproduction](#failure-reproduction) only when the failing command output contains that exact fragment.
+
 ### Failure Reproduction
 
-The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the issue's expected failure fragment; unrelated command failures are kept distinct.
+The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the persisted [expected failure fragment](#expected-failure-fragment); unrelated command failures are kept distinct. The Temporal workflow implements this attempt in a fresh exact-revision workspace through the canonical safe executor and records its classified evidence.
 
 ### GitHub App Installation Token
 
@@ -130,11 +134,11 @@ structured `_index.md` files for discoverability.
 
 ### Maintenance Run
 
-One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. Its implemented initial state validates the complete target identity, is atomically persisted in Postgres, and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
+One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, immutable base revision, and explicit [expected failure fragment](#expected-failure-fragment). Its implemented initial state validates and atomically persists that complete evidence in Postgres and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented first phase records submitted and inspection events, inspects an exact-revision disposable checkout through retried Activities, returns sanitized project evidence, and then completes. Reproduction, proposal attempts, approval waiting, and delivery orchestration remain planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, and reproduction events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Proposal attempts, approval waiting, and delivery orchestration remain planned.
 
 ### Monorepo
 
@@ -166,7 +170,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path resolves the repository default branch through a repository-scoped App request and retains the delivery, installation, repository, branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts. Created and replayed canonical rows then enter [workflow submission](#workflow-submission), while identity conflicts never reach Temporal.
+An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path requires one explicitly marked [expected failure fragment](#expected-failure-fragment), resolves the repository default branch through a repository-scoped App request, and retains the delivery, installation, repository, branch, issue, actor, full immutable base revision, and exact fragment. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts. Created and replayed canonical rows then enter [workflow submission](#workflow-submission), while identity conflicts never reach Temporal.
 
 ### Run Timeline
 
@@ -182,7 +186,7 @@ Structured proof produced by repository checks, including the exact command, exi
 
 ### Workflow Submission
 
-The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. The executable worker consumes this handoff; later [maintenance workflow](#maintenance-workflow) phases remain planned.
+The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. The executable worker consumes this handoff through inspection and failure reproduction; later [maintenance workflow](#maintenance-workflow) phases remain planned.
 
 ### Workspace
 

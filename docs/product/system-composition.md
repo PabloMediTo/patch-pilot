@@ -24,7 +24,7 @@ packages/
   maintenance/
 ```
 
-The application workspaces are deployable shells. `packages/maintenance` owns product behavior through conceptual first-level modules such as runs, repository understanding, change proposals, verification, review, approvals, and delivery. Provider-specific adapters remain with their owning concepts until real lifecycle pressure justifies extraction. The [maintenance worker runtime](maintenance-worker-runtime.md) now registers the deterministic workflow bundle and composes the maintenance package's timeline, workspace, and project-detection interfaces into its first Activity phase.
+The application workspaces are deployable shells. `packages/maintenance` owns product behavior through conceptual first-level modules such as runs, repository understanding, change proposals, verification, review, approvals, and delivery. Provider-specific adapters remain with their owning concepts until real lifecycle pressure justifies extraction. The [maintenance worker runtime](maintenance-worker-runtime.md) registers the deterministic workflow bundle and composes the maintenance package's timeline, workspace, project-detection, reproduction, and safety interfaces into separate inspection and reproduction Activities.
 
 The web deployment owns the browser-facing origin. Its executable Node main process serves the review page and browser assets through the HTTP dispatcher. Initial review loading forwards only the browser's cookie or bearer credential to the API's bounded evidence endpoint; timeline and approval route shapes stream to the API over HTTP or HTTPS. Browser disconnects close the corresponding upstream request.
 

@@ -4,17 +4,19 @@ CREATE TABLE IF NOT EXISTS maintenance_runs (
   installation_id bigint CHECK (installation_id > 0),
   repository text NOT NULL,
   issue_number integer NOT NULL CHECK (issue_number > 0),
+  expected_failure text CHECK (expected_failure IS NULL OR char_length(expected_failure) BETWEEN 1 AND 500),
   default_branch text,
   base_revision text NOT NULL CHECK (char_length(base_revision) = 40),
   actor_id bigint CHECK (actor_id > 0),
   source_delivery_id text UNIQUE,
   run_status text NOT NULL,
   submitted_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
-);`;
-const COLUMNS = `run_id, installation_id, repository, issue_number, default_branch,
+);
+ALTER TABLE maintenance_runs ADD COLUMN IF NOT EXISTS expected_failure text;`;
+const COLUMNS = `run_id, installation_id, repository, issue_number, expected_failure, default_branch,
   base_revision, actor_id, source_delivery_id, run_status, submitted_at`;
 const INSERT_SQL = `INSERT INTO maintenance_runs (${COLUMNS.replace(", submitted_at", "")})
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT DO NOTHING RETURNING ${COLUMNS};`;
 const SELECT_SQL = `SELECT ${COLUMNS} FROM maintenance_runs WHERE run_id = $1;`;
 const SELECT_CONFLICT_SQL = `SELECT ${COLUMNS} FROM maintenance_runs
@@ -75,6 +77,7 @@ function mapRun(row) {
   return Object.freeze({ id: row.run_id,
     installationId: row.installation_id === null ? undefined : Number(row.installation_id),
     repository: row.repository, issueNumber: row.issue_number,
+    expectedFailure: row.expected_failure ?? undefined,
     ...(row.default_branch === null ? {} : { defaultBranch: row.default_branch }),
     baseRevision: row.base_revision,
     actorId: row.actor_id === null ? undefined : Number(row.actor_id),
@@ -85,6 +88,6 @@ function mapRun(row) {
 /** Creates stable parameter order without interpolating run evidence. */
 function runValues(run) {
   return [run.id, run.installationId ?? null, run.repository, run.issueNumber,
-    run.defaultBranch ?? null, run.baseRevision, run.actorId ?? null,
+    run.expectedFailure, run.defaultBranch ?? null, run.baseRevision, run.actorId ?? null,
     run.sourceDeliveryId ?? null, run.status];
 }

@@ -9,7 +9,8 @@ epic: EPIC-wvku6
 plan: null
 depends_on:
 - TASK-t4mp0
-blocks: []
+blocks:
+- TASK-r3pr0
 related:
 - TASK-r7q5a
 assignee: null

@@ -5,9 +5,11 @@ import { createMaintenanceRun, createPostgresMaintenanceRunStore } from "./index
 const submittedAt = "2026-08-16T12:00:00.000Z";
 const run = createMaintenanceRun({ id: "github:delivery-1", installationId: 17,
   repository: "octo/example", issueNumber: 42, defaultBranch: "main",
+  expectedFailure: "expected 2 but received 3",
   baseRevision: "a".repeat(40), actorId: 23, sourceDeliveryId: "delivery-1" });
 const row = { run_id: run.id, installation_id: "17", repository: run.repository,
-  issue_number: 42, default_branch: "main", base_revision: run.baseRevision,
+  issue_number: 42, expected_failure: run.expectedFailure, default_branch: "main",
+  base_revision: run.baseRevision,
   actor_id: "23", source_delivery_id: "delivery-1", run_status: "submitted",
   submitted_at: submittedAt };
 const queries = [];
@@ -22,8 +24,8 @@ const store = await createPostgresMaintenanceRunStore({ pool });
 
 assert.deepEqual(await store.saveSubmittedRun(run), { status: "created",
   run: { ...run, submittedAt } });
-assert.deepEqual(queries[1].values, [run.id, 17, "octo/example", 42, "main",
-  run.baseRevision, 23, "delivery-1", "submitted"]);
+assert.deepEqual(queries[1].values, [run.id, 17, "octo/example", 42,
+  "expected 2 but received 3", "main", run.baseRevision, 23, "delivery-1", "submitted"]);
 isInsertWinner = false;
 assert.deepEqual(await store.saveSubmittedRun(run), { status: "existing",
   run: { ...run, submittedAt } });

@@ -7,7 +7,7 @@ const payload = {
   label: { name: "patch-pilot" },
   installation: { id: 17 },
   repository: { full_name: "octo/example", default_branch: "main" },
-  issue: { number: 42 },
+  issue: { number: 42, body: "<!-- patch-pilot:expected-failure -->\nexpected 2 but received 3\n<!-- /patch-pilot:expected-failure -->" },
   sender: { id: 23 },
 };
 const submittedRuns = [];
@@ -31,6 +31,7 @@ assert.deepEqual(submittedRuns, [
     installationId: 17,
     repository: "octo/example",
     issueNumber: 42,
+    expectedFailure: "expected 2 but received 3",
     defaultBranch: "main",
     baseRevision: "a".repeat(40),
     actorId: 23,
@@ -40,6 +41,25 @@ assert.deepEqual(submittedRuns, [
 ]);
 assert.equal(dispatchedRuns[0].id, "github:delivery-123");
 assert.equal(result.workflow.status, "started");
+
+await assert.rejects(createGitHubIssueRunSubmission({ eventName: "issues",
+  deliveryId: "delivery-invalid", payload: { ...payload, issue: { number: 42, body: "no marker" } },
+  resolveBaseRevision: async () => "a".repeat(40), submitRun: async () => undefined,
+  dispatchRun: async () => undefined }), (error) => error.code === "invalid-github-webhook");
+
+const duplicateFragment = payload.issue.body.repeat(2);
+await assert.rejects(createGitHubIssueRunSubmission({ eventName: "issues",
+  deliveryId: "delivery-duplicate", payload: { ...payload,
+    issue: { number: 42, body: duplicateFragment } },
+  resolveBaseRevision: async () => "a".repeat(40), submitRun: async () => undefined,
+  dispatchRun: async () => undefined }), (error) => error.code === "invalid-github-webhook");
+
+const strayMarker = `${payload.issue.body}\n<!-- patch-pilot:expected-failure -->`;
+await assert.rejects(createGitHubIssueRunSubmission({ eventName: "issues",
+  deliveryId: "delivery-stray", payload: { ...payload,
+    issue: { number: 42, body: strayMarker } },
+  resolveBaseRevision: async () => "a".repeat(40), submitRun: async () => undefined,
+  dispatchRun: async () => undefined }), (error) => error.code === "invalid-github-webhook");
 
 const ignoredResult = await createGitHubIssueRunSubmission({
   eventName: "issues",

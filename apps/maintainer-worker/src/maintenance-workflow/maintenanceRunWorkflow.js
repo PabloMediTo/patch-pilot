@@ -10,14 +10,15 @@ const inspectionActivities = proxyActivities({ startToCloseTimeout: "10 minutes"
     maximumInterval: "1 minute" } });
 
 /**
- * Runs the first durable phase of one submitted maintenance run.
+ * Runs the durable inspection and reproduction phases of one submitted maintenance run.
  *
  * @param {object} run Canonical persisted submitted run.
- * @returns {Promise<object>} Inspection-phase outcome.
+ * @returns {Promise<object>} Reproduction-phase or unsupported outcome.
  */
 export function maintenanceRunWorkflow(run) {
   return orchestrateMaintenanceRun({ run,
     recordTimelineEvent: timelineActivities.recordTimelineEvent,
     inspectRepository: inspectionActivities.inspectRepository,
+    reproduceIssue: inspectionActivities.reproduceIssue,
     now: () => new Date().toISOString() });
 }

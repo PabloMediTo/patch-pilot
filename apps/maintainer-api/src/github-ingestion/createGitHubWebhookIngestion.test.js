@@ -26,7 +26,8 @@ const envelope = { deliveryId: "delivery-1", eventName: "issues",
   observedAt: "2026-08-16T14:00:00.000Z", payload: { action: "labeled",
     label: { name: "patch-pilot" }, installation: { id: 17 },
     repository: { full_name: "octo/example", default_branch: "release/v1" },
-    issue: { number: 42 }, sender: { id: 23 } } };
+    issue: { number: 42, body: "<!-- patch-pilot:expected-failure -->\nreported assertion\n<!-- /patch-pilot:expected-failure -->" },
+    sender: { id: 23 } } };
 
 const accepted = await ingestWebhook(envelope);
 assert.equal(accepted.status, "accepted");
@@ -34,6 +35,7 @@ assert.equal(accepted.run.submittedAt, "2026-08-16T14:00:00.000Z");
 assert.deepEqual(requests, [{ installationId: 17, method: "GET",
   path: "/repos/octo/example/git/ref/heads/release%2Fv1" }]);
 assert.equal(savedRuns[0].baseRevision, revision);
+assert.equal(savedRuns[0].expectedFailure, "reported assertion");
 assert.equal(dispatchedRuns[0].id, "github:delivery-1");
 
 saveStatus = "existing";

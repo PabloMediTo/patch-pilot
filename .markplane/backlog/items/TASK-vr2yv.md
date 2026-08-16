@@ -49,6 +49,7 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - Composed immutable policy, Docker sandbox adapter, and bounded CLI execution behind one worker command executor with internally generated container identities.
 - Verified that allowed commands traverse create, copy, attach, and cleanup while blocked commands never invoke Docker.
 - Registered only the required worker-to-maintenance workspace edge, `sandbox-execution` to `docker-cli` module edge, and `node:crypto` provider permission.
+- The Temporal reproduction Activity now consumes the composed executor with the required workspace boundary; unit tests cover this wiring without claiming live runtime enforcement.
 - Remaining before completion: exercise the composed executor against a real runtime to prove every limit. Docker is not installed on the current machine.
 
 ## References

@@ -41,7 +41,8 @@ assert.equal(reconciled[0].eventName, "pull_request");
 assert.deepEqual(JSON.parse(response.body), { status: "recorded" });
 const issueBody = JSON.stringify({ action: "labeled", label: { name: "patch-pilot" },
   installation: { id: 17 }, repository: { full_name: "octo/example", default_branch: "main" },
-  issue: { number: 42 }, sender: { id: 23 } });
+  issue: { number: 42, body: "<!-- patch-pilot:expected-failure -->\nreported assertion\n<!-- /patch-pilot:expected-failure -->" },
+  sender: { id: 23 } });
 const issueResponse = await exchange(deployment.server,
   { body: issueBody, eventName: "issues", deliveryId: "issue-delivery-1" });
 assert.equal(issueResponse.statusCode, 202);
@@ -114,7 +115,8 @@ function exchange(server, input) {
 /** Maps submitted-run insert values to the Postgres row returned to the deployment. */
 function mapRunRow(values) {
   return { run_id: values[0], installation_id: values[1], repository: values[2],
-    issue_number: values[3], default_branch: values[4], base_revision: values[5],
-    actor_id: values[6], source_delivery_id: values[7], run_status: values[8],
+    issue_number: values[3], expected_failure: values[4], default_branch: values[5],
+    base_revision: values[6], actor_id: values[7], source_delivery_id: values[8],
+    run_status: values[9],
     submitted_at: "2026-08-16T14:00:00.000Z" };
 }

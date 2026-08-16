@@ -16,6 +16,7 @@ Own one durable maintenance run from validated repository and issue input throug
 - GitHub repository installation and repository identifier
 - issue identifier
 - immutable base revision
+- explicit expected-failure fragment
 - actor and authorization context
 - configured run limits and target-language policy
 
@@ -57,7 +58,7 @@ Own one durable maintenance run from validated repository and issue input throug
 
 ## Current implementation boundary
 
-The executable workflow currently implements submission evidence and the repository-inspection portion of steps 2 through 4. It validates the persisted target, records replay-safe timeline events, creates an exact-revision disposable checkout, detects a supported Python or TypeScript root, removes the checkout, and returns sanitized evidence. It does not yet fetch issue details, reproduce the failure, produce a proposal, wait for approval, or deliver a pull request.
+The executable workflow currently implements submission, inspection, and reproduction through step 5. It validates the persisted target and explicit expected-failure fragment, records replay-safe timeline events, and uses separate exact-revision disposable checkouts for inspection and reproduction so no machine-local path crosses an Activity boundary. Supported Python or TypeScript roots execute their standard test command through the canonical safe executor; unsupported roots record a reproduction skip. The workflow classifies and records reproduction evidence before completing. It does not yet produce a proposal, wait for approval, or deliver a pull request, and live Docker enforcement still requires runtime proof.
 
 ## Retry policy
 

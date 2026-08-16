@@ -12,12 +12,12 @@ Current reality:
 - `boundaries.config.mjs` is the canonical executable registry for future workspaces, modules, and dependency permissions.
 - Three deployable application workspaces and the conceptual maintenance package are registered and bootstrapped with tested public interfaces and narrow declared module edges.
 - Local Temporal, Postgres, Redis, and Temporal UI services are defined in `compose.yaml` for development with pinned images and health checks.
-- Signed GitHub issue-label deliveries can now produce an authenticated run submission bound to an immutable revision.
+- Signed GitHub issue-label deliveries can now produce an authenticated run submission bound to an immutable revision and one explicitly marked expected-failure fragment.
 - Authenticated opted-in issue webhooks now resolve a repository-scoped full commit, reach atomic Postgres run persistence, and start a deterministic Temporal workflow through the executable API deployment.
 - The maintenance package can materialize that revision in a disposable, verified Detached-HEAD repository workspace and remove it through a guarded cleanup operation.
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Canonical MVP command and change policy is enforced before a sandbox port. A Docker adapter selects pinned runtimes, applies the fixed limits, copies the workspace into the quota-controlled container layer, and guarantees cleanup. The worker composes it with bounded shell-free Docker process execution; only live Docker proof remains required before target-repository commands can be enabled in deployment.
-- The worker has an executable Temporal deployment and bundled maintenance workflow whose first phase records replay-safe timeline events, inspects a disposable credential-free repository checkout, sanitizes project evidence, and closes Temporal, Postgres, and Redis resources deterministically.
+- The worker has an executable Temporal deployment and bundled maintenance workflow that records replay-safe inspection and reproduction events, uses fresh disposable exact-revision checkouts for both Activities, invokes the safe executor for supported projects, and closes Temporal, Postgres, and Redis resources deterministically. Live Docker proof remains open.
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.

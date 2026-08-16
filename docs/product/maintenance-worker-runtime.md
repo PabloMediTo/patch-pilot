@@ -21,8 +21,9 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 ## Outputs
 
 - a registered deterministic `maintenanceRunWorkflow` bundle
-- canonical `run.submitted` and inspection lifecycle timeline events
+- canonical submission, inspection, and reproduction lifecycle timeline events
 - a sanitized supported or unsupported project inspection without a local path
+- classified reproduction evidence from the safe command executor for supported projects
 - deterministic provider cleanup after worker polling stops
 
 ## Adjacent parts
@@ -31,15 +32,15 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - [run timelines](run-timelines.md) persist Activity evidence before Redis publication
 - [repository workspaces](repository-workspaces.md) create and remove the inspection checkout
 - [supported project detection](project-detection.md) classifies the checked-out root
-- later workflow phases will compose failure reproduction and proposal attempts
+- later workflow phases will compose proposal attempts, review, approval, and delivery
 
-## First workflow phase
+## Implemented workflow phases
 
-The Workflow records the canonical submitted event, records inspection start, and calls a separately configured inspection Activity. Timeline Activities use a 30-second start-to-close timeout and at most five infrastructure attempts. Inspection uses a ten-minute timeout and at most three attempts. Both use bounded exponential backoff.
+The Workflow records the canonical submitted event, runs inspection, and then either records an explicit unsupported reproduction skip or calls the reproduction Activity. Timeline Activities use a 30-second start-to-close timeout and at most five infrastructure attempts. Inspection and reproduction use a ten-minute timeout and at most three attempts. Both use bounded exponential backoff.
 
 The inspection Activity creates a checkout at the exact recorded revision, runs deterministic Python/TypeScript project detection, removes the checkout in `finally`, and removes its machine-local path from the durable result. It currently constructs a credential-free GitHub HTTPS URL, so the executable worker can inspect only repositories reachable without a future non-interactive Git credential provider.
 
-The current workflow completes after this first inspection phase with explicit inspection evidence. Reproduction, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated.
+The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow records reproduced, not-reproduced, different-failure, or execution-failed evidence, then completes after reproduction. Dependency installation, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling this path for untrusted deployed repositories.
 
 ## Lifecycle
 

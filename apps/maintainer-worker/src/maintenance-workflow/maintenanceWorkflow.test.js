@@ -4,18 +4,22 @@ import { createMaintenanceWorkflowActivities, orchestrateMaintenanceRun } from "
 
 const run = Object.freeze({ id: "github:delivery-1", repository: "octo/example",
   issueNumber: 42, baseRevision: "a".repeat(40), status: "submitted",
+  expectedFailure: "expected 2 but received 3",
   submittedAt: "2026-08-16T16:00:00.000Z" });
 
 const events = [];
-const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z"];
+const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
+  "2026-08-16T16:03:00.000Z", "2026-08-16T16:04:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const result = await orchestrateMaintenanceRun({ run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
+  reproduceIssue: async () => ({ status: "reproduced", evidence: { exitCode: 1 } }),
   now: () => times.shift() });
 
-assert.deepEqual(result, { status: "inspection-completed", runId: run.id, inspection });
+assert.equal(result.status, "reproduction-completed");
+assert.equal(result.reproduction.status, "reproduced");
 assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type, occurredAt })), [
   { eventId: `${run.id}:timeline:submitted`, type: "run.submitted",
     occurredAt: run.submittedAt },
@@ -23,6 +27,10 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:01:00.000Z" },
   { eventId: `${run.id}:timeline:inspection-completed`, type: "run.inspection.completed",
     occurredAt: "2026-08-16T16:02:00.000Z" },
+  { eventId: `${run.id}:timeline:reproduction-started`, type: "run.reproduction.started",
+    occurredAt: "2026-08-16T16:03:00.000Z" },
+  { eventId: `${run.id}:timeline:reproduction-completed`, type: "run.reproduction.completed",
+    occurredAt: "2026-08-16T16:04:00.000Z" },
 ]);
 
 const failure = new Error("checkout unavailable");
@@ -30,9 +38,20 @@ const failureEvents = [];
 await assert.rejects(orchestrateMaintenanceRun({ run,
   recordTimelineEvent: async (event) => { failureEvents.push(event); },
   inspectRepository: async () => { throw failure; },
+  reproduceIssue: async () => { throw new Error("must not reproduce"); },
   now: () => "2026-08-16T16:03:00.000Z" }), (error) => error === failure);
 assert.equal(failureEvents.at(-1).type, "run.inspection.failed");
 assert.equal(failureEvents.at(-1).payload.message, "checkout unavailable");
+
+const unsupportedEvents = [];
+const unsupported = await orchestrateMaintenanceRun({ run,
+  recordTimelineEvent: async (event) => { unsupportedEvents.push(event); },
+  inspectRepository: async () => ({ status: "unsupported", reason: "no-supported-project" }),
+  reproduceIssue: async () => { throw new Error("must not reproduce"); },
+  now: () => "2026-08-16T16:05:00.000Z" });
+assert.equal(unsupported.status, "unsupported");
+assert.equal(unsupportedEvents.at(-1).type, "run.reproduction.skipped");
+assert.equal(unsupportedEvents.at(-1).payload.reason, "no-supported-project");
 
 const activityCalls = [];
 const timelineEvents = [];
@@ -51,10 +70,18 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
     return { ...inspection, workspaceDirectory: input.workspaceDirectory };
   },
   removeWorkspace: async (input) => { activityCalls.push({ operation: "remove", input }); },
+  executeCommand: async () => ({ exitCode: 1, stdout: "",
+    stderr: "expected 2 but received 3", durationMs: 50,
+    hasTimedOut: false, hasTruncatedOutput: false }),
 });
 assert.deepEqual(await activities.inspectRepository(run), inspection);
 assert.deepEqual(activityCalls.map(({ operation }) => operation), ["create", "detect", "remove"]);
 assert.equal(activityCalls[0].input.repositoryUrl, "https://github.com/octo/example.git");
+
+const reproduction = await activities.reproduceIssue(run);
+assert.equal(reproduction.status, "reproduced");
+assert.deepEqual(activityCalls.map(({ operation }) => operation),
+  ["create", "detect", "remove", "create", "detect", "remove"]);
 
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });

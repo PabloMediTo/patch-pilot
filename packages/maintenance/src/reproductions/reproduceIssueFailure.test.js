@@ -9,20 +9,22 @@ const project = Object.freeze({
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }),
 });
 
+let executionRequest;
 const reproduced = await reproduceIssueFailure({
   project,
   expectedFailure: "expected 2 but received 3",
-  executeCommand: async () => ({
+  executeCommand: async (request) => { executionRequest = request; return ({
     exitCode: 1,
     stdout: "",
     stderr: "AssertionError: expected 2 but received 3",
     durationMs: 120,
     hasTimedOut: false,
     hasTruncatedOutput: false,
-  }),
+  }); },
 });
 assert.equal(reproduced.status, "reproduced");
 assert.equal(reproduced.evidence.exitCode, 1);
+assert.equal(executionRequest.workspaceDirectory, project.workspaceDirectory);
 
 const differentFailure = await reproduceIssueFailure({
   project,
@@ -37,6 +39,10 @@ const differentFailure = await reproduceIssueFailure({
   }),
 });
 assert.equal(differentFailure.status, "different-failure");
+
+await assert.rejects(reproduceIssueFailure({ project,
+  expectedFailure: "x".repeat(501), executeCommand: async () => ({}) }),
+/bounded expected failure/u);
 
 const notReproduced = await reproduceIssueFailure({
   project,

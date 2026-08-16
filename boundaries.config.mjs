@@ -156,7 +156,7 @@ export const boundaryConfig = {
         },
         "maintenance-workflow": {
           architectureRole: "application-role",
-          allowedModuleDependencies: [],
+          allowedModuleDependencies: ["sandbox-execution"],
           allowedExternalDependencies: ["@temporalio/workflow"],
           allowedCoreDependencies: [],
         },

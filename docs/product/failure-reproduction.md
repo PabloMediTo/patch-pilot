@@ -14,7 +14,7 @@ Execute a supported project's standard test command through a bounded executor a
 ## Inputs
 
 - a supported-project descriptor
-- a concrete non-empty expected failure fragment derived from the issue
+- the persisted non-empty [expected failure fragment](../DICTIONARY.md#expected-failure-fragment) explicitly marked in the issue
 - an executor port that returns structured command evidence
 
 ## Outputs
@@ -28,12 +28,12 @@ Execute a supported project's standard test command through a bounded executor a
 ## Adjacent parts
 
 - supported-project detection supplies the standard command
-- the future safety executor owns process, container, network, and resource enforcement
-- persistence will store the evidence in the run timeline
+- the worker's safety executor owns process, container, network, and resource enforcement
+- the maintenance workflow records reproduction lifecycle and result evidence in the run timeline
 - planning starts only from a reproduced failure
 
 ## Evidence rule
 
 A non-zero exit code alone is insufficient. The combined standard output and standard error must contain the exact expected failure fragment. Timeout or output truncation makes the execution evidence incomplete and therefore cannot produce an accepted reproduction.
 
-The current implementation defines and tests the executor contract but does not execute untrusted target-repository commands on the host.
+The Temporal workflow now creates a fresh exact-revision workspace for reproduction, re-detects the project, executes its standard test command through the composed safety executor, records the classified evidence, and removes the workspace in `finally`. Unsupported inspection results record an explicit skipped outcome and never invoke reproduction. A real Docker execution remains unverified locally, so deployed untrusted execution stays disabled until the runtime safety proof is complete.
