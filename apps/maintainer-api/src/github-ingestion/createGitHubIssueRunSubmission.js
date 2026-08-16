@@ -32,7 +32,7 @@ export async function createGitHubIssueRunSubmission(input) {
  * Creates a run that retains its GitHub authorization and idempotency context.
  *
  * @param {string} deliveryId GitHub delivery identifier.
- * @param {{ installationId: number, repository: string, issueNumber: number, expectedFailure: string, actorId: number }} request Validated request.
+ * @param {{ installationId: number, repository: string, issueNumber: number, issueTitle: string, issueContext: string, expectedFailure: string, actorId: number }} request Validated request.
  * @param {string} baseRevision Immutable revision resolved from GitHub.
  * @returns {object} Initial maintenance run.
  */
@@ -45,6 +45,8 @@ function createRunFromDelivery(deliveryId, request, baseRevision) {
     installationId: request.installationId,
     repository: request.repository,
     issueNumber: request.issueNumber,
+    issueTitle: request.issueTitle,
+    issueContext: request.issueContext,
     expectedFailure: request.expectedFailure,
     defaultBranch: request.defaultBranch,
     baseRevision,

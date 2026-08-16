@@ -4,6 +4,8 @@ import { createMaintenanceWorkflowActivities, orchestrateMaintenanceRun } from "
 
 const run = Object.freeze({ id: "github:delivery-1", repository: "octo/example",
   issueNumber: 42, baseRevision: "a".repeat(40), status: "submitted",
+  issueTitle: "Fix incorrect addition result",
+  issueContext: "Addition returns the wrong value.",
   expectedFailure: "expected 2 but received 3",
   submittedAt: "2026-08-16T16:00:00.000Z" });
 

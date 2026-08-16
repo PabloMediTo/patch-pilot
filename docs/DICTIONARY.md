@@ -132,9 +132,13 @@ The repository documentation model that separates [global docs](#global-docs)
 under `docs/` from optional [co-located docs](#co-located-docs) and uses
 structured `_index.md` files for discoverability.
 
+### Issue Context
+
+The immutable issue-side planning evidence accepted when a GitHub issue requests a run: a trimmed non-empty title of at most 500 characters and the trimmed descriptive body outside the expected-failure marker of at most 8,000 characters. It is persisted with the [maintenance run](#maintenance-run) before Temporal starts. The separate [expected failure fragment](#expected-failure-fragment) remains reproduction evidence and is not duplicated in this context.
+
 ### Maintenance Run
 
-One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, immutable base revision, and explicit [expected failure fragment](#expected-failure-fragment). Its implemented initial state validates and atomically persists that complete evidence in Postgres and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
+One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, bounded [issue context](#issue-context), immutable base revision, and explicit [expected failure fragment](#expected-failure-fragment). Its implemented initial state validates and atomically persists that complete evidence in Postgres and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
 
 ### Maintenance Workflow
 
@@ -170,7 +174,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path requires one explicitly marked [expected failure fragment](#expected-failure-fragment), resolves the repository default branch through a repository-scoped App request, and retains the delivery, installation, repository, branch, issue, actor, full immutable base revision, and exact fragment. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts. Created and replayed canonical rows then enter [workflow submission](#workflow-submission), while identity conflicts never reach Temporal.
+An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path requires bounded [issue context](#issue-context) and one explicitly marked [expected failure fragment](#expected-failure-fragment), resolves the repository default branch through a repository-scoped App request, and retains the delivery, installation, repository, branch, issue, actor, full immutable base revision, and exact issue evidence. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts. Created and replayed canonical rows then enter [workflow submission](#workflow-submission), while identity conflicts never reach Temporal.
 
 ### Run Timeline
 

@@ -2,7 +2,7 @@
  * Reads an opted-in issue event into the identifiers needed to submit a run.
  *
  * @param {Record<string, unknown>} payload Parsed GitHub webhook payload.
- * @returns {{ installationId: number, repository: string, issueNumber: number, expectedFailure: string, defaultBranch: string, actorId: number } | null} Run request or null for a non-triggering event.
+ * @returns {{ installationId: number, repository: string, issueNumber: number, issueTitle: string, issueContext: string, expectedFailure: string, defaultBranch: string, actorId: number } | null} Run request or null for a non-triggering event.
  * @throws {Error} When a triggering event omits a required identifier.
  */
 export function readGitHubIssueRunRequest(payload) {
@@ -13,18 +13,20 @@ export function readGitHubIssueRunRequest(payload) {
     return null;
   }
 
+  const issue = readIssueEvidence(payload.issue?.title, payload.issue?.body);
   return Object.freeze({
     installationId: readPositiveInteger(payload.installation?.id, "installation.id"),
     repository: readNonEmptyString(payload.repository?.full_name, "repository.full_name"),
     issueNumber: readPositiveInteger(payload.issue?.number, "issue.number"),
-    expectedFailure: readExpectedFailure(payload.issue?.body),
+    ...issue,
     defaultBranch: readNonEmptyString(payload.repository?.default_branch, "repository.default_branch"),
     actorId: readPositiveInteger(payload.sender?.id, "sender.id"),
   });
 }
 
-/** Extracts one explicit bounded failure fragment from the issue body. */
-function readExpectedFailure(body) {
+/** Extracts bounded planning and failure evidence from the issue. */
+function readIssueEvidence(title, body) {
+  const issueTitle = readBoundedString(title, "issue.title", 500);
   const source = readNonEmptyString(body, "issue.body");
   const openingMarker = "<!-- patch-pilot:expected-failure -->";
   const closingMarker = "<!-- /patch-pilot:expected-failure -->";
@@ -35,7 +37,20 @@ function readExpectedFailure(body) {
   if (expectedFailure === undefined || expectedFailure === "" || expectedFailure.length > 500) {
     throw invalidPayload("GitHub issue body requires one bounded patch-pilot expected-failure marker.");
   }
-  return expectedFailure;
+  const issueContext = source.replace(matches[0][0], "").trim();
+  if (issueContext === "" || issueContext.length > 8000) {
+    throw invalidPayload("GitHub issue body requires bounded descriptive context outside the expected-failure marker.");
+  }
+  return Object.freeze({ issueTitle, issueContext, expectedFailure });
+}
+
+/** Reads one trimmed non-empty string within a product-owned bound. */
+function readBoundedString(value, field, maximumLength) {
+  const result = readNonEmptyString(value, field).trim();
+  if (result.length > maximumLength) {
+    throw invalidPayload(`GitHub payload field ${field} exceeds its maximum length.`);
+  }
+  return result;
 }
 
 /**

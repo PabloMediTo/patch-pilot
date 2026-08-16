@@ -14,7 +14,7 @@ Produce the first reviewable [change proposal](../DICTIONARY.md#change-proposal)
 
 ## Inputs
 
-- issue title and context
+- immutable bounded [issue context](../DICTIONARY.md#issue-context) persisted with the submitted run
 - successful [failure reproduction](../DICTIONARY.md#failure-reproduction)
 - inspected repository context and relevant files
 - structured plan-generator and diff-generator ports
@@ -37,7 +37,7 @@ Produce the first reviewable [change proposal](../DICTIONARY.md#change-proposal)
 
 ## Plan contract
 
-The plan generator receives immutable issue, reproduction, repository-context, and limit data. It may return at most eight ordered steps. Every step requires a concrete description, rationale, and one or more repository-relative files. One file belongs to exactly one step so ownership remains unambiguous.
+The plan generator receives immutable issue, reproduction, repository-context, and limit data. Issue title and descriptive context are now preserved by authenticated run submission; repository file context and concrete generator-provider composition remain later workflow work. The generator may return at most eight ordered steps. Every step requires a concrete description, rationale, and one or more repository-relative files. One file belongs to exactly one step so ownership remains unambiguous.
 
 The plan is versioned from its first representation. Later modification or retry work must create a new version rather than silently changing the plan reviewed by a human.
 

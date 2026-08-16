@@ -14,6 +14,10 @@ Temporal owns maintenance-run execution and waiting. Postgres provides the durab
 
 A run must reproduce the reported problem before modifying code. If reproduction cannot be established, the run stops for human review instead of claiming a speculative fix.
 
+## Bounded issue evidence at submission
+
+Authenticated issue submission persists a trimmed title, the descriptive body outside the expected-failure marker, and the exact marked failure fragment before Temporal starts. Title, context, and failure evidence have separate product-owned bounds. Missing or oversized evidence is rejected rather than silently truncated so planning and reproduction always use the exact immutable text accepted from GitHub.
+
 ## Human-controlled delivery
 
 The system may inspect, plan, modify, and verify autonomously in isolation. Publishing a branch or pull request requires an explicit approval decision. Automatic merge is outside the MVP.

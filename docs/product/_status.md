@@ -5,9 +5,9 @@
 - The product idea and initial system boundaries are documented.
 - Delivery is organized in Markplane epics and initial tasks.
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
-- The maintenance package creates the initial `submitted` state only from a valid repository identity, positive issue and optional GitHub identities, a full immutable base revision, and one bounded [expected failure fragment](../DICTIONARY.md#expected-failure-fragment). Atomic [run persistence](run-persistence.md) stores that evidence in Postgres, assigns the submission timestamp, and reloads the first writer after run- or delivery-identity conflicts.
+- The maintenance package creates the initial `submitted` state only from a valid repository identity, positive issue and optional GitHub identities, bounded [issue context](../DICTIONARY.md#issue-context), a full immutable base revision, and one bounded [expected failure fragment](../DICTIONARY.md#expected-failure-fragment). Atomic [run persistence](run-persistence.md) stores that evidence in Postgres, assigns the submission timestamp, and reloads the first writer after run- or delivery-identity conflicts.
 - A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
-- Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label. The executable API path requires exactly one expected-failure marker pair in the issue body, resolves the default branch through the repository-scoped GitHub App transport, requires a full immutable revision, and atomically persists the [run submission](../DICTIONARY.md#run-submission) with accepted, replayed, or conflicting outcomes.
+- Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label. The executable API path requires a bounded title, non-empty descriptive context, and exactly one expected-failure marker pair, resolves the default branch through the repository-scoped GitHub App transport, requires a full immutable revision, and atomically persists the [run submission](../DICTIONARY.md#run-submission) with accepted, replayed, or conflicting outcomes.
 - A [repository workspace](../DICTIONARY.md#repository-workspace) can be created as a unique disposable checkout at an exact full commit SHA, with bounded non-interactive Git execution and guarded cleanup.
 - Root manifests can identify one [supported project](../DICTIONARY.md#supported-project) as Python/pytest or TypeScript/npm and select its standard test command.
 - [Failure reproduction](../DICTIONARY.md#failure-reproduction) classifies bounded executor evidence as reproduced, not reproduced, a different failure, or execution failure.
@@ -40,7 +40,7 @@
 
 ## Next milestone
 
-Extend `maintenanceRunWorkflow` from recorded reproduction evidence into the existing bounded proposal-attempt loop, then persist the final review snapshot. Later workflow milestones will add durable approval waiting and delivery. Live Postgres/GitHub, Postgres/Redis, Temporal, and Docker safety verification remain open where local runtime availability is still required.
+Add bounded repository file context for planning, then compose concrete plan/diff generator ports so `maintenanceRunWorkflow` can enter the existing proposal-attempt loop and persist the final review snapshot. Later workflow milestones will add durable approval waiting and delivery. Live Postgres/GitHub, Postgres/Redis, Temporal, and Docker safety verification remain open where local runtime availability is still required.
 
 ## Open questions
 

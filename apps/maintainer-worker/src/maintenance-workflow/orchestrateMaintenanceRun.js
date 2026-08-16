@@ -83,6 +83,9 @@ function assertPersistedRun(run) {
   const hasIdentity = typeof run?.id === "string" && run.id.trim() !== ""
     && typeof run.repository === "string" && run.repository.trim() !== ""
     && typeof run.baseRevision === "string" && /^[0-9a-f]{40}$/u.test(run.baseRevision)
+    && typeof run.issueTitle === "string" && run.issueTitle.trim() !== ""
+    && run.issueTitle.length <= 500 && typeof run.issueContext === "string"
+    && run.issueContext.trim() !== "" && run.issueContext.length <= 8000
     && typeof run.expectedFailure === "string" && run.expectedFailure.trim() !== ""
     && run.expectedFailure.length <= 500;
   if (!hasIdentity || run.status !== "submitted" || Number(run.issueNumber) < 1

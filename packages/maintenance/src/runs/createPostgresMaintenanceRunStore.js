@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS maintenance_runs (
   installation_id bigint CHECK (installation_id > 0),
   repository text NOT NULL,
   issue_number integer NOT NULL CHECK (issue_number > 0),
+  issue_title text CHECK (issue_title IS NULL OR char_length(issue_title) BETWEEN 1 AND 500),
+  issue_context text CHECK (issue_context IS NULL OR char_length(issue_context) BETWEEN 1 AND 8000),
   expected_failure text CHECK (expected_failure IS NULL OR char_length(expected_failure) BETWEEN 1 AND 500),
   default_branch text,
   base_revision text NOT NULL CHECK (char_length(base_revision) = 40),
@@ -12,11 +14,13 @@ CREATE TABLE IF NOT EXISTS maintenance_runs (
   run_status text NOT NULL,
   submitted_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE maintenance_runs ADD COLUMN IF NOT EXISTS issue_title text;
+ALTER TABLE maintenance_runs ADD COLUMN IF NOT EXISTS issue_context text;
 ALTER TABLE maintenance_runs ADD COLUMN IF NOT EXISTS expected_failure text;`;
-const COLUMNS = `run_id, installation_id, repository, issue_number, expected_failure, default_branch,
-  base_revision, actor_id, source_delivery_id, run_status, submitted_at`;
+const COLUMNS = `run_id, installation_id, repository, issue_number, issue_title, issue_context,
+  expected_failure, default_branch, base_revision, actor_id, source_delivery_id, run_status, submitted_at`;
 const INSERT_SQL = `INSERT INTO maintenance_runs (${COLUMNS.replace(", submitted_at", "")})
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 ON CONFLICT DO NOTHING RETURNING ${COLUMNS};`;
 const SELECT_SQL = `SELECT ${COLUMNS} FROM maintenance_runs WHERE run_id = $1;`;
 const SELECT_CONFLICT_SQL = `SELECT ${COLUMNS} FROM maintenance_runs
@@ -77,6 +81,8 @@ function mapRun(row) {
   return Object.freeze({ id: row.run_id,
     installationId: row.installation_id === null ? undefined : Number(row.installation_id),
     repository: row.repository, issueNumber: row.issue_number,
+    issueTitle: row.issue_title ?? undefined,
+    issueContext: row.issue_context ?? undefined,
     expectedFailure: row.expected_failure ?? undefined,
     ...(row.default_branch === null ? {} : { defaultBranch: row.default_branch }),
     baseRevision: row.base_revision,
@@ -88,6 +94,6 @@ function mapRun(row) {
 /** Creates stable parameter order without interpolating run evidence. */
 function runValues(run) {
   return [run.id, run.installationId ?? null, run.repository, run.issueNumber,
-    run.expectedFailure, run.defaultBranch ?? null, run.baseRevision, run.actorId ?? null,
-    run.sourceDeliveryId ?? null, run.status];
+    run.issueTitle, run.issueContext, run.expectedFailure, run.defaultBranch ?? null,
+    run.baseRevision, run.actorId ?? null, run.sourceDeliveryId ?? null, run.status];
 }
