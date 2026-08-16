@@ -138,9 +138,9 @@ export const boundaryConfig = {
       modules: {
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: [],
-          allowedExternalDependencies: [],
-          allowedCoreDependencies: [],
+          allowedModuleDependencies: ["maintenance-workflow"],
+          allowedExternalDependencies: ["@temporalio/worker"],
+          allowedCoreDependencies: ["node:url"],
         },
         "docker-cli": {
           architectureRole: "application-role",
@@ -154,17 +154,23 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:crypto"],
         },
+        "maintenance-workflow": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: ["@temporalio/workflow"],
+          allowedCoreDependencies: [],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "docker-cli", "sandbox-execution"],
+          allowedModuleDependencies: ["application", "docker-cli", "maintenance-workflow", "sandbox-execution"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
         "main.js": {
           allowedModuleDependencies: ["application"],
           allowedExternalDependencies: [],
-          allowedCoreDependencies: [],
+          allowedCoreDependencies: ["node:process"],
         },
       },
     },
@@ -317,7 +323,7 @@ export const boundaryConfig = {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
           allowedExternalDependencies: ["pg", "redis"],
-          allowedCoreDependencies: [],
+          allowedCoreDependencies: ["node:util"],
         },
         safety: {
           architectureRole: "conceptual-module",

@@ -12,7 +12,8 @@ depends_on:
 - TASK-d5qnh
 blocks:
 - TASK-ha9e4
-related: []
+related:
+- TASK-k3w9q
 assignee: null
 tags:
 - timeline
@@ -50,6 +51,8 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Added `npm run test:timeline-integration`, which uses the real provider clients, requires two Redis deliveries, and compares them with ordered Postgres history. It intentionally fails rather than skipping when services are absent.
 - Added the separate `run-timeline-http` API role for authenticated `GET /runs/:runId/timeline`, strict `Last-Event-ID` parsing, terminal JSON errors, and Node-compatible disconnect cleanup.
 - Composed the timeline route into the concrete Node API dispatcher and server without buffering, with transport-owned repeating heartbeat scheduling.
+- Made deterministic event IDs replay the canonical first Postgres evidence while rejecting identity reuse with different evidence, allowing Temporal Activity retries to remain idempotent.
+- Connected the first worker workflow phase to submitted and inspection lifecycle events; Redis may republish an exact replay, while API and browser consumers deduplicate its canonical sequence.
 - Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References

@@ -61,7 +61,7 @@ await runTest("initializes Postgres once and maps ordered timeline rows", async 
     sequence: "1",
     event_type: "run.submitted",
     occurred_at: "2026-08-14T10:00:00.000Z",
-    payload: { issue: 42 },
+    payload: { nested: { second: 2, first: 1 }, issue: 42 },
   };
   const pool = {
     query: async (sql, values) => {
@@ -77,12 +77,13 @@ await runTest("initializes Postgres once and maps ordered timeline rows", async 
     runId: "run-1",
     type: "run.submitted",
     occurredAt: "2026-08-14T10:00:00.000Z",
-    payload: { issue: 42 },
+    payload: { issue: 42, nested: { first: 1, second: 2 } },
   });
   const events = await listRunTimeline({ runId: "run-1", store });
 
   assert.equal(queries.filter(({ sql }) => sql.includes("CREATE TABLE")).length, 1);
   assert.match(queries[1].sql, /ON CONFLICT \(run_id\) DO UPDATE/u);
+  assert.match(queries[1].sql, /ON CONFLICT \(event_id\) DO UPDATE/u);
   assert.match(queries[2].sql, /ORDER BY sequence ASC/u);
   assert.deepEqual(events[0], {
     eventId: "event-1",
@@ -90,8 +91,12 @@ await runTest("initializes Postgres once and maps ordered timeline rows", async 
     sequence: 1,
     type: "run.submitted",
     occurredAt: "2026-08-14T10:00:00.000Z",
-    payload: { issue: 42 },
+    payload: { nested: { second: 2, first: 1 }, issue: 42 },
   });
+
+  await assert.rejects(store.append({ eventId: "event-1", runId: "run-2",
+    type: "run.submitted", occurredAt: "2026-08-14T10:00:00.000Z",
+    payload: { issue: 42, nested: { first: 1, second: 2 } } }), /different evidence/u);
 });
 
 await runTest("publishes and subscribes through one run-scoped Redis channel", async () => {

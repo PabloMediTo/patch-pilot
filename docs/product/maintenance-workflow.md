@@ -33,7 +33,7 @@ Own one durable maintenance run from validated repository and issue input throug
 ## Adjacent parts
 
 - control-plane API starts and queries runs
-- worker executes Temporal activities
+- [maintenance worker runtime](maintenance-worker-runtime.md) executes Temporal Activities
 - repository workspace isolates untrusted project commands
 - Postgres exposes durable audit and timeline data
 - Redis distributes live progress
@@ -54,6 +54,10 @@ Own one durable maintenance run from validated repository and issue input throug
 10. Retry modification and verification when the critique identifies a correctable problem and the retry budget remains.
 11. Wait durably for human approval or rejection.
 12. After approval, prepare and publish the branch and pull-request proposal idempotently.
+
+## Current implementation boundary
+
+The executable workflow currently implements submission evidence and the repository-inspection portion of steps 2 through 4. It validates the persisted target, records replay-safe timeline events, creates an exact-revision disposable checkout, detects a supported Python or TypeScript root, removes the checkout, and returns sanitized evidence. It does not yet fetch issue details, reproduce the failure, produce a proposal, wait for approval, or deliver a pull request.
 
 ## Retry policy
 

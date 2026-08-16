@@ -28,6 +28,7 @@ Create and remove one disposable [repository workspace](../DICTIONARY.md#reposit
 - GitHub ingestion supplies the authorized repository and immutable revision
 - the maintenance worker creates and removes workspaces for workflow activities
 - repository understanding inspects the checked-out files
+- the [maintenance worker runtime](maintenance-worker-runtime.md) creates a short-lived inspection checkout and removes its local path from durable evidence
 - the execution-safety policy will constrain commands run inside the workspace
 
 ## Checkout invariants

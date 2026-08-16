@@ -132,6 +132,10 @@ structured `_index.md` files for discoverability.
 
 One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. Its implemented initial state validates the complete target identity, is atomically persisted in Postgres, and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
 
+### Maintenance Workflow
+
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented first phase records submitted and inspection events, inspects an exact-revision disposable checkout through retried Activities, returns sanitized project evidence, and then completes. Reproduction, proposal attempts, approval waiting, and delivery orchestration remain planned.
+
 ### Monorepo
 
 One source-control repository containing multiple declared application or package workspaces. This repository reserves `apps/*` and `packages/*` as npm workspace locations, while concrete workspaces are introduced only for known concepts.
@@ -166,7 +170,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. The concrete adapters are implemented and unit-tested, while live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. The concrete adapters and first workflow events are implemented and unit-tested, while live local-service verification remains open.
 
 ### Supported Project
 
@@ -178,7 +182,7 @@ Structured proof produced by repository checks, including the exact command, exi
 
 ### Workflow Submission
 
-The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. Worker-side workflow execution remains planned.
+The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. The executable worker consumes this handoff; later [maintenance workflow](#maintenance-workflow) phases remain planned.
 
 ### Workspace
 

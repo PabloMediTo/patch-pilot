@@ -17,18 +17,19 @@ Current reality:
 - The maintenance package can materialize that revision in a disposable, verified Detached-HEAD repository workspace and remove it through a guarded cleanup operation.
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Canonical MVP command and change policy is enforced before a sandbox port. A Docker adapter selects pinned runtimes, applies the fixed limits, copies the workspace into the quota-controlled container layer, and guarantees cleanup. The worker composes it with bounded shell-free Docker process execution; only live Docker proof remains required before target-repository commands can be enabled in deployment.
+- The worker has an executable Temporal deployment and bundled maintenance workflow whose first phase records replay-safe timeline events, inspects a disposable credential-free repository checkout, sanitizes project evidence, and closes Temporal, Postgres, and Redis resources deterministically.
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.
 - The web shell renders a safe, responsive review document, loads same-origin style and EventSource assets, and starts an environment-configured Node server. Its bounded API client forwards only cookie or bearer credentials to the authenticated no-store review-evidence endpoint, while timeline and approval routes stream through unchanged. Desktop, mobile, overflow, controls, live insertion, and both deployment compositions are verified; live provider verification remains open.
-- The API shell now has an executable environment-backed deployment that composes shared authentication, one Postgres pool, canonical review-snapshot/timeline/approval stores, one Redis stream, one Temporal submission connection, GitHub ingestion and pull-request reconciliation, the Node listener, and signal-driven idempotent shutdown. Worker-side workflow execution remains open.
+- The API shell has an executable environment-backed deployment that composes shared authentication, one Postgres pool, canonical review-snapshot/timeline/approval stores, one Redis stream, one Temporal submission connection, GitHub ingestion and pull-request reconciliation, the Node listener, and signal-driven idempotent shutdown.
 - Approval decisions have a tested domain use case for first-decision validation, required rejection reasons, idempotent replay, and competing-decision conflicts.
 - Approval decisions also have a concrete Postgres adapter with database-enforced first-writer and idempotency constraints; only live service verification remains open.
 - Approval submissions have an authenticated API route with required idempotency keys, stable HTTP outcomes, shared deployment authentication, and environment-backed store wiring.
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
-- Product implementation is underway through the maintenance package and application shells; durable orchestration and remaining live provider verification remain open in Markplane.
+- Product implementation is underway through the maintenance package and application shells; later workflow phases and remaining live provider verification remain open in Markplane.
 
 Open questions:
 

@@ -51,6 +51,13 @@
 - Read when: A task changes how persisted runs start Temporal workflows, workflow IDs, task queues, dispatch retries, or Temporal client ownership.
 - Tags: product, runs, temporal, workflow, submission, idempotency
 
+### Maintenance Worker Runtime
+
+- Path: `docs/product/maintenance-worker-runtime.md`
+- Summary: Temporal worker registration, first inspection workflow phase, Activity retry boundaries, and provider lifecycle.
+- Read when: A task changes worker startup, workflow registration, Activity composition, inspection orchestration, task queues, or worker shutdown.
+- Tags: product, worker, temporal, workflow, activities, inspection, lifecycle
+
 ### System Composition
 
 - Path: `docs/product/system-composition.md`

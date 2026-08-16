@@ -26,7 +26,7 @@ Determine whether one repository root is a [supported project](../DICTIONARY.md#
 
 - repository workspaces provide the immutable files
 - failure reproduction executes the selected command through a bounded executor
-- future MVP safety policy supplies the concrete executor
+- the [MVP safety policy](mvp-safety-policy.md) supplies the concrete executor for later reproduction
 
 ## Detection rules
 

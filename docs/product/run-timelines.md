@@ -35,13 +35,13 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 
 ## Persistence model
 
-The Postgres adapter creates its schema idempotently on first use. A sequence row per run allocates an increasing integer in the same atomic statement that inserts the event. Event IDs are globally unique, and `(run_id, sequence)` is unique. Queries always order by sequence rather than trusting timestamps.
+The Postgres adapter creates its schema idempotently on first use. A sequence row per run allocates an increasing integer in the same atomic statement that inserts the event. Event IDs are globally unique, and `(run_id, sequence)` is unique. Repeating the same deterministic event ID returns the canonical first event; reusing that ID for different run, type, time, or payload evidence is rejected. A racing replay may consume an unused sequence number, so ordering is increasing rather than gapless. Queries always order by sequence rather than trusting timestamps.
 
 ## Live delivery model
 
 Each run uses `patch-pilot:run:<run-id>:timeline`. Publication occurs only after Postgres returns the canonical stored event. Redis does not assign IDs or ordering and does not repair missed messages; reconnecting consumers must reload Postgres history before resuming live delivery.
 
-If publication fails, the operation returns `persisted-stream-failed` with safe error evidence. The stored event remains available for catch-up and must not be rolled back merely because a live viewer missed it.
+If publication fails, the operation returns `persisted-stream-failed` with safe error evidence. The stored event remains available for catch-up and must not be rolled back merely because a live viewer missed it. An Activity retry may republish the same canonical sequence; API feeds and browser consumers deduplicate it by sequence.
 
 ## Control-plane feed
 

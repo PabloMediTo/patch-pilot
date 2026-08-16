@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS run_timeline_sequences (
   run_id text PRIMARY KEY,
@@ -29,6 +31,7 @@ INSERT INTO run_timeline_events (
 )
 SELECT $2, $1, allocated.last_sequence, $3, $4::timestamptz, $5::jsonb
 FROM allocated
+ON CONFLICT (event_id) DO UPDATE SET event_id = EXCLUDED.event_id
 RETURNING event_id, run_id, sequence, event_type, occurred_at, payload;
 `;
 
@@ -60,7 +63,9 @@ export async function createPostgresRunTimelineStore(options = {}) {
         event.occurredAt,
         JSON.stringify(event.payload),
       ]);
-      return mapDatabaseEvent(result.rows[0]);
+      const storedEvent = mapDatabaseEvent(result.rows[0]);
+      assertMatchingEvent(storedEvent, event);
+      return storedEvent;
     },
     list: async (runId) => {
       schemaPromise ??= pool.query(SCHEMA_SQL);
@@ -70,6 +75,18 @@ export async function createPostgresRunTimelineStore(options = {}) {
     },
     close: async () => pool.end(),
   });
+}
+
+/** Rejects reuse of a deterministic event identity for different evidence. */
+function assertMatchingEvent(storedEvent, requestedEvent) {
+  const hasSameEvidence = storedEvent.eventId === requestedEvent.eventId
+    && storedEvent.runId === requestedEvent.runId
+    && storedEvent.type === requestedEvent.type
+    && storedEvent.occurredAt === requestedEvent.occurredAt
+    && isDeepStrictEqual(storedEvent.payload, requestedEvent.payload);
+  if (!hasSameEvidence) {
+    throw new Error("Timeline event identity is already bound to different evidence.");
+  }
 }
 
 /**
