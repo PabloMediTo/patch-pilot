@@ -53,6 +53,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:buffer", "node:crypto"],
         },
+        "github-delivery": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
         "run-timeline-feed": {
           architectureRole: "application-role",
           allowedModuleDependencies: [],
@@ -84,6 +90,7 @@ export const boundaryConfig = {
             "api-http",
             "api-server",
             "application",
+            "github-delivery",
             "github-ingestion",
             "run-approval-http",
             "run-review-evidence-http",

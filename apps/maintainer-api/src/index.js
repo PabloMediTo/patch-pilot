@@ -1,6 +1,7 @@
 export { createMaintainerApiApplication } from "./application/index.js";
 export { handleMaintainerApiRequest } from "./api-http/index.js";
 export { createMaintainerApiServer } from "./api-server/index.js";
+export { createGitHubDeliveryRuntime } from "./github-delivery/index.js";
 export { createGitHubIssueRunSubmission } from "./github-ingestion/index.js";
 export { handleRunApprovalRequest } from "./run-approval-http/index.js";
 export { handleRunReviewEvidenceRequest } from "./run-review-evidence-http/index.js";
