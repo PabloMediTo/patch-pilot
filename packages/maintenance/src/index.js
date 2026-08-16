@@ -7,6 +7,7 @@ export {
   createGitHubDeliveryAdapter,
   createPostgresDeliveryStore,
   publishApprovedPullRequest,
+  reconcileGitHubPullRequest,
 } from "./deliveries/index.js";
 export { executeProposalAttempts } from "./proposal-attempts/index.js";
 export {

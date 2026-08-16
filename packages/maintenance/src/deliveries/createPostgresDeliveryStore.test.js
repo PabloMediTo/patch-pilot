@@ -48,6 +48,8 @@ assert.deepEqual(queries[1].values, [delivery.runId, 17, "octo/example", 42, "ma
   84, delivery.pullRequest.url, true, delivery.deliveredAt]);
 
 assert.deepEqual(await store.get(delivery.runId), delivery);
+assert.deepEqual(await store.getByPullRequest("octo/example", 84), delivery);
+assert.deepEqual(queries.at(-1).values, ["octo/example", 84]);
 assert.equal(queries.filter(({ sql }) => sql.includes("CREATE TABLE")).length, 1);
 
 insertRows = [];

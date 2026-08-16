@@ -111,6 +111,10 @@ A short-lived credential issued for one GitHub App installation. The implemented
 
 The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its authenticated GitHub App transport supplies repository-scoped [installation tokens](#github-app-installation-token); its commit publisher strictly applies the exact approved UTF-8 text diff to the immutable base and creates deterministic Git objects; and its REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. The control-plane API composes the approval store and all delivery ports behind one lifecycle-managed runtime operation. Environment-backed main-process wiring and live proof remain planned; automatic merge is prohibited.
 
+### GitHub Delivery Observation
+
+An immutable comparison between one tracked [GitHub delivery](#github-delivery) and a later `pull_request` webhook. The implemented reconciliation use case records normal lifecycle state as matched when the installation, repository, URL, head branch and revision, and base branch remain exact; otherwise it lists provider drift without changing GitHub or the original delivery. GitHub redelivery replays through its unique delivery identity. Concrete Postgres persistence and signed HTTP ingestion remain planned.
+
 ### Global Docs
 
 The canonical documentation files under `docs/` that define repository-wide

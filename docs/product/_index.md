@@ -72,6 +72,13 @@
 - Read when: A task changes approved branch publication, pull-request creation, delivery evidence, or GitHub delivery retries.
 - Tags: product, github, delivery, approval, pull-request, idempotency
 
+### GitHub Delivery Reconciliation
+
+- Path: `docs/product/github-delivery-reconciliation.md`
+- Summary: Idempotent pull-request webhook comparison, immutable provider drift, and delivery observations.
+- Read when: A task changes post-publication GitHub webhooks, pull-request lifecycle observation, provider drift, or webhook replay handling.
+- Tags: product, github, delivery, reconciliation, webhook, pull-request, idempotency
+
 ### Repository Workspaces
 
 - Path: `docs/product/repository-workspaces.md`

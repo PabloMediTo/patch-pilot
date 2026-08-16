@@ -29,6 +29,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::t
 ON CONFLICT DO NOTHING
 RETURNING ${COLUMNS};`;
 const SELECT_SQL = `SELECT ${COLUMNS} FROM run_pull_request_deliveries WHERE run_id = $1;`;
+const SELECT_BY_PULL_REQUEST_SQL = `SELECT ${COLUMNS} FROM run_pull_request_deliveries
+WHERE repository = $1 AND pull_request_number = $2;`;
 
 /**
  * Creates atomic Postgres persistence for completed pull-request deliveries.
@@ -48,6 +50,11 @@ export async function createPostgresDeliveryStore(options = {}) {
     get: async (runId) => {
       await ensureSchema();
       const result = await pool.query(SELECT_SQL, [runId]);
+      return result.rows[0] === undefined ? null : mapDelivery(result.rows[0]);
+    },
+    getByPullRequest: async (repository, pullRequestNumber) => {
+      await ensureSchema();
+      const result = await pool.query(SELECT_BY_PULL_REQUEST_SQL, [repository, pullRequestNumber]);
       return result.rows[0] === undefined ? null : mapDelivery(result.rows[0]);
     },
     saveDelivery: async (delivery) => {

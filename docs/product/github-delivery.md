@@ -10,6 +10,7 @@ Publish one exactly approved [pull-request proposal](../DICTIONARY.md#pull-reque
 - changing or re-verifying proposal content
 - merging the pull request
 - owning GitHub credentials or durable workflow scheduling
+- reconciling later pull-request lifecycle webhooks
 
 ## Inputs
 
@@ -31,6 +32,7 @@ Publish one exactly approved [pull-request proposal](../DICTIONARY.md#pull-reque
 - Postgres implements the atomic delivery-record port
 - the GitHub REST adapter maps commit publication to branch references and draft-pull-request creation
 - authenticated GitHub App transport supplies short-lived installation requests
+- [GitHub delivery reconciliation](github-delivery-reconciliation.md) observes later pull-request lifecycle and provider drift without mutating this evidence
 
 ## Evidence gate
 

@@ -18,7 +18,7 @@ tags:
 - webhooks
 position: a3
 created: 2026-08-14
-updated: 2026-08-14
+updated: 2026-08-16
 ---
 
 # Reconcile GitHub delivery results and webhooks
@@ -35,6 +35,11 @@ Deliver **Reconcile GitHub delivery results and webhooks** within the documented
 
 ## Notes
 
-[Reference material, links, additional context.]
+- Added provider-free reconciliation for supported `pull_request` lifecycle actions against immutable delivery evidence.
+- Matching identity records normal state/draft/merge observations; installation, repository, URL, head/base branch, or head-revision changes are explicit provider drift and never trigger mutation.
+- Unrelated events, unsupported actions, and untracked pull requests are ignored; GitHub redelivery replays through `X-GitHub-Delivery`, while conflicting reuse is rejected.
+- Extended the delivery Postgres adapter with parameterized lookup by repository and pull-request number.
+- Focused tests cover matched open/merged state, changed-head drift, ignored and untracked events, replay, conflict, and malformed provider evidence.
+- Remaining: add atomic Postgres observation persistence and signed control-plane webhook ingestion.
 
 ## References

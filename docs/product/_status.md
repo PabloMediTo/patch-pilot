@@ -32,12 +32,13 @@
 - Browser approval actions now prevent native form submission, generate an idempotency key, send bounded JSON through the same origin, and reload canonical evidence only after success.
 - A provider-free [GitHub delivery](../DICTIONARY.md#github-delivery) use case gates publication against the exact approval binding, hashes the current diff, derives one safe deterministic branch, requires a linked draft pull request, and normalizes durable or concurrent retries. Its Postgres store atomically persists complete evidence. Concrete GitHub adapters authenticate as the App installation, create deterministic commits, and create or exactly replay branch refs and open draft PRs without overwriting changed provider state. The control-plane API composes these with approval persistence and one managed pool behind a guarded lifecycle; environment-backed main-process wiring and live verification remain open.
 - The GitHub App transport now signs bounded RS256 app JWTs, exchanges them for repository-scoped least-privilege [installation tokens](../DICTIONARY.md#github-app-installation-token), coalesces and refreshes the cache before expiration, pins REST API version `2026-03-10`, and bounds request duration and response bytes without exposing credentials.
+- Provider-free [GitHub delivery observations](../DICTIONARY.md#github-delivery-observation) now reconcile supported pull-request lifecycle webhooks against immutable delivery identity, distinguish matched state from provider drift, ignore unrelated or untracked events, and normalize exact webhook redelivery. The delivery store can locate evidence by repository and pull-request number; signed HTTP ingestion and concrete observation persistence remain open.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
-Verify GitHub delivery against live Postgres and a disposable GitHub test repository, then wire approved deployment configuration into the API main process. Control-plane authentication composition and live Postgres/Redis and Docker safety verification remain open where local runtime or policy decisions are still required.
+Persist GitHub delivery observations atomically and connect them to signed webhook ingestion. Environment-backed API configuration, control-plane authentication composition, and live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime or policy decisions are still required.
 
 ## Open questions
 
