@@ -9,7 +9,7 @@ This document composes the distinct system parts. It does not replace their futu
 | Web interface | Present run submission, timeline, diff, evidence, and approval controls behind one browser origin | Running tools, owning API behavior, or publishing changes | API query data and live events | Run requests and approval decisions forwarded to the API | Control-plane API |
 | Repository workspace | Provide one disposable, constrained checkout for inspection, modification, and tests | Owning workflow state or long-term artifacts | Repository, revision, commands, limits | Files, command results, diff, logs | Maintenance worker |
 | Temporal | Persist workflow execution, retries, timers, and approval waiting | Product reporting or artifact storage | Workflow commands and signals | Durable workflow progress | API, worker |
-| Postgres | Store product query state and durable audit records | Scheduling retries or live fan-out | Runs, steps, tool calls, plans, test results, approvals | Timeline and review queries | API, worker |
+| Postgres | Store product query state and durable audit records | Scheduling retries or live fan-out | Runs, steps, tool calls, plans, test results, review snapshots, approvals | Timeline and review queries | API, worker |
 | Redis | Cache repository or model results and distribute live progress | Canonical workflow or approval storage | Cache entries and progress events | Cache hits and live event streams | API, worker |
 | GitHub delivery | Read authorized issues and publish approved branches and pull requests | Approving its own proposal or merging | GitHub App installation, approved proposal | Issue context, branch, draft pull request | API, worker, GitHub |
 

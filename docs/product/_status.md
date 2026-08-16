@@ -19,6 +19,7 @@
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
 - The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
+- A [review snapshot](../DICTIONARY.md#review-snapshot) can now be created only from a ready final proposal with passed verification and accepted critique. It derives the exact approval binding and has an atomic immutable Postgres store; API read composition and live verification remain open.
 - The maintenance package validates human approval decisions, requires rejection reasons, binds the decision to canonical base-revision, diff, plan-version, and passed-verification hashes, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
 - Approval decisions have a concrete Postgres store with idempotent schema evolution, parameterized writes, database uniqueness constraints, evidence-binding columns, and existing-decision recovery after write conflicts; legacy unbound rows remain readable but cannot authorize delivery. Live verification remains open.
 - The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
@@ -38,7 +39,7 @@
 
 ## Next milestone
 
-Compose the control-plane API main process with its implemented authentication port and environment-backed persisted stores. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
+Compose review snapshots, timeline history, and approval decisions into the authenticated API read and decision ports, then wire the executable main process lifecycle. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
 
 ## Open questions
 

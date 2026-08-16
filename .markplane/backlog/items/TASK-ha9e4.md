@@ -76,6 +76,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Registered `api-authentication` as an independent security application role with only the exact `node:crypto` provider permission; focused tests cover valid, malformed, missing, array-valued, and incorrect credentials plus configuration rejection.
 - Added an API application-runtime composition that constructs deployment authentication and supplies it to the concrete server while keeping persisted data ports explicit.
 - The concrete server now derives approval authentication and both review/timeline run-access checks from that one shared source; focused loopback tests prove valid bearer access and rejection when the credential is absent.
-- Remaining before completion: compose the executable control-plane main process with persisted evidence stores, listener, and lifecycle ownership; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added a canonical immutable review snapshot created only from a ready proposal with passed verification and accepted critique; it derives the exact diff/evidence hashes and approval binding while detaching caller-owned JSON.
+- Added atomic Postgres review-snapshot persistence with explicit binding columns, JSONB evidence, first-writer recovery, and no duplication of timeline or approval records.
+- Registered `reviews` as a conceptual maintenance module with only exact `pg` and `node:crypto` permissions; focused tests cover gate rejection, hashing, deep immutability, parameterized persistence, replay recovery, and conflicts.
+- Remaining before completion: compose snapshot, timeline, and approval stores into the API read/decision ports, then wire the executable listener and lifecycle; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

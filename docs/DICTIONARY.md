@@ -152,6 +152,10 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process, concrete API server, and single-operator API authentication adapter are implemented; API main-process and persisted-store wiring remain planned.
 
+### Review Snapshot
+
+The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run. API query composition, workflow recording, and live persistence verification remain planned.
+
 ### Repository Workspace
 
 A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. The implemented sandbox copies it into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.

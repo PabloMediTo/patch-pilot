@@ -14,6 +14,7 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 ## Inputs
 
 - run identity and current state
+- persisted [review snapshot](../DICTIONARY.md#review-snapshot)
 - ordered timeline events
 - implementation plan and unified diff
 - bounded verification evidence
@@ -31,8 +32,9 @@ Present the persisted [change proposal](../DICTIONARY.md#change-proposal), [veri
 
 - the [control-plane API](../DICTIONARY.md#control-plane-api) authorizes and supplies persisted evidence through `GET /runs/:runId/review-evidence`, plus live timeline events
 - the approval use case validates the first human action and delegates atomic persistence
+- the review-snapshot store owns immutable approval-gate proposal, verification, critique, and binding evidence
 - GitHub delivery consumes only an approved result
 
 ## Current enforcement boundary
 
-The web application implements and tests the review model, HTML rendering, same-origin live timeline client, responsive stylesheet, HTTP dispatcher, concrete Node HTTP server, and executable environment-configured main process. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The restrictive CSP permits only same-origin scripts, styles, connections, and form actions. For initial HTML, the server-side review client forwards only `cookie` or `authorization` to the API, bounds the response to two MiB by default, and maps authorized evidence, unauthorized access, and missing reviews without giving the web process its own session policy. Approval forms use Same-Origin Fetch with a generated idempotency key and bounded JSON body; successful decisions reload canonical evidence. The API application runtime composes the implemented [control-plane authentication](control-plane-authentication.md) adapter into the concrete server as the one shared approval and run-access policy. Executable main-process composition with persisted evidence stores remains open; live Postgres and Redis verification remains separately blocked by unavailable Docker.
+The web application implements and tests the review model, HTML rendering, same-origin live timeline client, responsive stylesheet, HTTP dispatcher, concrete Node HTTP server, and executable environment-configured main process. Repository and agent-authored text is escaped on the server, and streamed event fields enter the DOM only through `textContent`. The restrictive CSP permits only same-origin scripts, styles, connections, and form actions. For initial HTML, the server-side review client forwards only `cookie` or `authorization` to the API, bounds the response to two MiB by default, and maps authorized evidence, unauthorized access, and missing reviews without giving the web process its own session policy. Approval forms use Same-Origin Fetch with a generated idempotency key and bounded JSON body; successful decisions reload canonical evidence. The API application runtime composes the implemented [control-plane authentication](control-plane-authentication.md) adapter into the concrete server as the one shared approval and run-access policy. A concrete Postgres [review snapshot](../DICTIONARY.md#review-snapshot) store now provides immutable proposal, verification, critique, and approval-binding evidence without duplicating timeline or decision storage. API read composition and executable main-process lifecycle wiring remain open; live Postgres and Redis verification remains separately blocked by unavailable Docker.

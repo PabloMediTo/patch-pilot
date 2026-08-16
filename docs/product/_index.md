@@ -155,3 +155,10 @@
 - Summary: Human review model and safe rendering of timeline, plan, diff, verification evidence, and approval actions.
 - Read when: A task changes review evidence presentation, diff rendering, approval availability, or web review behavior.
 - Tags: product, review, frontend, diff, evidence, approval
+
+### Review Snapshots
+
+- Path: `docs/product/review-snapshots.md`
+- Summary: Immutable approval-gate evidence, exact review binding, atomic Postgres persistence, and separation from timeline and decisions.
+- Read when: A task changes when evidence enters human review, review persistence, approval bindings, or API review-query composition.
+- Tags: product, review, snapshot, postgres, evidence, approval
