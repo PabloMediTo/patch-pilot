@@ -15,7 +15,7 @@
 - A bounded [change proposal](../DICTIONARY.md#change-proposal) can now be generated only after reproduction: it records a versioned structured plan, derives file and line evidence from a unified diff, requires exact plan-to-diff file agreement, and applies the canonical change policy.
 - Ready proposals can now produce immutable [verification evidence](../DICTIONARY.md#verification-evidence), structured [critique decisions](../DICTIONARY.md#critique-decision), and up to three visible [proposal attempts](../DICTIONARY.md#proposal-attempt) comprising the initial modification plus two retries.
 - A [run timeline](../DICTIONARY.md#run-timeline) module now provides an idempotent Postgres schema, atomic per-run event sequences, ordered history queries, and run-scoped Redis publication/subscription. The API composes these into a gap-free feed, resumable SSE session, and authenticated `GET /runs/:runId/timeline` route. Its adapters are unit-tested but still require live verification against the local services.
-- No Temporal workflow or dependency restoration has been implemented. The executable [control-plane runtime](control-plane-runtime.md) constructs the environment-configured single-operator bearer adapter, one shared Postgres pool, the run/review/timeline/approval stores and queries, one Redis stream, issue submission, GitHub pull-request reconciliation, and the listener with signal-driven idempotent shutdown. Durable run-to-Temporal submission remains open.
+- The executable [control-plane runtime](control-plane-runtime.md) now constructs the environment-configured single-operator bearer adapter, one shared Postgres pool, the run/review/timeline/approval stores and queries, one Redis stream, one reusable Temporal connection, issue submission, GitHub pull-request reconciliation, and the listener with signal-driven idempotent shutdown. Created and replayed persisted runs start one deterministic `maintenanceRunWorkflow`; worker-side workflow and Activity implementation remains open.
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
 - The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
@@ -39,7 +39,7 @@
 
 ## Next milestone
 
-Start the first Temporal maintenance workflow from an accepted or replayed persisted run, including timeline and review-snapshot recording. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
+Implement the worker-side `maintenanceRunWorkflow`, beginning with submitted timeline recording and the first inspection Activity boundary. Later workflow milestones will compose reproduction, attempts, review-snapshot recording, durable approval waiting, and delivery. Live Postgres/GitHub, Postgres/Redis, Temporal, and Docker safety verification remain open where local runtime availability is still required.
 
 ## Open questions
 

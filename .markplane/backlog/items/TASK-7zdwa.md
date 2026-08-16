@@ -8,7 +8,8 @@ effort: medium
 epic: EPIC-wvku6
 plan: null
 depends_on: []
-blocks: []
+blocks:
+- TASK-t4mp0
 related: []
 assignee: null
 tags:

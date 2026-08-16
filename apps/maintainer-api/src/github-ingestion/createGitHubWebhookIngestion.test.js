@@ -5,6 +5,7 @@ import { createGitHubWebhookIngestion } from "./index.js";
 const revision = "a".repeat(40);
 const requests = [];
 const savedRuns = [];
+const dispatchedRuns = [];
 let saveStatus = "created";
 const ingestWebhook = createGitHubWebhookIngestion({
   requestGitHub: async (request) => {
@@ -16,6 +17,8 @@ const ingestWebhook = createGitHubWebhookIngestion({
     return { status: saveStatus, run: Object.freeze({ ...run,
       submittedAt: "2026-08-16T14:00:00.000Z" }) };
   },
+  dispatchRun: async (run) => { dispatchedRuns.push(run); return { status: "started",
+    workflowId: run.id }; },
   reconcilePullRequestWebhook: async (envelope) => ({ status: "recorded",
     deliveryId: envelope.deliveryId }),
 });
@@ -31,6 +34,7 @@ assert.equal(accepted.run.submittedAt, "2026-08-16T14:00:00.000Z");
 assert.deepEqual(requests, [{ installationId: 17, method: "GET",
   path: "/repos/octo/example/git/ref/heads/release%2Fv1" }]);
 assert.equal(savedRuns[0].baseRevision, revision);
+assert.equal(dispatchedRuns[0].id, "github:delivery-1");
 
 saveStatus = "existing";
 assert.equal((await ingestWebhook(envelope)).status, "replayed");
@@ -43,6 +47,7 @@ assert.deepEqual(await ingestWebhook({ eventName: "pull_request", deliveryId: "p
 const failingIngestion = createGitHubWebhookIngestion({
   requestGitHub: async () => ({ statusCode: 404, body: {} }),
   saveSubmittedRun: async () => ({ status: "created" }),
+  dispatchRun: async () => ({ status: "started" }),
   reconcilePullRequestWebhook: async () => ({ status: "ignored" }),
 });
 await assert.rejects(failingIngestion(envelope), /immutable revision/u);

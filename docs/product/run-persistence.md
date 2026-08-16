@@ -32,7 +32,7 @@ Persist the initial immutable identity and target evidence of one submitted [mai
 ## Adjacent parts
 
 - [GitHub run ingestion](github-ingestion.md) constructs the validated [run submission](../DICTIONARY.md#run-submission)
-- the [maintenance workflow](maintenance-workflow.md) starts only after durable submission persistence
+- [workflow submission](workflow-submission.md) starts Temporal only after durable submission persistence
 - the [run timeline](../DICTIONARY.md#run-timeline) owns ordered lifecycle events separately
 - the [control-plane runtime](control-plane-runtime.md) connects this store to authenticated issue webhook dispatch
 
@@ -40,4 +40,4 @@ Persist the initial immutable identity and target evidence of one submitted [mai
 
 The store lazily installs one `maintenance_runs` table. Both run ID and source delivery ID are unique so GitHub redelivery cannot create a second run under another identity. Insertion uses a parameterized `ON CONFLICT DO NOTHING` statement and returns the database winner. If another writer wins, the adapter reloads by run ID or delivery ID. Exactly one matching row is an idempotent existing result; zero rows or two different identity matches are an explicit conflict rather than a guessed winner.
 
-The table stores current run status without constraining the column to `submitted`, leaving later workflow transitions possible. This adapter nevertheless accepts only the initial `submitted` state. Timeline, workflow-step, and review evidence remain in their owning stores instead of accumulating in the run row.
+The table stores current run status without constraining the column to `submitted`, leaving later workflow transitions possible. This adapter nevertheless accepts only the initial `submitted` state. The API passes the database-owned canonical row, including its submission timestamp, to Temporal. Timeline, workflow-step, and review evidence remain in their owning stores instead of accumulating in the run row.

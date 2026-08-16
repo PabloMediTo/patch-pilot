@@ -11,13 +11,17 @@ const payload = {
   sender: { id: 23 },
 };
 const submittedRuns = [];
+const dispatchedRuns = [];
 
 const result = await createGitHubIssueRunSubmission({
   eventName: "issues",
   deliveryId: "delivery-123",
   payload,
   resolveBaseRevision: async () => "a".repeat(40),
-  submitRun: async (run) => { submittedRuns.push(run); return { status: "created", run }; },
+  submitRun: async (run) => { submittedRuns.push(run); return { status: "created",
+    run: { ...run, submittedAt: "2026-08-16T15:00:00.000Z" } }; },
+  dispatchRun: async (run) => { dispatchedRuns.push(run); return { status: "started",
+    workflowId: run.id }; },
 });
 
 assert.equal(result.status, "accepted");
@@ -34,6 +38,8 @@ assert.deepEqual(submittedRuns, [
     status: "submitted",
   },
 ]);
+assert.equal(dispatchedRuns[0].id, "github:delivery-123");
+assert.equal(result.workflow.status, "started");
 
 const ignoredResult = await createGitHubIssueRunSubmission({
   eventName: "issues",
@@ -44,6 +50,9 @@ const ignoredResult = await createGitHubIssueRunSubmission({
   },
   submitRun: async () => {
     throw new Error("Ignored events must not submit a run.");
+  },
+  dispatchRun: async () => {
+    throw new Error("Ignored events must not dispatch a run.");
   },
 });
 assert.deepEqual(ignoredResult, {

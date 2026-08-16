@@ -44,6 +44,13 @@
 - Read when: A task changes initial run validation, run storage, submission idempotency, or the persistence boundary before Temporal starts.
 - Tags: product, runs, postgres, persistence, idempotency, temporal
 
+### Workflow Submission
+
+- Path: `docs/product/workflow-submission.md`
+- Summary: Deterministic Temporal workflow identity, persistence-before-dispatch ordering, redelivery idempotency, and API connection lifecycle.
+- Read when: A task changes how persisted runs start Temporal workflows, workflow IDs, task queues, dispatch retries, or Temporal client ownership.
+- Tags: product, runs, temporal, workflow, submission, idempotency
+
 ### System Composition
 
 - Path: `docs/product/system-composition.md`

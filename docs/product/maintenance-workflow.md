@@ -42,7 +42,7 @@ Own one durable maintenance run from validated repository and issue input throug
 
 ## Lifecycle
 
-1. Record a `submitted` run through the atomic [run persistence](run-persistence.md) boundary, bound to the repository, issue, and immutable base revision.
+1. Record a `submitted` run through the atomic [run persistence](run-persistence.md) boundary, then start its deterministic Temporal [workflow submission](workflow-submission.md), bound to the repository, issue, and immutable base revision.
 2. Validate repository, issue, installation, language, and base revision.
 3. Create the isolated repository workspace.
 4. Inspect manifests, instructions, source layout, and relevant history.

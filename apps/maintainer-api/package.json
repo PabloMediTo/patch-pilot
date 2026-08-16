@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@patch-pilot/maintenance": "0.0.0",
+    "@temporalio/client": "^1.22.0",
     "pg": "^8.23.0"
   }
 }

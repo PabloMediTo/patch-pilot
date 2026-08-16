@@ -6,7 +6,7 @@ const FULL_REVISION = /^[0-9a-f]{40}$/u;
 /**
  * Routes authenticated GitHub envelopes to run submission or delivery reconciliation.
  *
- * @param {{ requestGitHub: Function, saveSubmittedRun: Function, reconcilePullRequestWebhook: Function }} input Provider and persistence ports.
+ * @param {{ requestGitHub: Function, saveSubmittedRun: Function, dispatchRun: Function, reconcilePullRequestWebhook: Function }} input Provider and persistence ports.
  * @returns {Function} Authenticated webhook ingestion operation.
  */
 export function createGitHubWebhookIngestion(input) {
@@ -17,7 +17,8 @@ export function createGitHubWebhookIngestion(input) {
     }
     return createGitHubIssueRunSubmission({ ...envelope,
       resolveBaseRevision: (request) => resolveBaseRevision(input.requestGitHub, request),
-      submitRun: input.saveSubmittedRun });
+      submitRun: input.saveSubmittedRun,
+      dispatchRun: input.dispatchRun });
   };
 }
 
@@ -40,7 +41,8 @@ async function resolveBaseRevision(requestGitHub, request) {
 
 /** Requires concrete provider, persistence, and reconciliation ports. */
 function assertPorts(input) {
-  if ([input?.requestGitHub, input?.saveSubmittedRun, input?.reconcilePullRequestWebhook]
+  if ([input?.requestGitHub, input?.saveSubmittedRun, input?.dispatchRun,
+    input?.reconcilePullRequestWebhook]
     .some((port) => typeof port !== "function")) {
     throw new Error("GitHub webhook ingestion requires provider, run store, and reconciliation ports.");
   }

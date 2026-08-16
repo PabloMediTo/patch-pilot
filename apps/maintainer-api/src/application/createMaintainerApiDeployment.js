@@ -10,26 +10,32 @@ import pg from "pg";
 
 import { createGitHubDeliveryRuntime } from "../github-delivery/index.js";
 import { createGitHubWebhookIngestion } from "../github-ingestion/index.js";
+import { createTemporalRunSubmissionRuntime } from "../workflow-submission/index.js";
 import { createMaintainerApiRuntime } from "./createMaintainerApiRuntime.js";
 
 const DEFAULT_POSTGRES_URL = "postgres://patch_pilot:patch_pilot@127.0.0.1:5432/patch_pilot";
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
+const DEFAULT_TEMPORAL_ADDRESS = "127.0.0.1:7233";
+const DEFAULT_TEMPORAL_NAMESPACE = "default";
+const DEFAULT_TEMPORAL_TASK_QUEUE = "patch-pilot-maintenance";
 
 /**
  * Composes all stateful API adapters behind one deployment lifecycle.
  *
- * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function }} options Environment and optional controlled test resources.
+ * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function, temporalRunSubmissionRuntime?: object }} options Environment and optional controlled test resources.
  * @returns {Promise<{ server: object, listen: Function, deliverApprovedPullRequest: Function, close: Function }>} API deployment operations.
  */
 export async function createMaintainerApiDeployment(options) {
   const config = createDeploymentConfig(options?.environment);
   const pool = options?.pool ?? new pg.Pool({ connectionString: config.postgresUrl });
-  let timelineStream;
-  let githubDeliveryRuntime;
+  let timelineStream, githubDeliveryRuntime, temporalRunSubmissionRuntime;
 
   try {
     timelineStream = options?.timelineStream
       ?? await createRedisRunTimelineStream({ url: config.redisUrl });
+    temporalRunSubmissionRuntime = options?.temporalRunSubmissionRuntime
+      ?? await createTemporalRunSubmissionRuntime({ address: config.temporalAddress,
+        namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue });
     githubDeliveryRuntime = options?.githubDeliveryRuntime
       ?? await createGitHubDeliveryRuntime({ pool, appId: config.githubAppId,
         privateKey: config.githubAppPrivateKey });
@@ -43,18 +49,21 @@ export async function createMaintainerApiDeployment(options) {
     ]);
     const ingestWebhook = createGitHubWebhookIngestion({ requestGitHub,
       saveSubmittedRun: runStore.saveSubmittedRun,
+      dispatchRun: temporalRunSubmissionRuntime.dispatchRun,
       reconcilePullRequestWebhook: githubDeliveryRuntime.reconcilePullRequestWebhook });
     const runtime = createMaintainerApiRuntime({ environment: options.environment,
       githubWebhook: { secret: config.githubWebhookSecret,
         ingestWebhook },
       reviewStore, timelineStore, approvalStore, timelineStream });
     const lifecycle = createDeploymentLifecycle({ ...runtime, timelineStream,
+      temporalRunSubmissionRuntime,
       githubDeliveryRuntime, host: config.host, port: config.port });
     return Object.freeze({ server: runtime.server, listen: lifecycle.listen,
       deliverApprovedPullRequest: githubDeliveryRuntime.deliverApprovedPullRequest,
       close: lifecycle.close });
   } catch (error) {
-    await closeFailedComposition({ pool, timelineStream, githubDeliveryRuntime });
+    await closeFailedComposition({ pool, timelineStream, temporalRunSubmissionRuntime,
+      githubDeliveryRuntime });
     throw error;
   }
 }
@@ -66,14 +75,20 @@ function createDeploymentConfig(environment) {
   const githubWebhookSecret = environment?.PATCH_PILOT_GITHUB_WEBHOOK_SECRET;
   const githubAppId = environment?.PATCH_PILOT_GITHUB_APP_ID;
   const githubAppPrivateKey = environment?.PATCH_PILOT_GITHUB_APP_PRIVATE_KEY;
-  const hasStrings = [host, githubWebhookSecret, githubAppId, githubAppPrivateKey]
+  const temporalAddress = environment?.PATCH_PILOT_TEMPORAL_ADDRESS ?? DEFAULT_TEMPORAL_ADDRESS;
+  const temporalNamespace = environment?.PATCH_PILOT_TEMPORAL_NAMESPACE ?? DEFAULT_TEMPORAL_NAMESPACE;
+  const temporalTaskQueue = environment?.PATCH_PILOT_TEMPORAL_TASK_QUEUE
+    ?? DEFAULT_TEMPORAL_TASK_QUEUE;
+  const hasStrings = [host, githubWebhookSecret, githubAppId, githubAppPrivateKey,
+    temporalAddress, temporalNamespace, temporalTaskQueue]
     .every((value) => typeof value === "string" && value.trim() !== "");
   if (!hasStrings || !Number.isSafeInteger(port) || port < 1 || port > 65535) {
     throw new Error("API deployment requires valid listener and GitHub App environment values.");
   }
   return Object.freeze({ host, port, githubWebhookSecret, githubAppId, githubAppPrivateKey,
     postgresUrl: environment.PATCH_PILOT_POSTGRES_URL ?? DEFAULT_POSTGRES_URL,
-    redisUrl: environment.PATCH_PILOT_REDIS_URL ?? DEFAULT_REDIS_URL });
+    redisUrl: environment.PATCH_PILOT_REDIS_URL ?? DEFAULT_REDIS_URL,
+    temporalAddress, temporalNamespace, temporalTaskQueue });
 }
 
 /** Owns one listener, Redis stream, and shared Postgres pool lifecycle. */
@@ -110,6 +125,7 @@ async function closeDeploymentResources(resources) {
   const ingressResult = await Promise.allSettled([closeServer(resources.server)]);
   const providerResults = await Promise.allSettled([
     resources.timelineStream.close(),
+    resources.temporalRunSubmissionRuntime.close(),
     resources.githubDeliveryRuntime.close(),
   ]);
   const failures = [...ingressResult, ...providerResults]
@@ -131,6 +147,9 @@ function closeServer(server) {
 async function closeFailedComposition(resources) {
   const operations = [];
   if (resources.timelineStream !== undefined) operations.push(resources.timelineStream.close());
+  if (resources.temporalRunSubmissionRuntime !== undefined) {
+    operations.push(resources.temporalRunSubmissionRuntime.close());
+  }
   if (resources.githubDeliveryRuntime !== undefined) operations.push(resources.githubDeliveryRuntime.close());
   else operations.push(resources.pool.end());
   await Promise.allSettled(operations);

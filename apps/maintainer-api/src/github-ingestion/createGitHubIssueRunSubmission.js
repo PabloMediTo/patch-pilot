@@ -5,7 +5,7 @@ import { readGitHubIssueRunRequest } from "./readGitHubIssueRunRequest.js";
 /**
  * Converts one authenticated, opted-in GitHub issue envelope into a submitted run.
  *
- * @param {{ eventName: string, deliveryId: string, payload: object, resolveBaseRevision: Function, submitRun: Function }} input Authenticated envelope and outbound ports.
+ * @param {{ eventName: string, deliveryId: string, payload: object, resolveBaseRevision: Function, submitRun: Function, dispatchRun: Function }} input Authenticated envelope and outbound ports.
  * @returns {Promise<{ status: string, reason?: string, run?: object }>} Ingestion outcome.
  * @throws {Error} When a triggering payload or persistence result is invalid.
  */
@@ -22,7 +22,10 @@ export async function createGitHubIssueRunSubmission(input) {
 
   const baseRevision = await input.resolveBaseRevision(request);
   const run = createRunFromDelivery(input.deliveryId, request, baseRevision);
-  return normalizeSubmission(await input.submitRun(run), run);
+  const submission = normalizeSubmission(await input.submitRun(run), run);
+  if (submission.status === "conflict") return submission;
+  const workflow = await input.dispatchRun(submission.run);
+  return Object.freeze({ ...submission, workflow });
 }
 
 /**

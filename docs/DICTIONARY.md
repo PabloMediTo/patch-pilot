@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, GitHub pull-request reconciliation, and deterministic signal-driven shutdown. Durable issue-to-Temporal dispatch remains planned.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, one Temporal submission connection, GitHub ingestion and pull-request reconciliation, and deterministic signal-driven shutdown. It starts persisted issue runs but does not execute worker Activities.
 
 ### Critique Decision
 
@@ -130,7 +130,7 @@ structured `_index.md` files for discoverability.
 
 ### Maintenance Run
 
-One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. Its implemented initial state validates the complete target identity and is atomically persisted in Postgres before workflow dispatch, with unique run and source-delivery identities. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
+One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. Its implemented initial state validates the complete target identity, is atomically persisted in Postgres, and is submitted to Temporal with the same deterministic workflow identity. Unique run and source-delivery identities make webhook retries safe. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
 
 ### Monorepo
 
@@ -162,7 +162,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path resolves the repository default branch through a repository-scoped App request and retains the delivery, installation, repository, branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts so later workflow and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently. Temporal submission remains planned.
+An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path resolves the repository default branch through a repository-scoped App request and retains the delivery, installation, repository, branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts. Created and replayed canonical rows then enter [workflow submission](#workflow-submission), while identity conflicts never reach Temporal.
 
 ### Run Timeline
 
@@ -175,6 +175,10 @@ A repository root whose manifests and test configuration match one deterministic
 ### Verification Evidence
 
 Structured proof produced by repository checks, including the exact command, exit code, bounded output, duration, timeout, and truncation state. The implemented verifier classifies this evidence as passed, failed, or execution-failed. Human approval relies on the evidence rather than an agent claim that a fix works.
+
+### Workflow Submission
+
+The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. Worker-side workflow execution remains planned.
 
 ### Workspace
 

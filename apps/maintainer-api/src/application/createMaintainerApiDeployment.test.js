@@ -13,6 +13,11 @@ const pool = { endCalls: 0, async query(sql, values) {
   async end() { this.endCalls += 1; } };
 const timelineStream = { closeCalls: 0, async subscribe() { return async () => undefined; },
   async close() { this.closeCalls += 1; } };
+const dispatchedRuns = [];
+const temporalRunSubmissionRuntime = { closeCalls: 0,
+  async dispatchRun(run) { dispatchedRuns.push(run); return { status: "started",
+    workflowId: run.id }; },
+  async close() { this.closeCalls += 1; } };
 const githubDeliveryRuntime = {
   closeCalls: 0,
   deliverApprovedPullRequest: async () => ({ status: "created" }),
@@ -25,6 +30,7 @@ const githubDeliveryRuntime = {
 const port = await reservePort();
 const deployment = await createMaintainerApiDeployment({ environment: createEnvironment(port),
   pool, timelineStream, githubDeliveryRuntime,
+  temporalRunSubmissionRuntime,
   githubRequest: async () => ({ statusCode: 200, body: { object: { sha: "a".repeat(40) } } }) });
 
 await deployment.listen();
@@ -40,23 +46,30 @@ const issueResponse = await exchange(deployment.server,
   { body: issueBody, eventName: "issues", deliveryId: "issue-delivery-1" });
 assert.equal(issueResponse.statusCode, 202);
 assert.deepEqual(JSON.parse(issueResponse.body), { status: "accepted" });
+assert.equal(dispatchedRuns[0].id, "github:issue-delivery-1");
+assert.equal(dispatchedRuns[0].submittedAt, "2026-08-16T14:00:00.000Z");
 assert.deepEqual(await deployment.deliverApprovedPullRequest({}), { status: "created" });
 
 await deployment.close();
 await deployment.close();
 assert.equal(timelineStream.closeCalls, 1);
+assert.equal(temporalRunSubmissionRuntime.closeCalls, 1);
 assert.equal(githubDeliveryRuntime.closeCalls, 1);
 assert.equal(pool.endCalls, 1);
 
 await assert.rejects(createMaintainerApiDeployment({ environment: {}, pool,
-  timelineStream, githubDeliveryRuntime }), /valid listener and GitHub App/u);
+  timelineStream, temporalRunSubmissionRuntime, githubDeliveryRuntime }), /valid listener/u);
 
 const failedPool = { endCalls: 0, async query() { return { rows: [] }; },
   async end() { this.endCalls += 1; } };
 const failedStream = { closeCalls: 0, async close() { this.closeCalls += 1; } };
+const failedTemporalRuntime = { closeCalls: 0, async dispatchRun() {},
+  async close() { this.closeCalls += 1; } };
 await assert.rejects(createMaintainerApiDeployment({ environment: createEnvironment(3001),
-  pool: failedPool, timelineStream: failedStream }));
+  pool: failedPool, timelineStream: failedStream,
+  temporalRunSubmissionRuntime: failedTemporalRuntime }));
 assert.equal(failedStream.closeCalls, 1);
+assert.equal(failedTemporalRuntime.closeCalls, 1);
 assert.equal(failedPool.endCalls, 1);
 
 /** Creates complete deployment environment values without real credentials. */
