@@ -30,7 +30,7 @@ Capture the immutable [review snapshot](../DICTIONARY.md#review-snapshot) that m
 ## Adjacent parts
 
 - proposal attempts supply only their completed final proposal, passed verification, and accepted critique
-- the API review query will combine the snapshot with timeline history and any approval decision
+- the API review query combines the snapshot with timeline history and any approval decision
 - GitHub delivery later verifies the approval binding against the approved proposal
 - Postgres owns the concrete immutable snapshot row
 
@@ -40,4 +40,4 @@ A snapshot can be created only for a ready proposal whose verification passed an
 
 The Postgres store records one row per run with explicit binding columns and JSONB plan, verification, and critique evidence. First-writer insertion never updates a row. A uniqueness loss reloads the winner for idempotent comparison by its caller; failure to locate a winner is an explicit conflict. Timeline entries and approval decisions remain in their own canonical stores and are joined only at the API read boundary.
 
-The use case, store, and focused tests are implemented. Workflow recording, API read composition, and live Postgres verification remain open.
+The use case, store, API query composition, and focused tests are implemented. Workflow recording and live Postgres verification remain open.

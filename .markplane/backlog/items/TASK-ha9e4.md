@@ -19,7 +19,7 @@ tags:
 - approval
 position: a6
 created: 2026-08-14
-updated: 2026-08-15
+updated: 2026-08-16
 ---
 
 # Build diff, evidence, and approval review screen
@@ -79,6 +79,9 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added a canonical immutable review snapshot created only from a ready proposal with passed verification and accepted critique; it derives the exact diff/evidence hashes and approval binding while detaching caller-owned JSON.
 - Added atomic Postgres review-snapshot persistence with explicit binding columns, JSONB evidence, first-writer recovery, and no duplication of timeline or approval records.
 - Registered `reviews` as a conceptual maintenance module with only exact `pg` and `node:crypto` permissions; focused tests cover gate rejection, hashing, deep immutability, parameterized persistence, replay recovery, and conflicts.
-- Remaining before completion: compose snapshot, timeline, and approval stores into the API read/decision ports, then wire the executable listener and lifecycle; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added the provider-free API `run-review-query` role, which joins immutable review snapshots with ordered timeline history and an optional approval decision without duplicating canonical records.
+- The API application runtime now derives both review-evidence reads and exact approval state from the same three injected stores; missing decisions remain omitted so the web model preserves first-decision actions.
+- Registered the query role and its single application edge, with focused tests for complete, undecided, missing-review, invalid-port, and exact-binding outcomes.
+- Remaining before completion: wire environment-backed stores, live stream, executable listener, and lifecycle in the API main process; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

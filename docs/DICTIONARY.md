@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes. The application runtime constructs an environment-configured bearer adapter and enforces it as the one shared single-operator authentication and all-runs authorization policy for human routes; Postgres/Redis adapters and other stores remain injected until the API main process wires deployment configuration.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes. The application runtime constructs an environment-configured bearer adapter, enforces it as the one shared single-operator authentication and all-runs authorization policy for human routes, and composes injected review-snapshot, timeline, and approval stores into the read and decision queries. Environment-backed adapters and listener lifecycle remain for the API main process to wire.
 
 ### Critique Decision
 
@@ -150,11 +150,11 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process, concrete API server, and single-operator API authentication adapter are implemented; API main-process and persisted-store wiring remain planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; its query composes the canonical snapshot, timeline, and optional decision, while the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process, concrete API server, single-operator authentication, and persisted-state query composition are implemented; API main-process lifecycle wiring remains planned.
 
 ### Review Snapshot
 
-The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run. API query composition, workflow recording, and live persistence verification remain planned.
+The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run, and the API query joins those separate records only when serving review or approval state. Workflow recording and live persistence verification remain planned.
 
 ### Repository Workspace
 

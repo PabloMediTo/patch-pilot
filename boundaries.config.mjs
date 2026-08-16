@@ -49,7 +49,7 @@ export const boundaryConfig = {
         },
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["api-authentication", "api-server"],
+          allowedModuleDependencies: ["api-authentication", "api-server", "run-review-query"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
@@ -83,6 +83,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:url"],
         },
+        "run-review-query": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
         "run-timeline-http": {
           architectureRole: "application-role",
           allowedModuleDependencies: ["run-timeline-feed"],
@@ -101,6 +107,7 @@ export const boundaryConfig = {
             "github-ingestion",
             "run-approval-http",
             "run-review-evidence-http",
+            "run-review-query",
             "run-timeline-feed",
             "run-timeline-http",
           ],
