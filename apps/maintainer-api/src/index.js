@@ -1,4 +1,5 @@
 export { createMaintainerApiApplication } from "./application/index.js";
+export { createApiBearerAuthentication } from "./api-authentication/index.js";
 export { handleMaintainerApiRequest } from "./api-http/index.js";
 export { createMaintainerApiServer } from "./api-server/index.js";
 export { createGitHubDeliveryRuntime } from "./github-delivery/index.js";

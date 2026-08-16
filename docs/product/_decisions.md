@@ -18,6 +18,10 @@ A run must reproduce the reported problem before modifying code. If reproduction
 
 The system may inspect, plan, modify, and verify autonomously in isolation. Publishing a branch or pull request requires an explicit approval decision. Automatic merge is outside the MVP.
 
+## Single-operator bearer authentication
+
+The MVP control plane authenticates one deployment-configured operator through a bearer credential and records a separate stable actor identity in approval evidence. This avoids introducing account provisioning, session storage, or partially defined multi-tenant access rules before the product needs them. The web origin may forward the bearer header, but authentication remains owned by the API deployment. A future multi-user policy must replace this adapter explicitly rather than extending its all-runs authorization semantics implicitly.
+
 ## Redis is not canonical storage
 
 Redis supports short-lived caches and live progress delivery. Durable run facts, plans, tool calls, verification results, and approval decisions remain in Postgres.

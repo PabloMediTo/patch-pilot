@@ -58,6 +58,13 @@
 - Read when: You need to start, inspect, troubleshoot, or update the local stateful service environment.
 - Tags: product, local-development, docker, temporal, postgres, redis
 
+### Control-Plane Authentication
+
+- Path: `docs/product/control-plane-authentication.md`
+- Summary: Single-operator bearer authentication, environment contract, timing-safe credential comparison, and explicit MVP authorization limits.
+- Read when: A task changes control-plane user authentication, bearer credentials, actor identity, run access, or API deployment security.
+- Tags: product, api, authentication, authorization, bearer, security
+
 ### GitHub Run Ingestion
 
 - Path: `docs/product/github-ingestion.md`

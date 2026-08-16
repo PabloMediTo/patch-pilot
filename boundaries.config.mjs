@@ -29,6 +29,12 @@ export const boundaryConfig = {
       sourceRoot: "src",
       allowedWorkspaceDependencies: ["maintenance"],
       modules: {
+        "api-authentication": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:crypto"],
+        },
         "api-http": {
           architectureRole: "application-role",
           allowedModuleDependencies: ["github-ingestion", "run-approval-http", "run-review-evidence-http", "run-timeline-http"],
@@ -87,6 +93,7 @@ export const boundaryConfig = {
       compositionFiles: {
         "index.js": {
           allowedModuleDependencies: [
+            "api-authentication",
             "api-http",
             "api-server",
             "application",

@@ -72,6 +72,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Registered `api-http` with only the three route-role edges and `api-server` with only `api-http` plus exact Node buffer, HTTP, timer, and URL providers.
 - Bound every new approval decision to canonical base-revision, diff, plan-version, passed-verification, and verification-evidence hashes loaded from run state rather than browser input.
 - Evolved the Postgres approval schema idempotently so evidence bindings survive retries; legacy unbound decisions remain readable but deliberately cannot authorize GitHub delivery.
-- Remaining before completion: compose the control-plane API main process with concrete authentication and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added an environment-configured single-operator bearer authentication adapter with a stable audit actor, shared approval/run-access ports, fixed-length digest comparison, and strict secret/identity validation.
+- Registered `api-authentication` as an independent security application role with only the exact `node:crypto` provider permission; focused tests cover valid, malformed, missing, array-valued, and incorrect credentials plus configuration rejection.
+- Remaining before completion: compose the control-plane API main process with the authentication adapter and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

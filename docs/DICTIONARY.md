@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, and timeline SSE routes; authentication, Postgres/Redis adapters, and other stores remain injected until the API main process wires deployment configuration.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes. An environment-configured bearer adapter implements the MVP's single-operator authentication and all-runs authorization policy; Postgres/Redis adapters and other stores remain injected until the API main process wires deployment configuration.
 
 ### Critique Decision
 
@@ -150,7 +150,7 @@ One visible apply-verify-critique pass for a versioned [change proposal](#change
 
 ### Review Screen
 
-The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process and concrete API server are implemented; API main-process authentication and persisted-store wiring remain planned.
+The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured Node web main process, concrete API server, and single-operator API authentication adapter are implemented; API main-process and persisted-store wiring remain planned.
 
 ### Repository Workspace
 
