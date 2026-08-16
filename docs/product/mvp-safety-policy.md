@@ -54,6 +54,10 @@ A proposal may modify at most 10 unique files and 500 total added plus deleted l
 
 The MVP rejects changes to environment/secret files, private keys, dependency manifests, requirements files, lockfiles, migration directories, distribution output, and generated artifacts. These outcomes require rejection or a future explicit policy rather than an automatic exception.
 
+## Repository-context limits
+
+Planning context uses a separate read policy because files such as `package.json` or `pyproject.toml` are useful evidence even though automatic modification is forbidden. Discovery streams at most 1,000 directory entries, considers at most 200 allowed candidates, and selects at most 12 UTF-8 text files, 32 KiB each and 128 KiB total. It excludes environment files, private keys, lockfiles, Git metadata, dependencies, virtual environments, caches, coverage, build/distribution output, generated areas, binary content, oversized files, and symbolic links. Sensitive checks are case-insensitive, and callers cannot substitute larger limits.
+
 ## Container adapter
 
 The maintenance package maps the canonical specification to Docker without exposing an image or limit choice to callers. It selects pinned Node.js or Python images, creates a container with CPU, memory, writable-layer disk, process, output, timeout, capability, and network limits, copies the disposable repository workspace into the size-limited container layer, attaches to the command, and forcibly removes the container afterward. It deliberately does not bind-mount the host workspace because a bind mount would bypass the container writable-layer disk quota.

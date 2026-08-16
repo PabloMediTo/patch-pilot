@@ -12,17 +12,23 @@ const run = Object.freeze({ id: "github:delivery-1", repository: "octo/example",
 const events = [];
 const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
   "2026-08-16T16:03:00.000Z", "2026-08-16T16:04:00.000Z",
-  "2026-08-16T16:05:00.000Z"];
+  "2026-08-16T16:05:00.000Z", "2026-08-16T16:06:00.000Z",
+  "2026-08-16T16:07:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const result = await orchestrateMaintenanceRun({ run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
   reproduceIssue: async () => ({ status: "reproduced", evidence: { exitCode: 1 } }),
+  collectPlanningContext: async () => ({ status: "ready",
+    relevantFiles: [{ path: "src/math.ts", content: "export const add = () => 3;",
+      byteLength: 27 }], totalBytes: 27, candidateCount: 4 }),
   now: () => times.shift() });
 
-assert.equal(result.status, "reproduced");
+assert.equal(result.status, "planning-ready");
 assert.equal(result.reproduction.status, "reproduced");
+assert.equal(result.repositoryContext.relevantFiles[0].path, "src/math.ts");
+assert.equal(events.at(-2).payload.repositoryContext.relevantFiles[0].content, undefined);
 assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type, occurredAt })), [
   { eventId: `${run.id}:timeline:submitted`, type: "run.submitted",
     occurredAt: run.submittedAt },
@@ -34,8 +40,12 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:03:00.000Z" },
   { eventId: `${run.id}:timeline:reproduction-completed`, type: "run.reproduction.completed",
     occurredAt: "2026-08-16T16:04:00.000Z" },
+  { eventId: `${run.id}:timeline:planning-context-started`,
+    type: "run.planning.context.started", occurredAt: "2026-08-16T16:05:00.000Z" },
+  { eventId: `${run.id}:timeline:planning-context-completed`,
+    type: "run.planning.context.completed", occurredAt: "2026-08-16T16:06:00.000Z" },
   { eventId: `${run.id}:timeline:planning-ready`, type: "run.planning.ready",
-    occurredAt: "2026-08-16T16:05:00.000Z" },
+    occurredAt: "2026-08-16T16:07:00.000Z" },
 ]);
 
 const failure = new Error("checkout unavailable");
@@ -80,6 +90,28 @@ await assert.rejects(orchestrateMaintenanceRun({ run,
   now: () => "2026-08-16T16:07:00.000Z" }), /invalid outcome/u);
 assert.equal(invalidEvents.at(-1).type, "run.reproduction.failed");
 
+const unavailableEvents = [];
+const unavailable = await orchestrateMaintenanceRun({ run,
+  recordTimelineEvent: async (event) => { unavailableEvents.push(event); },
+  inspectRepository: async () => inspection,
+  reproduceIssue: async () => ({ status: "reproduced", evidence: { exitCode: 1 } }),
+  collectPlanningContext: async () => ({ status: "unsupported",
+    reason: "no-readable-planning-context" }),
+  now: () => "2026-08-16T16:08:00.000Z" });
+assert.equal(unavailable.status, "planning-context-unavailable");
+assert.equal(unavailableEvents.at(-1).type, "run.terminal");
+assert.equal(unavailableEvents.at(-1).payload.reason, "no-readable-planning-context");
+
+const malformedContextEvents = [];
+await assert.rejects(orchestrateMaintenanceRun({ run,
+  recordTimelineEvent: async (event) => { malformedContextEvents.push(event); },
+  inspectRepository: async () => inspection,
+  reproduceIssue: async () => ({ status: "reproduced", evidence: { exitCode: 1 } }),
+  collectPlanningContext: async () => ({ status: "ready", relevantFiles: [], totalBytes: 0,
+    candidateCount: 0 }),
+  now: () => "2026-08-16T16:09:00.000Z" }), /invalid outcome/u);
+assert.equal(malformedContextEvents.at(-1).type, "run.planning.context.failed");
+
 const activityCalls = [];
 const timelineEvents = [];
 const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "controlled-root",
@@ -96,6 +128,11 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
     activityCalls.push({ operation: "detect", input });
     return { ...inspection, workspaceDirectory: input.workspaceDirectory };
   },
+  collectPlanningContext: async (input) => {
+    activityCalls.push({ operation: "collect", input });
+    return { status: "ready", relevantFiles: [{ path: "src/math.ts", content: "source",
+      byteLength: 6 }], totalBytes: 6, candidateCount: 3 };
+  },
   removeWorkspace: async (input) => { activityCalls.push({ operation: "remove", input }); },
   executeCommand: async () => ({ exitCode: 1, stdout: "",
     stderr: "expected 2 but received 3", durationMs: 50,
@@ -109,6 +146,14 @@ const reproduction = await activities.reproduceIssue(run);
 assert.equal(reproduction.status, "reproduced");
 assert.deepEqual(activityCalls.map(({ operation }) => operation),
   ["create", "detect", "remove", "create", "detect", "remove"]);
+
+const repositoryContext = await activities.collectPlanningContext(run);
+assert.equal(repositoryContext.status, "ready");
+assert.deepEqual(activityCalls.map(({ operation }) => operation),
+  ["create", "detect", "remove", "create", "detect", "remove",
+    "create", "collect", "remove"]);
+assert.deepEqual(activityCalls.at(-2).input.issue,
+  { title: run.issueTitle, context: run.issueContext });
 
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });

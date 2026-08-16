@@ -142,7 +142,7 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, and reproduction events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Only accepted reproduction records planning readiness; all other known reproduction outcomes terminate explicitly. Proposal attempts, approval waiting, and delivery orchestration remain planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, and planning-context events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Only accepted reproduction with ready bounded [repository planning context](#repository-planning-context) records planning readiness; all other known outcomes terminate explicitly. Proposal attempts, approval waiting, and delivery orchestration remain planned.
 
 ### Monorepo
 
@@ -150,7 +150,7 @@ One source-control repository containing multiple declared application or packag
 
 ### MVP Safety Policy
 
-The fixed rules that decide which repository commands and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, and rejects oversized or sensitive changes. Its Docker adapter maps those rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup, and the worker composes the adapter with bounded shell-free Docker process execution. Live runtime proof is still required before untrusted commands can be enabled in deployment.
+The fixed rules that decide which repository commands, planning-context files, and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, bounds and filters [repository planning context](#repository-planning-context), and rejects oversized or sensitive changes. Its Docker adapter maps execution rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup. Live runtime proof is still required before untrusted commands can be enabled in deployment.
 
 ### Pull-Request Proposal
 
@@ -168,6 +168,10 @@ The human-facing view of one reviewable maintenance run. It presents ordered tim
 
 The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run, and the API query joins those separate records only when serving review or approval state. Workflow recording and live persistence verification remain planned.
 
+### Repository Planning Context
+
+The deterministic bounded repository text selected after accepted [failure reproduction](#failure-reproduction) for plan and diff generation. It contains at most 12 issue-relevant safe UTF-8 files, 32 KiB each and 128 KiB total, discovered from no more than 1,000 entries and 200 allowed candidates. Sensitive, dependency, generated, binary, oversized, and symbolic-link content is excluded. Full text remains Temporal Activity evidence, while the [run timeline](#run-timeline) records only paths and byte metrics.
+
 ### Repository Workspace
 
 A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. The implemented sandbox copies it into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
@@ -178,7 +182,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection and reproduction lifecycle, planning readiness after accepted reproduction, and explicit terminal outcomes. Live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, and planning-context lifecycle; source context is represented only by paths and byte metrics. Live local-service verification remains open.
 
 ### Supported Project
 

@@ -18,6 +18,10 @@ A run must reproduce the reported problem before modifying code. If reproduction
 
 Authenticated issue submission persists a trimmed title, the descriptive body outside the expected-failure marker, and the exact marked failure fragment before Temporal starts. Title, context, and failure evidence have separate product-owned bounds. Missing or oversized evidence is rejected rather than silently truncated so planning and reproduction always use the exact immutable text accepted from GitHub.
 
+## Bounded repository evidence before generation
+
+Planning receives a deterministic safe subset of repository text rather than unrestricted filesystem access or a full checkout snapshot. Selection is issue-aware but provider-free, excludes secrets and non-source areas, and has fixed candidate, file, per-file, and total-byte limits. Full selected text stays in Temporal Activity evidence; the live timeline retains only paths and sizes. Generator providers cannot broaden this collection boundary.
+
 ## Human-controlled delivery
 
 The system may inspect, plan, modify, and verify autonomously in isolation. Publishing a branch or pull request requires an explicit approval decision. Automatic merge is outside the MVP.

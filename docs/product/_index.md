@@ -128,6 +128,13 @@
 - Read when: A task changes supported repository shapes, manifest detection, language selection, or standard reproduction commands.
 - Tags: product, detection, python, typescript, pytest, npm
 
+### Repository Planning Context
+
+- Path: `docs/product/repository-planning-context.md`
+- Summary: Deterministic safe file discovery, issue-aware relevance ranking, and strict source-context size limits before planning.
+- Read when: A task changes which repository files planning may see, context ranking, sensitive-path exclusion, symlink handling, or planning-context limits.
+- Tags: product, planning, repository, context, files, safety, limits
+
 ### Failure Reproduction
 
 - Path: `docs/product/failure-reproduction.md`

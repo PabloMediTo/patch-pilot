@@ -303,7 +303,7 @@ export const boundaryConfig = {
         },
         "repository-understanding": {
           architectureRole: "conceptual-module",
-          allowedModuleDependencies: [],
+          allowedModuleDependencies: ["safety"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:fs/promises", "node:path"],
         },

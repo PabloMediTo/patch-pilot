@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   assessChangeSafety,
   assessExecutionSafety,
+  assessRepositoryContextPath,
   createMvpSafetyPolicy,
   executeWithMvpSafety,
   runInDockerSandbox,
@@ -29,6 +30,18 @@ assert.deepEqual(
   }),
   { status: "blocked", reasons: ["command-not-allowed"] },
 );
+
+assert.deepEqual(assessRepositoryContextPath({ path: "src/fix.ts", kind: "file",
+  policy: policy.repositoryContext }), { status: "allowed", reasons: [] });
+assert.deepEqual(assessRepositoryContextPath({ path: ".env.production", kind: "file",
+  policy: policy.repositoryContext }), { status: "blocked", reasons: ["forbidden-file",
+  "unsupported-file-type"] });
+assert.equal(assessRepositoryContextPath({ path: "node_modules/pkg/index.js", kind: "file",
+  policy: policy.repositoryContext }).status, "blocked");
+assert.equal(assessRepositoryContextPath({ path: "../outside.ts", kind: "file",
+  policy: policy.repositoryContext }).status, "blocked");
+assert.equal(assessRepositoryContextPath({ path: "PRIVATE.PEM", kind: "file",
+  policy: policy.repositoryContext }).status, "blocked");
 assert.deepEqual(
   assessExecutionSafety({
     request: { ...allowedRequest, cwd: join("C:", "outside") },

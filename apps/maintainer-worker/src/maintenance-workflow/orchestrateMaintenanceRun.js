@@ -1,8 +1,8 @@
 /**
  * Orchestrates durable inspection and reproduction through explicit Activity ports.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, now: Function }} input Persisted run and deterministic workflow ports.
- * @returns {Promise<object>} Reproduction-phase workflow outcome.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @returns {Promise<object>} Planning-context or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
   assertPersistedRun(input?.run);
@@ -15,13 +15,42 @@ export async function orchestrateMaintenanceRun(input) {
     return Object.freeze({ status: "unsupported", runId: input.run.id, inspection });
   }
   const reproduction = await runReproductionPhase(input);
-  if (reproduction.status === "reproduced") {
-    await recordEvent(input, "planning-ready", { reproduction: "reproduced" });
-  } else {
+  return finishReproduction(input, inspection, reproduction);
+}
+
+/** Gates terminal reproduction outcomes and collects planning context after acceptance. */
+async function finishReproduction(input, inspection, reproduction) {
+  if (reproduction.status !== "reproduced") {
     await recordTerminalOutcome(input, reproduction.status, reproduction.reason);
+    return Object.freeze({ status: reproduction.status, runId: input.run.id,
+      inspection, reproduction });
   }
-  return Object.freeze({ status: reproduction.status, runId: input.run.id,
-    inspection, reproduction });
+  const repositoryContext = await runPlanningContextPhase(input);
+  if (repositoryContext.status !== "ready") {
+    await recordTerminalOutcome(input, "planning-context-unavailable", repositoryContext.reason);
+    return Object.freeze({ status: "planning-context-unavailable", runId: input.run.id,
+      inspection, reproduction, repositoryContext });
+  }
+  await recordEvent(input, "planning-ready", { reproduction: "reproduced",
+    relevantFileCount: repositoryContext.relevantFiles.length,
+    totalBytes: repositoryContext.totalBytes });
+  return Object.freeze({ status: "planning-ready", runId: input.run.id,
+    inspection, reproduction, repositoryContext });
+}
+
+/** Collects bounded planning context with explicit lifecycle evidence. */
+async function runPlanningContextPhase(input) {
+  await recordEvent(input, "planning-context-started", { issueTitle: input.run.issueTitle });
+  try {
+    const repositoryContext = await input.collectPlanningContext(input.run);
+    assertPlanningContext(repositoryContext);
+    await recordEvent(input, "planning-context-completed",
+      { repositoryContext: summarizePlanningContext(repositoryContext) });
+    return repositoryContext;
+  } catch (error) {
+    await recordEvent(input, "planning-context-failed", { message: safeMessage(error) });
+    throw error;
+  }
 }
 
 /** Runs inspection with explicit start, completion, and failure evidence. */
@@ -101,6 +130,41 @@ function assertReproductionOutcome(reproduction) {
   if (!statuses.has(reproduction?.status)) {
     throw new Error("Reproduction Activity returned an invalid outcome.");
   }
+}
+
+/** Requires one bounded planning-context Activity result. */
+function assertPlanningContext(context) {
+  const files = context?.relevantFiles;
+  const hasValidFiles = Array.isArray(files) && files.length > 0 && files.length <= 12
+    && files.every(hasValidContextFile) && new Set(files.map((file) => file.path)).size === files.length;
+  const measuredBytes = hasValidFiles
+    ? files.reduce((total, file) => total + file.byteLength, 0) : -1;
+  const hasReadyContext = context?.status === "ready" && Array.isArray(context.relevantFiles)
+    && hasValidFiles && context.totalBytes === measuredBytes && context.totalBytes <= 131_072
+    && Number.isInteger(context.candidateCount) && context.candidateCount >= files.length
+    && context.candidateCount <= 200;
+  const hasUnsupportedContext = context?.status === "unsupported"
+    && typeof context.reason === "string" && context.reason.trim() !== "";
+  if (!hasReadyContext && !hasUnsupportedContext) {
+    throw new Error("Planning-context Activity returned an invalid outcome.");
+  }
+}
+
+/** Checks one bounded repository text entry returned by the Activity. */
+function hasValidContextFile(file) {
+  return typeof file?.path === "string" && file.path.trim() !== ""
+    && typeof file.content === "string" && Number.isInteger(file.byteLength)
+    && file.byteLength >= 0 && file.byteLength <= 32_768;
+}
+
+/** Removes source content from the live timeline while retaining selection evidence. */
+function summarizePlanningContext(context) {
+  if (context.status !== "ready") return Object.freeze({ ...context });
+  return Object.freeze({ status: "ready", totalBytes: context.totalBytes,
+    candidateCount: context.candidateCount,
+    relevantFiles: Object.freeze(context.relevantFiles.map((file) => Object.freeze({
+      path: file.path, byteLength: file.byteLength,
+    }))) });
 }
 
 /** Converts an Activity failure to bounded timeline evidence. */

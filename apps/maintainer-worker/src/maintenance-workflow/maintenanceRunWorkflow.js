@@ -20,5 +20,6 @@ export function maintenanceRunWorkflow(run) {
     recordTimelineEvent: timelineActivities.recordTimelineEvent,
     inspectRepository: inspectionActivities.inspectRepository,
     reproduceIssue: inspectionActivities.reproduceIssue,
+    collectPlanningContext: inspectionActivities.collectPlanningContext,
     now: () => new Date().toISOString() });
 }

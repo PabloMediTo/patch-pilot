@@ -21,10 +21,11 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 ## Outputs
 
 - a registered deterministic `maintenanceRunWorkflow` bundle
-- canonical submission, inspection, and reproduction lifecycle timeline events
+- canonical submission, inspection, reproduction, and planning-context lifecycle timeline events
 - an explicit planning-ready gate or terminal classified outcome
 - a sanitized supported or unsupported project inspection without a local path
 - classified reproduction evidence from the safe command executor for supported projects
+- bounded repository planning context after accepted reproduction
 - deterministic provider cleanup after worker polling stops
 
 ## Adjacent parts
@@ -33,6 +34,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - [run timelines](run-timelines.md) persist Activity evidence before Redis publication
 - [repository workspaces](repository-workspaces.md) create and remove the inspection checkout
 - [supported project detection](project-detection.md) classifies the checked-out root
+- [repository planning context](repository-planning-context.md) selects safe relevant text evidence
 - later workflow phases will compose proposal attempts, review, approval, and delivery
 
 ## Implemented workflow phases
@@ -41,7 +43,9 @@ The Workflow records the canonical submitted event, runs inspection, and then ei
 
 The inspection Activity creates a checkout at the exact recorded revision, runs deterministic Python/TypeScript project detection, removes the checkout in `finally`, and removes its machine-local path from the durable result. It currently constructs a credential-free GitHub HTTPS URL, so the executable worker can inspect only repositories reachable without a future non-interactive Git credential provider.
 
-The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow accepts only the known reproduction classifications. A reproduced failure records planning readiness; every valid non-reproduced classification records an explicit terminal event, while malformed Activity evidence fails visibly. Dependency installation, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling this path for untrusted deployed repositories.
+The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow accepts only the known reproduction classifications. Every valid non-reproduced classification records an explicit terminal event, while malformed Activity evidence fails visibly.
+
+After accepted reproduction, a separate Activity creates a third checkout, collects bounded repository planning context, and removes the workspace in `finally`. Ready context records planning readiness; unavailable or malformed context terminates or fails explicitly. Timeline evidence omits full source content. Dependency installation, generator-provider composition, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
 
 ## Lifecycle
 

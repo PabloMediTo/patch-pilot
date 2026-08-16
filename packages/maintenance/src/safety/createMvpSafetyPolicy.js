@@ -34,5 +34,24 @@ export function createMvpSafetyPolicy() {
       forbiddenExtensions: Object.freeze([".key", ".pem"]),
       forbiddenSegments: Object.freeze(["dist", "generated", "migrations"]),
     }),
+    repositoryContext: Object.freeze({
+      maxEntries: 1000,
+      maxCandidates: 200,
+      maxFiles: 12,
+      maxFileBytes: 32_768,
+      maxTotalBytes: 131_072,
+      allowedExtensions: Object.freeze([
+        ".cjs", ".ini", ".js", ".json", ".jsx", ".md", ".mjs", ".py", ".toml",
+        ".ts", ".tsx", ".txt", ".yaml", ".yml",
+      ]),
+      forbiddenBasenames: Object.freeze([
+        ".env", "package-lock.json", "pnpm-lock.yaml", "poetry.lock", "uv.lock", "yarn.lock",
+      ]),
+      forbiddenExtensions: Object.freeze([".key", ".pem"]),
+      forbiddenSegments: Object.freeze([
+        ".git", ".venv", "__pycache__", "build", "coverage", "dist", "generated",
+        "node_modules", "venv",
+      ]),
+    }),
   });
 }
