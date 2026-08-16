@@ -1,7 +1,7 @@
 ---
 id: TASK-ngp7p
 title: Reconcile GitHub delivery results and webhooks
-status: draft
+status: done
 priority: high
 type: feature
 effort: medium
@@ -29,9 +29,9 @@ Deliver **Reconcile GitHub delivery results and webhooks** within the documented
 
 ## Acceptance Criteria
 
-- [ ] The observable outcome described by the title is implemented and covered by focused tests.
-- [ ] Architecture boundaries, product docs, and persisted run evidence remain aligned.
-- [ ] Relevant checks plus `npm run check` and `markplane check` pass.
+- [x] The observable outcome described by the title is implemented and covered by focused tests.
+- [x] Architecture boundaries, product docs, and persisted run evidence remain aligned.
+- [x] Relevant checks plus `npm run check` and `markplane check` pass.
 
 ## Notes
 
@@ -42,6 +42,9 @@ Deliver **Reconcile GitHub delivery results and webhooks** within the documented
 - Added atomic Postgres observation persistence with complete immutable evidence, database-level domain constraints, and first-writer recovery for replay/conflict classification.
 - Focused tests cover matched open/merged state, changed-head drift, ignored and untracked events, replay, conflict, and malformed provider evidence.
 - Store tests cover parameterized writes, immutable row mapping, one-time schema initialization, existing-row recovery, unresolved conflicts, and lifecycle closure.
-- Remaining: connect reconciliation to signed control-plane webhook ingestion.
+- Added bounded `POST /github/webhooks` ingestion that authenticates the untouched body before parsing, extracts required delivery/event identity, and returns stable `202`, `400`, `401`, `405`, or `409` responses.
+- Extended the lifecycle-managed delivery runtime to compose reconciliation lookup and observation persistence through the same managed Postgres pool.
+- Added focused handler, server, runtime, malformed-provider, and negative authentication tests.
+- Completed: signed ingestion, reconciliation, and atomic persisted replay/conflict handling now form one tested control-plane path.
 
 ## References

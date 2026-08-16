@@ -1,10 +1,16 @@
 import assert from "node:assert/strict";
 import { request } from "node:http";
+import { createHmac } from "node:crypto";
 
 import { createMaintainerApiServer } from "./index.js";
 
 let savedDecision;
+let webhookEnvelope;
+const webhookSecret = "webhook-secret";
 const server = createMaintainerApiServer({
+  githubWebhook: { secret: webhookSecret,
+    ingestWebhook: async (envelope) => { webhookEnvelope = envelope; return { status: "recorded" }; },
+    clock: () => new Date("2026-08-16T13:00:00.000Z") },
   reviewEvidence: { authorizeRunAccess: async () => true, loadRunReviewEvidence: async () => ({ run: { id: "run-1" } }) },
   approval: { authenticateRequest: async () => ({ id: "reviewer-1" }),
     loadApprovalState: async () => ({ runStatus: "awaiting-approval", decision: null,
@@ -28,6 +34,13 @@ assert.equal(savedDecision.reason, "Regression");
 const invalid = await exchange(server, { method: "POST", path: "/runs/run-1/approval/approve",
   headers: { "content-type": "application/json", "idempotency-key": "request-2" }, body: "{" });
 assert.deepEqual(invalid, { statusCode: 400, body: '{"error":"invalid-json"}' });
+const webhookBody = JSON.stringify({ action: "closed" });
+const webhook = await exchange(server, { method: "POST", path: "/github/webhooks",
+  headers: { "x-github-delivery": "delivery-123", "x-github-event": "pull_request",
+    "x-hub-signature-256": signWebhook(webhookBody) }, body: webhookBody });
+assert.deepEqual(webhook, { statusCode: 202, body: '{"status":"recorded"}' });
+assert.equal(webhookEnvelope.deliveryId, "delivery-123");
+assert.deepEqual(webhookEnvelope.payload, { action: "closed" });
 assert.equal((await exchange(server, { method: "GET", path: "/unknown" })).statusCode, 404);
 
 await close(server);
@@ -58,4 +71,9 @@ function originOf(target) {
 /** Stops the listening API server. */
 function close(target) {
   return new Promise((resolve, reject) => target.close((error) => error ? reject(error) : resolve()));
+}
+
+/** Signs one exact server-test webhook body. */
+function signWebhook(body) {
+  return `sha256=${createHmac("sha256", webhookSecret).update(body, "utf8").digest("hex")}`;
 }

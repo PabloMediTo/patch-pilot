@@ -27,7 +27,7 @@ Compare an authenticated GitHub `pull_request` webhook with immutable [GitHub de
 
 ## Adjacent parts
 
-- [GitHub run ingestion](github-ingestion.md) owns raw-body signature verification and webhook-envelope extraction
+- [GitHub run ingestion](github-ingestion.md) owns bounded raw-body reading, signature verification, webhook-envelope extraction, and HTTP acknowledgement
 - [GitHub delivery](github-delivery.md) creates the immutable provider evidence being compared
 - Postgres implements the atomic observation port
 - the maintenance workflow can translate matched lifecycle observations or divergence into later run events
@@ -46,4 +46,6 @@ The Postgres observation store creates one immutable row per GitHub delivery ide
 
 When insertion loses a uniqueness race, the store reloads the winning row so the reconciliation use case can distinguish an exact replay from conflicting evidence. A missing winner after a rejected insert is treated as a persistence conflict rather than silently accepted.
 
-The provider-free reconciliation use case, focused tests, delivery lookup, and atomic Postgres observation persistence are implemented. Raw signed HTTP ingestion remains planned.
+The control-plane delivery runtime composes reconciliation with delivery lookup and observation persistence behind one managed Postgres pool. Its signed webhook route records or replays valid supported deliveries, acknowledges ignored deliveries, maps malformed provider payloads to `400`, invalid signatures to `401`, and delivery-identity conflicts to `409` without mutating GitHub.
+
+The provider-free use case, signed HTTP ingestion, runtime composition, focused tests, delivery lookup, and atomic Postgres observation persistence are implemented. Live Postgres and GitHub webhook verification remain open.

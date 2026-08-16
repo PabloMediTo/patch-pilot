@@ -113,7 +113,7 @@ The controlled publication step after an [approval decision](#approval-decision)
 
 ### GitHub Delivery Observation
 
-An immutable comparison between one tracked [GitHub delivery](#github-delivery) and a later `pull_request` webhook. The implemented reconciliation use case records normal lifecycle state as matched when the installation, repository, URL, head branch and revision, and base branch remain exact; otherwise it lists provider drift without changing GitHub or the original delivery. A concrete Postgres store atomically reserves each unique delivery identity and reloads the first writer for exact redelivery replay. Signed HTTP ingestion remains planned.
+An immutable comparison between one tracked [GitHub delivery](#github-delivery) and a later `pull_request` webhook. The implemented reconciliation use case records normal lifecycle state as matched when the installation, repository, URL, head branch and revision, and base branch remain exact; otherwise it lists provider drift without changing GitHub or the original delivery. A concrete Postgres store atomically reserves each unique delivery identity and reloads the first writer for exact redelivery replay. The control-plane delivery runtime connects these ports to bounded signed HTTP ingestion with stable acknowledgement, rejection, and conflict responses; live provider and persistence verification remains planned.
 
 ### Global Docs
 

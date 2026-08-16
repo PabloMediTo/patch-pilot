@@ -2,7 +2,7 @@
 
 ## Responsibility
 
-Authenticate GitHub App webhook deliveries and translate an explicit issue opt-in into a [run submission](../DICTIONARY.md#run-submission).
+Authenticate bounded GitHub App webhook deliveries, extract their immutable envelope, and dispatch authenticated payloads. For `issues` events, translate an explicit opt-in into a [run submission](../DICTIONARY.md#run-submission).
 
 ## Not responsible for
 
@@ -21,12 +21,14 @@ Authenticate GitHub App webhook deliveries and translate an explicit issue opt-i
 ## Outputs
 
 - an accepted initial run bound to the GitHub delivery, installation, repository, default branch, issue, actor, and resolved immutable base revision
+- an authenticated envelope containing delivery identity, event name, parsed object payload, and server observation time for downstream consumers
 - an ignored result for valid deliveries that do not explicitly request a run
-- an error for an invalid signature or malformed triggering payload
+- stable HTTP rejection for invalid signatures, missing envelope headers, oversized bodies, invalid JSON, or malformed triggering payloads
 
 ## Adjacent parts
 
-- the control-plane transport preserves the raw body and supplies header values
+- the control-plane Node server bounds the body while preserving its exact UTF-8 text
+- [GitHub delivery reconciliation](github-delivery-reconciliation.md) consumes authenticated pull-request envelopes
 - the GitHub revision port resolves the repository default branch to an immutable commit SHA
 - the maintenance package creates the initial run state
 - future persistence and Temporal adapters consume accepted run submissions idempotently
@@ -34,5 +36,7 @@ Authenticate GitHub App webhook deliveries and translate an explicit issue opt-i
 ## Authentication and opt-in
 
 The signature is calculated over the untouched UTF-8 body with HMAC-SHA256 and compared in constant time. Payload parsing happens only after verification.
+
+The implemented `POST /github/webhooks` route applies the API's 64-KiB default body limit, rejects invalid signatures with `401`, rejects malformed authenticated envelopes with `400`, and acknowledges accepted, ignored, or recorded deliveries with `202`. A reused delivery identity containing conflicting evidence returns `409`. Responses are JSON and disable caching.
 
 Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. The GitHub delivery identifier becomes part of the run identity so the persistence adapter can make repeated deliveries idempotent. The submitted run also retains the default branch resolved with the immutable base revision so later pull-request delivery uses the reviewed target rather than reinterpreting repository defaults.

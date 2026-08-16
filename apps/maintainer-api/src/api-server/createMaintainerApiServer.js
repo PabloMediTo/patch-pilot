@@ -10,7 +10,7 @@ const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
 /**
  * Creates the concrete Node server for control-plane API routes.
  *
- * @param {{ approval: object, reviewEvidence: object, timeline: object, maxBodyBytes?: number }} input Role integrations and body policy.
+ * @param {{ githubWebhook: object, approval: object, reviewEvidence: object, timeline: object, maxBodyBytes?: number }} input Role integrations and body policy.
  * @returns {import("node:http").Server} Unstarted API server.
  */
 export function createMaintainerApiServer(input) {
@@ -26,6 +26,9 @@ function createRuntimePorts(input) {
   if (!Number.isSafeInteger(maxBodyBytes) || maxBodyBytes < 1) throw new Error("API body limit must be a positive integer.");
   return Object.freeze({
     reviewEvidence: input.reviewEvidence,
+    githubWebhook: Object.freeze({ ...input.githubWebhook,
+      readRawBody: (request) => readRawBody(request, maxBodyBytes),
+    }),
     approval: Object.freeze({ ...input.approval,
       readRequestBody: (request) => readRequestBody(request, maxBodyBytes),
       clock: input.approval.clock ?? (() => new Date()),
@@ -38,6 +41,16 @@ function createRuntimePorts(input) {
 
 /** Reads and parses one bounded approval request body. */
 async function readRequestBody(request, maxBodyBytes) {
+  const body = await readRawBody(request, maxBodyBytes);
+  if (body === "") return Object.freeze({});
+  const contentType = request.headers["content-type"]?.split(";", 1)[0].trim().toLowerCase();
+  if (contentType === "application/json") return parseJsonBody(body);
+  if (contentType === "application/x-www-form-urlencoded") return Object.freeze(Object.fromEntries(new URLSearchParams(body)));
+  throw badRequest("unsupported-content-type");
+}
+
+/** Reads one bounded request body while preserving the exact UTF-8 text. */
+async function readRawBody(request, maxBodyBytes) {
   const chunks = [];
   let byteCount = 0;
   for await (const chunk of request) {
@@ -45,12 +58,7 @@ async function readRequestBody(request, maxBodyBytes) {
     if (byteCount > maxBodyBytes) throw badRequest("request-body-too-large");
     chunks.push(chunk);
   }
-  const body = Buffer.concat(chunks).toString("utf8");
-  if (body === "") return Object.freeze({});
-  const contentType = request.headers["content-type"]?.split(";", 1)[0].trim().toLowerCase();
-  if (contentType === "application/json") return parseJsonBody(body);
-  if (contentType === "application/x-www-form-urlencoded") return Object.freeze(Object.fromEntries(new URLSearchParams(body)));
-  throw badRequest("unsupported-content-type");
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /** Parses one JSON object request body. */

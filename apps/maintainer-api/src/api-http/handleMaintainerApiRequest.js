@@ -1,3 +1,4 @@
+import { handleGitHubWebhookRequest } from "../github-ingestion/index.js";
 import { handleRunApprovalRequest } from "../run-approval-http/index.js";
 import { handleRunReviewEvidenceRequest } from "../run-review-evidence-http/index.js";
 import { handleRunTimelineRequest } from "../run-timeline-http/index.js";
@@ -5,11 +6,13 @@ import { handleRunTimelineRequest } from "../run-timeline-http/index.js";
 /**
  * Dispatches one control-plane API request across its focused route roles.
  *
- * @param {{ request: object, response: object, approval: object, reviewEvidence: object, timeline: object }} input HTTP exchange and role ports.
+ * @param {{ request: object, response: object, githubWebhook: object, approval: object, reviewEvidence: object, timeline: object }} input HTTP exchange and role ports.
  * @returns {Promise<object>} Terminal dispatch outcome.
  */
 export async function handleMaintainerApiRequest(input) {
   const exchange = Object.freeze({ request: input.request, response: input.response });
+  const webhookOutcome = await handleGitHubWebhookRequest({ ...exchange, ...input.githubWebhook });
+  if (webhookOutcome.status !== "unhandled") return webhookOutcome;
   const reviewOutcome = await handleRunReviewEvidenceRequest({ ...exchange, ...input.reviewEvidence });
   if (reviewOutcome.status !== "unhandled") return reviewOutcome;
   const approvalOutcome = await handleRunApprovalRequest({ ...exchange, ...input.approval });

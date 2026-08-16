@@ -68,12 +68,19 @@ function createObservedState(input) {
   const hasLifecycle = ["open", "closed"].includes(candidate?.state)
     && typeof candidate?.draft === "boolean" && typeof candidate?.merged === "boolean";
   if (!hasIdentity || !hasGitState || !hasLifecycle) {
-    throw new Error("GitHub pull-request webhook has malformed reconciliation evidence.");
+    throw invalidGitHubWebhook("GitHub pull-request webhook has malformed reconciliation evidence.");
   }
   return Object.freeze({ repository, installationId,
     pullRequest: Object.freeze({ number, url: candidate.html_url, headBranch: candidate.head.ref,
       headRevision: candidate.head.sha, baseBranch: candidate.base.ref, state: candidate.state,
       draft: candidate.draft, merged: candidate.merged }) });
+}
+
+/** Marks malformed provider input without coupling the domain use case to HTTP. */
+function invalidGitHubWebhook(message) {
+  const error = new Error(message);
+  error.code = "invalid-github-webhook";
+  return error;
 }
 
 /** Creates immutable observation evidence and identifies provider drift. */

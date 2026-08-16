@@ -72,7 +72,8 @@ assert.deepEqual(conflict, { status: "conflict", reason: "webhook-delivery-confl
 
 await assert.rejects(reconcileGitHubPullRequest(createInput({ payload: {
   ...payload, pull_request: { ...payload.pull_request, head: { ref: "unsafe", sha: "short" } },
-} })), /malformed reconciliation/u);
+} })), (error) => error.code === "invalid-github-webhook"
+  && /malformed reconciliation/u.test(error.message));
 await assert.rejects(reconcileGitHubPullRequest(createInput({
   loadDeliveryByPullRequest: async () => ({ runId: "incomplete" }),
 })), /malformed delivery evidence/u);
