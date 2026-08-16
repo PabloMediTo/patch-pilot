@@ -32,7 +32,7 @@ Compose and operate the executable [control-plane API](../DICTIONARY.md#control-
 - [control-plane authentication](control-plane-authentication.md) owns human bearer validation
 - [review snapshots](review-snapshots.md), timeline history, and approval decisions remain separate canonical records joined by the API query
 - [GitHub delivery reconciliation](github-delivery-reconciliation.md) consumes authenticated `pull_request` envelopes
-- [GitHub run ingestion](github-ingestion.md) can create a run submission, but durable issue-to-Temporal dispatch is not yet connected to this runtime
+- [GitHub run ingestion](github-ingestion.md) resolves and persists authenticated issue submissions; Temporal dispatch is not yet connected
 - the [local development environment](local-development.md) supplies the default Postgres and Redis endpoints
 
 ## Lifecycle and failure rules
@@ -41,4 +41,4 @@ Configuration is validated before a listener starts. The deployment creates a si
 
 Startup rejects listener errors. Shutdown stops HTTP ingress first, force-closes long-lived connections such as SSE, and then attempts both Redis and Postgres cleanup even if one provider fails. Repeated shutdown requests share the same promise. `main.js` installs this operation for `SIGINT` and `SIGTERM` and reports cleanup failure through the process exit code.
 
-The executable webhook path currently reconciles authenticated pull-request lifecycle events. Other valid event types are acknowledged as unsupported by reconciliation. Connecting opted-in issue events to persisted run submission and Temporal is the next runtime integration, not an implicit behavior of this deployment.
+The executable webhook path reconciles authenticated pull-request lifecycle events and routes opted-in issue events through repository-scoped base-revision resolution into atomic run persistence. Other valid event types are acknowledged as unsupported. Starting the first Temporal workflow from a created or replayed run is the next runtime integration, not an implicit behavior of persistence.

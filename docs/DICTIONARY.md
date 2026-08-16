@@ -162,7 +162,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, default branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts so later workflow and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently.
+An authenticated request to begin one [maintenance run](#maintenance-run). The executable GitHub ingestion path resolves the repository default branch through a repository-scoped App request and retains the delivery, installation, repository, branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts so later workflow and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently. Temporal submission remains planned.
 
 ### Run Timeline
 

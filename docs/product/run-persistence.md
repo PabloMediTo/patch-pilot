@@ -34,7 +34,7 @@ Persist the initial immutable identity and target evidence of one submitted [mai
 - [GitHub run ingestion](github-ingestion.md) constructs the validated [run submission](../DICTIONARY.md#run-submission)
 - the [maintenance workflow](maintenance-workflow.md) starts only after durable submission persistence
 - the [run timeline](../DICTIONARY.md#run-timeline) owns ordered lifecycle events separately
-- the [control-plane runtime](control-plane-runtime.md) will connect this store to authenticated issue webhook dispatch
+- the [control-plane runtime](control-plane-runtime.md) connects this store to authenticated issue webhook dispatch
 
 ## First-writer rules
 

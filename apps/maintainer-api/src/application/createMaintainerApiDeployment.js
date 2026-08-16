@@ -1,5 +1,7 @@
 import {
+  createGitHubAppRequest,
   createPostgresApprovalStore,
+  createPostgresMaintenanceRunStore,
   createPostgresRunReviewStore,
   createPostgresRunTimelineStore,
   createRedisRunTimelineStream,
@@ -7,6 +9,7 @@ import {
 import pg from "pg";
 
 import { createGitHubDeliveryRuntime } from "../github-delivery/index.js";
+import { createGitHubWebhookIngestion } from "../github-ingestion/index.js";
 import { createMaintainerApiRuntime } from "./createMaintainerApiRuntime.js";
 
 const DEFAULT_POSTGRES_URL = "postgres://patch_pilot:patch_pilot@127.0.0.1:5432/patch_pilot";
@@ -15,7 +18,7 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * Composes all stateful API adapters behind one deployment lifecycle.
  *
- * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object }} options Environment and optional controlled test resources.
+ * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function }} options Environment and optional controlled test resources.
  * @returns {Promise<{ server: object, listen: Function, deliverApprovedPullRequest: Function, close: Function }>} API deployment operations.
  */
 export async function createMaintainerApiDeployment(options) {
@@ -30,14 +33,20 @@ export async function createMaintainerApiDeployment(options) {
     githubDeliveryRuntime = options?.githubDeliveryRuntime
       ?? await createGitHubDeliveryRuntime({ pool, appId: config.githubAppId,
         privateKey: config.githubAppPrivateKey });
-    const [reviewStore, timelineStore, approvalStore] = await Promise.all([
+    const requestGitHub = options?.githubRequest ?? createGitHubAppRequest({
+      appId: config.githubAppId, privateKey: config.githubAppPrivateKey });
+    const [reviewStore, timelineStore, approvalStore, runStore] = await Promise.all([
       createPostgresRunReviewStore({ pool }),
       createPostgresRunTimelineStore({ pool }),
       createPostgresApprovalStore({ pool }),
+      createPostgresMaintenanceRunStore({ pool }),
     ]);
+    const ingestWebhook = createGitHubWebhookIngestion({ requestGitHub,
+      saveSubmittedRun: runStore.saveSubmittedRun,
+      reconcilePullRequestWebhook: githubDeliveryRuntime.reconcilePullRequestWebhook });
     const runtime = createMaintainerApiRuntime({ environment: options.environment,
       githubWebhook: { secret: config.githubWebhookSecret,
-        ingestWebhook: githubDeliveryRuntime.reconcilePullRequestWebhook },
+        ingestWebhook },
       reviewStore, timelineStore, approvalStore, timelineStream });
     const lifecycle = createDeploymentLifecycle({ ...runtime, timelineStream,
       githubDeliveryRuntime, host: config.host, port: config.port });

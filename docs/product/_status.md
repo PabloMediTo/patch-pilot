@@ -7,7 +7,7 @@
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
 - The maintenance package creates the initial `submitted` state only from a valid repository identity, positive issue and optional GitHub identities, and a full immutable base revision. Atomic [run persistence](run-persistence.md) stores that evidence in Postgres, assigns the submission timestamp, and reloads the first writer after run- or delivery-identity conflicts.
 - A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
-- Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label, resolve an immutable base revision through an injected port, and emit an initial [run submission](../DICTIONARY.md#run-submission).
+- Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label. The executable API path now resolves the default branch through the repository-scoped GitHub App transport, requires a full immutable revision, and atomically persists the [run submission](../DICTIONARY.md#run-submission) with accepted, replayed, or conflicting outcomes.
 - A [repository workspace](../DICTIONARY.md#repository-workspace) can be created as a unique disposable checkout at an exact full commit SHA, with bounded non-interactive Git execution and guarded cleanup.
 - Root manifests can identify one [supported project](../DICTIONARY.md#supported-project) as Python/pytest or TypeScript/npm and select its standard test command.
 - [Failure reproduction](../DICTIONARY.md#failure-reproduction) classifies bounded executor evidence as reproduced, not reproduced, a different failure, or execution failure.
@@ -15,7 +15,7 @@
 - A bounded [change proposal](../DICTIONARY.md#change-proposal) can now be generated only after reproduction: it records a versioned structured plan, derives file and line evidence from a unified diff, requires exact plan-to-diff file agreement, and applies the canonical change policy.
 - Ready proposals can now produce immutable [verification evidence](../DICTIONARY.md#verification-evidence), structured [critique decisions](../DICTIONARY.md#critique-decision), and up to three visible [proposal attempts](../DICTIONARY.md#proposal-attempt) comprising the initial modification plus two retries.
 - A [run timeline](../DICTIONARY.md#run-timeline) module now provides an idempotent Postgres schema, atomic per-run event sequences, ordered history queries, and run-scoped Redis publication/subscription. The API composes these into a gap-free feed, resumable SSE session, and authenticated `GET /runs/:runId/timeline` route. Its adapters are unit-tested but still require live verification against the local services.
-- No Temporal workflow or dependency restoration has been implemented. The executable [control-plane runtime](control-plane-runtime.md) now constructs the environment-configured single-operator bearer adapter, one shared Postgres pool, the review/timeline/approval stores and query, one Redis stream, GitHub pull-request reconciliation, and the listener with signal-driven idempotent shutdown. Durable issue-to-Temporal submission remains open.
+- No Temporal workflow or dependency restoration has been implemented. The executable [control-plane runtime](control-plane-runtime.md) constructs the environment-configured single-operator bearer adapter, one shared Postgres pool, the run/review/timeline/approval stores and queries, one Redis stream, issue submission, GitHub pull-request reconciliation, and the listener with signal-driven idempotent shutdown. Durable run-to-Temporal submission remains open.
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
 - The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
@@ -39,7 +39,7 @@
 
 ## Next milestone
 
-Connect authenticated opted-in issue webhooks through the implemented run store to the first Temporal maintenance workflow, including timeline and review-snapshot recording. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
+Start the first Temporal maintenance workflow from an accepted or replayed persisted run, including timeline and review-snapshot recording. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
 
 ## Open questions
 

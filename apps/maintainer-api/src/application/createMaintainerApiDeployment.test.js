@@ -6,7 +6,10 @@ import { createMaintainerApiDeployment } from "./index.js";
 
 const webhookSecret = "deployment-webhook-secret";
 const reconciled = [];
-const pool = { endCalls: 0, async query() { return { rows: [] }; },
+const pool = { endCalls: 0, async query(sql, values) {
+  if (sql.includes("INSERT INTO maintenance_runs")) return { rows: [mapRunRow(values)] };
+  return { rows: [] };
+},
   async end() { this.endCalls += 1; } };
 const timelineStream = { closeCalls: 0, async subscribe() { return async () => undefined; },
   async close() { this.closeCalls += 1; } };
@@ -21,14 +24,22 @@ const githubDeliveryRuntime = {
 };
 const port = await reservePort();
 const deployment = await createMaintainerApiDeployment({ environment: createEnvironment(port),
-  pool, timelineStream, githubDeliveryRuntime });
+  pool, timelineStream, githubDeliveryRuntime,
+  githubRequest: async () => ({ statusCode: 200, body: { object: { sha: "a".repeat(40) } } }) });
 
 await deployment.listen();
 const body = JSON.stringify({ action: "closed" });
-const response = await exchange(deployment.server, body);
+const response = await exchange(deployment.server, { body, eventName: "pull_request" });
 assert.equal(response.statusCode, 202);
 assert.equal(reconciled[0].eventName, "pull_request");
 assert.deepEqual(JSON.parse(response.body), { status: "recorded" });
+const issueBody = JSON.stringify({ action: "labeled", label: { name: "patch-pilot" },
+  installation: { id: 17 }, repository: { full_name: "octo/example", default_branch: "main" },
+  issue: { number: 42 }, sender: { id: 23 } });
+const issueResponse = await exchange(deployment.server,
+  { body: issueBody, eventName: "issues", deliveryId: "issue-delivery-1" });
+assert.equal(issueResponse.statusCode, 202);
+assert.deepEqual(JSON.parse(issueResponse.body), { status: "accepted" });
 assert.deepEqual(await deployment.deliverApprovedPullRequest({}), { status: "created" });
 
 await deployment.close();
@@ -69,13 +80,13 @@ function reservePort() {
 }
 
 /** Sends one correctly signed pull-request webhook to the deployment listener. */
-function exchange(server, body) {
+function exchange(server, input) {
   return new Promise((resolve, reject) => {
     const outgoing = request(`http://127.0.0.1:${server.address().port}/github/webhooks`, {
-      method: "POST", headers: { "x-github-delivery": "delivery-1",
-        "x-github-event": "pull_request",
+      method: "POST", headers: { "x-github-delivery": input.deliveryId ?? "delivery-1",
+        "x-github-event": input.eventName,
         "x-hub-signature-256": `sha256=${createHmac("sha256", webhookSecret)
-          .update(body, "utf8").digest("hex")}` },
+          .update(input.body, "utf8").digest("hex")}` },
     }, (incoming) => {
       const chunks = [];
       incoming.on("data", (chunk) => chunks.push(chunk));
@@ -83,6 +94,14 @@ function exchange(server, body) {
         body: Buffer.concat(chunks).toString("utf8") }));
     });
     outgoing.once("error", reject);
-    outgoing.end(body);
+    outgoing.end(input.body);
   });
+}
+
+/** Maps submitted-run insert values to the Postgres row returned to the deployment. */
+function mapRunRow(values) {
+  return { run_id: values[0], installation_id: values[1], repository: values[2],
+    issue_number: values[3], default_branch: values[4], base_revision: values[5],
+    actor_id: values[6], source_delivery_id: values[7], run_status: values[8],
+    submitted_at: "2026-08-16T14:00:00.000Z" };
 }

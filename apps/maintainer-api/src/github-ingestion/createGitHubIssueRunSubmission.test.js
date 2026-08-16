@@ -1,30 +1,23 @@
 import assert from "node:assert/strict";
-import { createHmac } from "node:crypto";
 
 import { createGitHubIssueRunSubmission } from "./index.js";
 
-const secret = "test-secret";
-const rawBody = JSON.stringify({
+const payload = {
   action: "labeled",
   label: { name: "patch-pilot" },
   installation: { id: 17 },
   repository: { full_name: "octo/example", default_branch: "main" },
   issue: { number: 42 },
   sender: { id: 23 },
-});
-const signature = `sha256=${createHmac("sha256", secret)
-  .update(rawBody, "utf8")
-  .digest("hex")}`;
+};
 const submittedRuns = [];
 
 const result = await createGitHubIssueRunSubmission({
   eventName: "issues",
   deliveryId: "delivery-123",
-  rawBody,
-  signature,
-  secret,
+  payload,
   resolveBaseRevision: async () => "a".repeat(40),
-  submitRun: async (run) => submittedRuns.push(run),
+  submitRun: async (run) => { submittedRuns.push(run); return { status: "created", run }; },
 });
 
 assert.equal(result.status, "accepted");
@@ -42,30 +35,10 @@ assert.deepEqual(submittedRuns, [
   },
 ]);
 
-await assert.rejects(
-  createGitHubIssueRunSubmission({
-    eventName: "issues",
-    deliveryId: "delivery-tampered",
-    rawBody,
-    signature: "sha256=invalid",
-    secret,
-    resolveBaseRevision: async () => "a".repeat(40),
-    submitRun: async (run) => submittedRuns.push(run),
-  }),
-  /Invalid GitHub webhook signature/,
-);
-assert.equal(submittedRuns.length, 1);
-
-const ignoredBody = JSON.stringify({ action: "opened" });
-const ignoredSignature = `sha256=${createHmac("sha256", secret)
-  .update(ignoredBody, "utf8")
-  .digest("hex")}`;
 const ignoredResult = await createGitHubIssueRunSubmission({
   eventName: "issues",
   deliveryId: "delivery-ignored",
-  rawBody: ignoredBody,
-  signature: ignoredSignature,
-  secret,
+  payload: { action: "opened" },
   resolveBaseRevision: async () => {
     throw new Error("Ignored events must not resolve a revision.");
   },

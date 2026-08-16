@@ -13,7 +13,7 @@ Current reality:
 - Three deployable application workspaces and the conceptual maintenance package are registered and bootstrapped with tested public interfaces and narrow declared module edges.
 - Local Temporal, Postgres, Redis, and Temporal UI services are defined in `compose.yaml` for development with pinned images and health checks.
 - Signed GitHub issue-label deliveries can now produce an authenticated run submission bound to an immutable revision.
-- Submitted runs now have atomic Postgres first-writer persistence across unique run and source-delivery identities, with full commit validation and database-owned submission time; webhook/runtime composition remains next.
+- Authenticated opted-in issue webhooks now resolve a repository-scoped full commit and reach atomic Postgres run persistence through the executable API deployment; Temporal submission remains next.
 - The maintenance package can materialize that revision in a disposable, verified Detached-HEAD repository workspace and remove it through a guarded cleanup operation.
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Canonical MVP command and change policy is enforced before a sandbox port. A Docker adapter selects pinned runtimes, applies the fixed limits, copies the workspace into the quota-controlled container layer, and guarantees cleanup. The worker composes it with bounded shell-free Docker process execution; only live Docker proof remains required before target-repository commands can be enabled in deployment.

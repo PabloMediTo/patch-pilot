@@ -1,24 +1,20 @@
 import { createMaintenanceRun } from "@patch-pilot/maintenance";
 
 import { readGitHubIssueRunRequest } from "./readGitHubIssueRunRequest.js";
-import { hasValidGitHubWebhookSignature } from "./hasValidGitHubWebhookSignature.js";
 
 /**
- * Converts one signed, opted-in GitHub issue webhook into a submitted run.
+ * Converts one authenticated, opted-in GitHub issue envelope into a submitted run.
  *
- * @param {{ eventName: string, deliveryId: string, rawBody: string, signature: string, secret: string, resolveBaseRevision: Function, submitRun: Function }} input Delivery data and outbound ports.
+ * @param {{ eventName: string, deliveryId: string, payload: object, resolveBaseRevision: Function, submitRun: Function }} input Authenticated envelope and outbound ports.
  * @returns {Promise<{ status: string, reason?: string, run?: object }>} Ingestion outcome.
- * @throws {Error} When authentication or a triggering payload is invalid.
+ * @throws {Error} When a triggering payload or persistence result is invalid.
  */
 export async function createGitHubIssueRunSubmission(input) {
-  assertValidSignature(input);
-
   if (input.eventName !== "issues") {
     return Object.freeze({ status: "ignored", reason: "unsupported-event" });
   }
 
-  const payload = JSON.parse(input.rawBody);
-  const request = readGitHubIssueRunRequest(payload);
+  const request = readGitHubIssueRunRequest(input.payload);
 
   if (request === null) {
     return Object.freeze({ status: "ignored", reason: "run-not-requested" });
@@ -26,24 +22,7 @@ export async function createGitHubIssueRunSubmission(input) {
 
   const baseRevision = await input.resolveBaseRevision(request);
   const run = createRunFromDelivery(input.deliveryId, request, baseRevision);
-  await input.submitRun(run);
-
-  return Object.freeze({ status: "accepted", run });
-}
-
-/**
- * Rejects a delivery whose raw body does not match its signature.
- *
- * @param {{ rawBody: string, secret: string, signature: string }} input Delivery signature material.
- * @returns {void}
- * @throws {Error} When signature verification fails.
- */
-function assertValidSignature(input) {
-  const hasValidSignature = hasValidGitHubWebhookSignature(input);
-
-  if (!hasValidSignature) {
-    throw new Error("Invalid GitHub webhook signature.");
-  }
+  return normalizeSubmission(await input.submitRun(run), run);
 }
 
 /**
@@ -80,6 +59,22 @@ function createRunFromDelivery(deliveryId, request, baseRevision) {
  */
 function assertNonEmptyString(value, field) {
   if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`GitHub ingestion field ${field} must be a non-empty string.`);
+    const error = new Error(`GitHub ingestion field ${field} must be a non-empty string.`);
+    error.code = "invalid-github-webhook";
+    throw error;
   }
+}
+
+/** Maps canonical store outcomes to stable webhook ingestion outcomes. */
+function normalizeSubmission(result, run) {
+  if (result?.status === "created") {
+    return Object.freeze({ status: "accepted", run: result.run ?? run });
+  }
+  if (result?.status === "existing") {
+    return Object.freeze({ status: "replayed", run: result.run });
+  }
+  if (result?.status === "conflict") {
+    return Object.freeze({ status: "conflict", reason: "run-submission-conflict" });
+  }
+  throw new Error("GitHub run submission persistence returned an invalid outcome.");
 }

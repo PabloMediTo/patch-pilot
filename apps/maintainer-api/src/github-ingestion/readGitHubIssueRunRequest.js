@@ -32,7 +32,7 @@ export function readGitHubIssueRunRequest(payload) {
  */
 function readPositiveInteger(value, field) {
   if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`GitHub payload field ${field} must be a positive integer.`);
+    throw invalidPayload(`GitHub payload field ${field} must be a positive integer.`);
   }
 
   return value;
@@ -48,8 +48,15 @@ function readPositiveInteger(value, field) {
  */
 function readNonEmptyString(value, field) {
   if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(`GitHub payload field ${field} must be a non-empty string.`);
+    throw invalidPayload(`GitHub payload field ${field} must be a non-empty string.`);
   }
 
   return value;
+}
+
+/** Marks authenticated malformed webhook evidence for stable transport mapping. */
+function invalidPayload(message) {
+  const error = new Error(message);
+  error.code = "invalid-github-webhook";
+  return error;
 }
