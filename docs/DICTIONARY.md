@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes. An environment-configured bearer adapter implements the MVP's single-operator authentication and all-runs authorization policy; Postgres/Redis adapters and other stores remain injected until the API main process wires deployment configuration.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its concrete Node server dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes. The application runtime constructs an environment-configured bearer adapter and enforces it as the one shared single-operator authentication and all-runs authorization policy for human routes; Postgres/Redis adapters and other stores remain injected until the API main process wires deployment configuration.
 
 ### Critique Decision
 

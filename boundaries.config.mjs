@@ -49,7 +49,7 @@ export const boundaryConfig = {
         },
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: [],
+          allowedModuleDependencies: ["api-authentication", "api-server"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

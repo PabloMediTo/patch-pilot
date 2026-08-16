@@ -74,6 +74,8 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Evolved the Postgres approval schema idempotently so evidence bindings survive retries; legacy unbound decisions remain readable but deliberately cannot authorize GitHub delivery.
 - Added an environment-configured single-operator bearer authentication adapter with a stable audit actor, shared approval/run-access ports, fixed-length digest comparison, and strict secret/identity validation.
 - Registered `api-authentication` as an independent security application role with only the exact `node:crypto` provider permission; focused tests cover valid, malformed, missing, array-valued, and incorrect credentials plus configuration rejection.
-- Remaining before completion: compose the control-plane API main process with the authentication adapter and persisted evidence stores; live timeline persistence verification remains tracked by `TASK-r7q5a`.
+- Added an API application-runtime composition that constructs deployment authentication and supplies it to the concrete server while keeping persisted data ports explicit.
+- The concrete server now derives approval authentication and both review/timeline run-access checks from that one shared source; focused loopback tests prove valid bearer access and rejection when the credential is absent.
+- Remaining before completion: compose the executable control-plane main process with persisted evidence stores, listener, and lifecycle ownership; live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

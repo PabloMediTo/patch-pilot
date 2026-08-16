@@ -25,7 +25,7 @@ Authenticate the single human operator permitted to inspect runs and submit [app
 
 ## Adjacent parts
 
-- the API main process will supply deployment environment values and share these ports across review, timeline, and approval roles
+- the API application runtime supplies deployment environment values and shares these ports across review, timeline, and approval roles
 - the web server forwards an existing browser bearer credential but does not interpret it
 - GitHub webhook ingestion uses its independent HMAC secret and authentication path
 
@@ -33,4 +33,4 @@ Authenticate the single human operator permitted to inspect runs and submit [app
 
 The implemented adapter deliberately models one deployment operator rather than a user database. Bearer scheme matching is case-insensitive, while the credential has no surrounding whitespace or alternate transport. Supplied and configured tokens are reduced to fixed-length SHA-256 digests and compared with a timing-safe primitive. Errors validate configuration names and constraints without including secret values.
 
-This adapter establishes the concrete authentication policy and ports but does not make the API executable main process complete by itself. Environment-backed Postgres, Redis, review-evidence, and lifecycle composition remain separate work.
+The application runtime now constructs this adapter from deployment values and gives the concrete server one shared authentication source. Individual review, timeline, or approval integrations cannot replace it with route-specific authentication ports. Environment-backed Postgres, Redis, review-evidence, listener, and lifecycle composition remain separate work in the executable main process.

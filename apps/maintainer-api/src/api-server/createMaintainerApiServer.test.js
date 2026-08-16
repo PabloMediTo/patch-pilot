@@ -2,37 +2,46 @@ import assert from "node:assert/strict";
 import { request } from "node:http";
 import { createHmac } from "node:crypto";
 
+import { createApiBearerAuthentication } from "../api-authentication/index.js";
 import { createMaintainerApiServer } from "./index.js";
 
 let savedDecision;
 let webhookEnvelope;
 const webhookSecret = "webhook-secret";
+const bearerToken = "private-api-token-with-at-least-32-characters";
 const server = createMaintainerApiServer({
+  authentication: createApiBearerAuthentication({ PATCH_PILOT_API_BEARER_TOKEN: bearerToken,
+    PATCH_PILOT_API_ACTOR_ID: "operator:pablo" }),
   githubWebhook: { secret: webhookSecret,
     ingestWebhook: async (envelope) => { webhookEnvelope = envelope; return { status: "recorded" }; },
     clock: () => new Date("2026-08-16T13:00:00.000Z") },
-  reviewEvidence: { authorizeRunAccess: async () => true, loadRunReviewEvidence: async () => ({ run: { id: "run-1" } }) },
-  approval: { authenticateRequest: async () => ({ id: "reviewer-1" }),
+  reviewEvidence: { loadRunReviewEvidence: async () => ({ run: { id: "run-1" } }) },
+  approval: {
     loadApprovalState: async () => ({ runStatus: "awaiting-approval", decision: null,
       reviewBinding: { baseRevision: "a".repeat(40), diffHash: "b".repeat(64), planVersion: 1,
         verification: { status: "passed", evidenceHash: "c".repeat(64) } } }),
     saveFirstDecision: async (decision) => { savedDecision = decision; return { status: "created", decision }; },
     clock: () => new Date("2026-08-15T10:00:00.000Z") },
-  timeline: { authorizeRunAccess: async () => false, store: {}, stream: {} },
+  timeline: { store: {}, stream: {} },
 });
 await listen(server);
 
-const review = await exchange(server, { method: "GET", path: "/runs/run-1/review-evidence" });
+const review = await exchange(server, { method: "GET", path: "/runs/run-1/review-evidence",
+  headers: authorizationHeaders() });
 assert.equal(review.statusCode, 200);
 assert.deepEqual(JSON.parse(review.body), { run: { id: "run-1" } });
+assert.equal((await exchange(server,
+  { method: "GET", path: "/runs/run-1/review-evidence" })).statusCode, 401);
 
 const approval = await exchange(server, { method: "POST", path: "/runs/run-1/approval/reject",
-  headers: { "content-type": "application/json", "idempotency-key": "request-1" }, body: '{"reason":"Regression"}' });
+  headers: { ...authorizationHeaders(), "content-type": "application/json",
+    "idempotency-key": "request-1" }, body: '{"reason":"Regression"}' });
 assert.equal(approval.statusCode, 201);
 assert.equal(savedDecision.reason, "Regression");
 
 const invalid = await exchange(server, { method: "POST", path: "/runs/run-1/approval/approve",
-  headers: { "content-type": "application/json", "idempotency-key": "request-2" }, body: "{" });
+  headers: { ...authorizationHeaders(), "content-type": "application/json",
+    "idempotency-key": "request-2" }, body: "{" });
 assert.deepEqual(invalid, { statusCode: 400, body: '{"error":"invalid-json"}' });
 const webhookBody = JSON.stringify({ action: "closed" });
 const webhook = await exchange(server, { method: "POST", path: "/github/webhooks",
@@ -76,4 +85,9 @@ function close(target) {
 /** Signs one exact server-test webhook body. */
 function signWebhook(body) {
   return `sha256=${createHmac("sha256", webhookSecret).update(body, "utf8").digest("hex")}`;
+}
+
+/** Returns the valid control-plane authorization header. */
+function authorizationHeaders() {
+  return { authorization: `Bearer ${bearerToken}` };
 }

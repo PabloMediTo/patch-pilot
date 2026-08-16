@@ -10,7 +10,7 @@ const DEFAULT_MAX_BODY_BYTES = 64 * 1024;
 /**
  * Creates the concrete Node server for control-plane API routes.
  *
- * @param {{ githubWebhook: object, approval: object, reviewEvidence: object, timeline: object, maxBodyBytes?: number }} input Role integrations and body policy.
+ * @param {{ authentication: object, githubWebhook: object, approval: object, reviewEvidence: object, timeline: object, maxBodyBytes?: number }} input Shared authentication, role integrations, and body policy.
  * @returns {import("node:http").Server} Unstarted API server.
  */
 export function createMaintainerApiServer(input) {
@@ -24,19 +24,32 @@ export function createMaintainerApiServer(input) {
 function createRuntimePorts(input) {
   const maxBodyBytes = input?.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   if (!Number.isSafeInteger(maxBodyBytes) || maxBodyBytes < 1) throw new Error("API body limit must be a positive integer.");
+  assertAuthentication(input?.authentication);
   return Object.freeze({
-    reviewEvidence: input.reviewEvidence,
+    reviewEvidence: Object.freeze({ ...input.reviewEvidence,
+      authorizeRunAccess: input.authentication.authorizeRunAccess,
+    }),
     githubWebhook: Object.freeze({ ...input.githubWebhook,
       readRawBody: (request) => readRawBody(request, maxBodyBytes),
     }),
     approval: Object.freeze({ ...input.approval,
+      authenticateRequest: input.authentication.authenticateRequest,
       readRequestBody: (request) => readRequestBody(request, maxBodyBytes),
       clock: input.approval.clock ?? (() => new Date()),
     }),
     timeline: Object.freeze({ ...input.timeline,
+      authorizeRunAccess: input.authentication.authorizeRunAccess,
       scheduleHeartbeat: input.timeline.scheduleHeartbeat ?? scheduleHeartbeat,
     }),
   });
+}
+
+/** Requires one shared authentication source for all human API routes. */
+function assertAuthentication(authentication) {
+  if (typeof authentication?.authenticateRequest !== "function"
+    || typeof authentication.authorizeRunAccess !== "function") {
+    throw new Error("API server requires shared authentication ports.");
+  }
 }
 
 /** Reads and parses one bounded approval request body. */
