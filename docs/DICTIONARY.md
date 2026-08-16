@@ -105,7 +105,7 @@ The bounded text that identifies the issue's reported failure in test output. A 
 
 ### Failure Reproduction
 
-The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the persisted [expected failure fragment](#expected-failure-fragment); unrelated command failures are kept distinct. The Temporal workflow implements this attempt in a fresh exact-revision workspace through the canonical safe executor and records its classified evidence.
+The evidence-backed attempt to demonstrate the bug reported by an issue. Patch Pilot accepts a reproduction only when the supported project's standard test command exits unsuccessfully and its captured output contains the persisted [expected failure fragment](#expected-failure-fragment); unrelated command failures are kept distinct. The Temporal workflow implements this attempt in a fresh exact-revision workspace through the canonical safe executor. Only accepted reproduction becomes planning-ready; unsupported, not-reproduced, different-failure, and execution-failed classifications are terminal outcomes.
 
 ### GitHub App Installation Token
 
@@ -138,7 +138,7 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, and reproduction events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Proposal attempts, approval waiting, and delivery orchestration remain planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, and reproduction events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Only accepted reproduction records planning readiness; all other known reproduction outcomes terminate explicitly. Proposal attempts, approval waiting, and delivery orchestration remain planned.
 
 ### Monorepo
 
@@ -174,7 +174,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. The concrete adapters and first workflow events are implemented and unit-tested, while live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection and reproduction lifecycle, planning readiness after accepted reproduction, and explicit terminal outcomes. Live local-service verification remains open.
 
 ### Supported Project
 

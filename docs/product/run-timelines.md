@@ -28,6 +28,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 ## Adjacent parts
 
 - workers record progress after completing workflow operations
+- the maintenance workflow records planning readiness only after accepted reproduction and terminal evidence for every non-planning outcome
 - Postgres remains the audit and catch-up source
 - Redis fans new events out to connected API instances
 - the control-plane API combines history queries and live subscriptions into one ordered feed for the web interface

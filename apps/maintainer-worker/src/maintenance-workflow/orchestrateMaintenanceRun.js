@@ -11,10 +11,16 @@ export async function orchestrateMaintenanceRun(input) {
   const inspection = await runInspectionPhase(input);
   if (inspection.status !== "supported") {
     await recordEvent(input, "reproduction-skipped", { reason: inspection.reason });
+    await recordTerminalOutcome(input, "unsupported", inspection.reason);
     return Object.freeze({ status: "unsupported", runId: input.run.id, inspection });
   }
   const reproduction = await runReproductionPhase(input);
-  return Object.freeze({ status: "reproduction-completed", runId: input.run.id,
+  if (reproduction.status === "reproduced") {
+    await recordEvent(input, "planning-ready", { reproduction: "reproduced" });
+  } else {
+    await recordTerminalOutcome(input, reproduction.status, reproduction.reason);
+  }
+  return Object.freeze({ status: reproduction.status, runId: input.run.id,
     inspection, reproduction });
 }
 
@@ -36,12 +42,19 @@ async function runReproductionPhase(input) {
   await recordEvent(input, "reproduction-started", { expectedFailure: input.run.expectedFailure });
   try {
     const reproduction = await input.reproduceIssue(input.run);
+    assertReproductionOutcome(reproduction);
     await recordEvent(input, "reproduction-completed", { reproduction });
     return reproduction;
   } catch (error) {
     await recordEvent(input, "reproduction-failed", { message: safeMessage(error) });
     throw error;
   }
+}
+
+/** Records one explicit non-planning terminal workflow outcome. */
+function recordTerminalOutcome(input, outcome, reason) {
+  return recordEvent(input, "terminal", { outcome,
+    ...(typeof reason === "string" && reason !== "" ? { reason } : {}) });
 }
 
 /** Records one workflow-time event with a deterministic identity. */
@@ -78,8 +91,17 @@ function assertPersistedRun(run) {
   }
 }
 
+/** Requires one recognized Activity-owned reproduction classification. */
+function assertReproductionOutcome(reproduction) {
+  const statuses = new Set(["reproduced", "not-reproduced", "different-failure",
+    "execution-failed", "unsupported"]);
+  if (!statuses.has(reproduction?.status)) {
+    throw new Error("Reproduction Activity returned an invalid outcome.");
+  }
+}
+
 /** Converts an Activity failure to bounded timeline evidence. */
 function safeMessage(error) {
   return error instanceof Error && error.message.trim() !== "" ? error.message.slice(0, 500)
-    : "Repository inspection failed.";
+    : "Maintenance workflow Activity failed.";
 }

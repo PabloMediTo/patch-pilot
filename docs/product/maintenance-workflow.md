@@ -58,7 +58,9 @@ Own one durable maintenance run from validated repository and issue input throug
 
 ## Current implementation boundary
 
-The executable workflow currently implements submission, inspection, and reproduction through step 5. It validates the persisted target and explicit expected-failure fragment, records replay-safe timeline events, and uses separate exact-revision disposable checkouts for inspection and reproduction so no machine-local path crosses an Activity boundary. Supported Python or TypeScript roots execute their standard test command through the canonical safe executor; unsupported roots record a reproduction skip. The workflow classifies and records reproduction evidence before completing. It does not yet produce a proposal, wait for approval, or deliver a pull request, and live Docker enforcement still requires runtime proof.
+The executable workflow currently implements submission, inspection, and reproduction through step 5. It validates the persisted target and explicit expected-failure fragment, records replay-safe timeline events, and uses separate exact-revision disposable checkouts for inspection and reproduction so no machine-local path crosses an Activity boundary. Supported Python or TypeScript roots execute their standard test command through the canonical safe executor; unsupported roots record a reproduction skip.
+
+Only a validated `reproduced` outcome records `run.planning.ready` and returns a planning-eligible workflow result. Unsupported, not-reproduced, different-failure, and execution-failed outcomes record `run.terminal` with their exact classification and cannot continue. An unknown Activity classification records `run.reproduction.failed` and fails the workflow instead of being treated as product evidence. The workflow does not yet produce a proposal, wait for approval, or deliver a pull request, and live Docker enforcement still requires runtime proof.
 
 ## Retry policy
 
