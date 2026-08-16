@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import {
   createImmutableRepositoryWorkspace,
+  materializeRepositoryWorkspaceDiff,
   removeRepositoryWorkspace,
 } from "./index.js";
 
@@ -48,6 +49,26 @@ try {
     await readFile(join(workspace.workspaceDirectory, ".git", "config"), "utf8"),
     /remote "origin"/u,
   );
+  const createDiff = (replacement) => ["diff --git a/example.txt b/example.txt",
+    "--- a/example.txt", "+++ b/example.txt", "@@ -1 +1 @@", "-immutable",
+    `+${replacement}`].join("\n");
+  await materializeRepositoryWorkspaceDiff({ rootDirectory: workspaceRoot,
+    workspaceDirectory: workspace.workspaceDirectory,
+    baseRevision, unifiedDiff: createDiff("changed") });
+  assert.equal((await readFile(join(workspace.workspaceDirectory, "example.txt"), "utf8")).trim(),
+    "changed");
+  await materializeRepositoryWorkspaceDiff({ rootDirectory: workspaceRoot,
+    workspaceDirectory: workspace.workspaceDirectory,
+    baseRevision, unifiedDiff: createDiff("retried") });
+  assert.equal((await readFile(join(workspace.workspaceDirectory, "example.txt"), "utf8")).trim(),
+    "retried");
+  await assert.rejects(materializeRepositoryWorkspaceDiff({
+    rootDirectory: workspaceRoot, workspaceDirectory: workspace.workspaceDirectory, baseRevision,
+    unifiedDiff: createDiff("invalid\0content"),
+  }), /bounded diff/u);
+  await assert.rejects(materializeRepositoryWorkspaceDiff({ rootDirectory: workspaceRoot,
+    workspaceDirectory: sourceDirectory, baseRevision, unifiedDiff: createDiff("unsafe") }),
+  /unrecognized repository workspace/u);
   await assert.rejects(
     removeRepositoryWorkspace({
       rootDirectory: workspaceRoot,

@@ -26,6 +26,10 @@ Planning receives a deterministic safe subset of repository text rather than unr
 
 The MVP worker uses the OpenAI Responses API with strict JSON Schema output and a pinned `gpt-5.4-mini` snapshot for plan and diff candidates. Provider selection, credentials, HTTP behavior, and prompts remain in a worker application role. The maintenance package still parses, bounds, traces, and safety-assesses every result independently, so schema conformance never substitutes for product validation. Requests disable provider-side response storage, and the timeline omits the generated source diff.
 
+## Full proposal retries from the immutable base
+
+Every proposal revision is a complete replacement diff against the run's immutable base revision. Before each attempt, the disposable checkout is restored and cleaned, then the replacement diff is checked and applied. This prevents one failed attempt from becoming hidden mutable input to the next generator request and keeps each retained plan, diff, and verification result independently reproducible.
+
 ## Human-controlled delivery
 
 The system may inspect, plan, modify, and verify autonomously in isolation. Publishing a branch or pull request requires an explicit approval decision. Automatic merge is outside the MVP.

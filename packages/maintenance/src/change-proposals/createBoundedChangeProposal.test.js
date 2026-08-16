@@ -61,6 +61,17 @@ await runTest("rejects planning before the reported failure is reproduced", asyn
   );
 });
 
+await runTest("creates an explicitly versioned revised proposal", async () => {
+  const result = await createBoundedChangeProposal({ ...baseInput, planVersion: 2,
+    generatePlan: async () => ({ summary: "Revise normalization.", steps: [{
+      description: "Revise source.", rationale: "Verification found a regression.",
+      files: ["src/account.js"],
+    }] }), generateDiff: async () => ({ unifiedDiff: [
+      "diff --git a/src/account.js b/src/account.js", "@@ -1 +1 @@", "-old", "+revised",
+    ].join("\n") }) });
+  assert.equal(result.plan.version, 2);
+});
+
 await runTest("rejects a diff that touches a file not justified by the plan", async () => {
   await assert.rejects(
     createBoundedChangeProposal({
@@ -82,6 +93,20 @@ await runTest("rejects a diff that touches a file not justified by the plan", as
     }),
     /exactly the files justified/u,
   );
+});
+
+await runTest("rejects redirected paths and unsafe file modes", async () => {
+  const generatePlan = async () => ({ summary: "Change source.", steps: [{
+    description: "Fix source.", rationale: "It owns the failure.", files: ["src/account.js"],
+  }] });
+  for (const metadata of ["+++ b/src/other.js", "new file mode 120000",
+    "rename to src/other.js", "GIT binary patch"]) {
+    await assert.rejects(createBoundedChangeProposal({ ...baseInput, generatePlan,
+      generateDiff: async () => ({ unifiedDiff: [
+        "diff --git a/src/account.js b/src/account.js", "--- a/src/account.js", metadata,
+        "@@ -1 +1 @@", "-old", "+fixed",
+      ].join("\n") }) }), /unsupported or mismatched file metadata/u);
+  }
 });
 
 await runTest("blocks a correctly planned diff that violates the canonical change policy", async () => {

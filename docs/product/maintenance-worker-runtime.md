@@ -23,10 +23,11 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 
 - a registered deterministic `maintenanceRunWorkflow` bundle
 - canonical submission, inspection, reproduction, planning-context, and proposal lifecycle timeline events
-- an explicit proposal-ready gate or terminal classified outcome
+- an accepted final-attempt outcome or explicit terminal classified outcome
 - a sanitized supported or unsupported project inspection without a local path
 - classified reproduction evidence from the safe command executor for supported projects
 - bounded repository planning context after accepted reproduction
+- immutable proposal-attempt history after apply, verify, critique, and bounded revision
 - deterministic provider cleanup after worker polling stops
 
 ## Adjacent parts
@@ -47,7 +48,9 @@ The inspection Activity creates a checkout at the exact recorded revision, runs 
 
 The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow accepts only the known reproduction classifications. Every valid non-reproduced classification records an explicit terminal event, while malformed Activity evidence fails visibly.
 
-After accepted reproduction, a separate Activity creates a third checkout, collects bounded repository planning context, and removes the workspace in `finally`. Ready context records planning readiness; unavailable or malformed context terminates or fails explicitly. A five-minute, three-attempt proposal Activity uses the worker-owned OpenAI Responses adapter and the maintenance package's bounded proposal use case. Ready and policy-blocked outcomes are distinct; malformed provider or Activity evidence fails visibly. Timeline evidence omits full source content and the unified diff. Dependency installation, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
+After accepted reproduction, a separate Activity creates a third checkout, collects bounded repository planning context, and removes the workspace in `finally`. Ready context records planning readiness; unavailable or malformed context terminates or fails explicitly. A five-minute, three-attempt proposal Activity uses the worker-owned OpenAI Responses adapter and the maintenance package's bounded proposal use case. Ready and policy-blocked outcomes are distinct; malformed provider or Activity evidence fails visibly.
+
+A separate 30-minute Activity creates a fourth exact-revision checkout and executes the existing apply-verify-critique loop. Every attempt resets that checkout to the immutable base, applies a complete checked diff, runs the supported command through the canonical safe executor, and invokes the structured reviewer only after passing verification. Failed verification requests a full revised proposal with the exact next plan version; two modification retries are permitted. The Activity awaits the whole loop before cleanup, while `finally` still guarantees removal after success or failure. Timeline evidence includes bounded verification and critique summaries but omits unified diffs. Dependency installation, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
 
 ## Lifecycle
 

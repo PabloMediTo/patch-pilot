@@ -36,7 +36,7 @@ Translate bounded issue, reproduction, and repository evidence into the structur
 
 The worker uses the OpenAI Responses API through its native HTTP port. Requests set `store: false` and require strict JSON Schema output. The default model is the pinned `gpt-5.4-mini-2026-03-17` snapshot and can be replaced through `PATCH_PILOT_OPENAI_MODEL` without changing the maintenance-domain ports. `PATCH_PILOT_OPENAI_API_KEY` is required only by the executable worker and is sent in the authorization header, never in prompts, Activity input, returned evidence, or error messages.
 
-Plan and diff generation are separate requests. Both receive only the evidence already accepted by the workflow. Responses are bounded to 512 KiB before parsing, HTTP errors expose only status codes, refusals are explicit failures, and every structured result is validated again by the provider-free change-proposal boundary.
+Plan and diff generation are separate requests. A third strict-schema request critiques only proposals whose verification passed. Failed verification produces a deterministic retry without spending a reviewer request. Revision requests include the prior plan, verification, and critique and require a complete replacement patch against the original context. Responses are bounded to 512 KiB before parsing, HTTP errors expose only status codes, refusals are explicit failures, and every structured result is validated again by the provider-free change-proposal or critique boundary.
 
 ## Durable evidence boundary
 

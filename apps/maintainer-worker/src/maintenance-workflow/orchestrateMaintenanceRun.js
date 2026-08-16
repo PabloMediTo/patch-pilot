@@ -1,7 +1,7 @@
 /**
  * Orchestrates durable inspection, reproduction, context, and proposal phases.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, now: Function }} input Persisted run and deterministic workflow ports.
  * @returns {Promise<object>} Proposal or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
@@ -34,6 +34,12 @@ async function finishReproduction(input, inspection, reproduction) {
   await recordEvent(input, "planning-ready", { reproduction: "reproduced",
     relevantFileCount: repositoryContext.relevantFiles.length,
     totalBytes: repositoryContext.totalBytes });
+  return finishPlanning(input, { inspection, reproduction, repositoryContext });
+}
+
+/** Generates a proposal and advances every safe proposal through bounded attempts. */
+async function finishPlanning(input, evidence) {
+  const { inspection, reproduction, repositoryContext } = evidence;
   const proposal = await runProposalPhase(input, reproduction, repositoryContext);
   if (proposal.status === "blocked") {
     await recordTerminalOutcome(input, "proposal-blocked", proposal.safety.reasons.join(","));
@@ -41,8 +47,32 @@ async function finishReproduction(input, inspection, reproduction) {
       inspection, reproduction, repositoryContext, proposal });
   }
   await recordEvent(input, "proposal-ready", summarizeProposal(proposal));
-  return Object.freeze({ status: "proposal-ready", runId: input.run.id,
-    inspection, reproduction, repositoryContext, proposal });
+  const attemptResult = await runAttemptPhase(input, { inspection, reproduction,
+    repositoryContext, proposal });
+  if (attemptResult.status !== "completed") {
+    await recordTerminalOutcome(input, `attempts-${attemptResult.status}`);
+    return Object.freeze({ status: `attempts-${attemptResult.status}`, runId: input.run.id,
+      inspection, reproduction, repositoryContext, proposal: attemptResult.proposal,
+      attempts: attemptResult.attempts });
+  }
+  await recordEvent(input, "attempts-accepted", summarizeAttemptResult(attemptResult));
+  return Object.freeze({ status: "attempts-completed", runId: input.run.id,
+    inspection, reproduction, repositoryContext, proposal: attemptResult.proposal,
+    attempts: attemptResult.attempts });
+}
+
+/** Executes and validates the bounded modification-verification-critique loop. */
+async function runAttemptPhase(input, evidence) {
+  await recordEvent(input, "attempts-started", { planVersion: evidence.proposal.plan.version });
+  try {
+    const result = await input.executeProposalAttempts({ run: input.run, ...evidence });
+    assertAttemptResult(result);
+    await recordEvent(input, "attempts-completed", summarizeAttemptResult(result));
+    return result;
+  } catch (error) {
+    await recordEvent(input, "attempts-failed", { message: safeMessage(error) });
+    throw error;
+  }
 }
 
 /** Generates and validates one bounded proposal with explicit lifecycle evidence. */
@@ -210,6 +240,46 @@ function summarizeProposal(proposal) {
     summary: proposal.plan.summary, plannedFiles: Object.freeze(proposal.plan.steps
       .flatMap((step) => step.files)), changes: proposal.sourceDiff.changes,
     safety: proposal.safety });
+}
+
+/** Requires one bounded attempt-loop result from the Activity. */
+function assertAttemptResult(result) {
+  const statuses = new Set(["completed", "rejected", "exhausted"]);
+  const hasAttempts = Array.isArray(result?.attempts) && result.attempts.length > 0
+    && result.attempts.length <= 3 && result.attempts.every(hasValidAttempt);
+  const finalAttempt = hasAttempts ? result.attempts.at(-1) : undefined;
+  if (!statuses.has(result?.status) || !hasAttempts
+    || result?.proposal?.plan?.version !== finalAttempt.proposal.plan.version
+    || !hasMatchingTerminalAttempt(result.status, finalAttempt)) {
+    throw new Error("Proposal-attempt Activity returned an invalid outcome.");
+  }
+}
+
+/** Ensures the result label agrees with the final critique and verification. */
+function hasMatchingTerminalAttempt(status, attempt) {
+  if (status === "completed") {
+    return attempt.verification.status === "passed" && attempt.critique.decision === "accepted";
+  }
+  if (status === "rejected") return attempt.critique.decision === "rejected";
+  return status === "exhausted" && attempt.critique.decision === "retry";
+}
+
+/** Checks one visible attempt without trusting unbounded source data. */
+function hasValidAttempt(attempt, index) {
+  return attempt?.attemptNumber === index + 1 && attempt?.proposal?.status === "ready"
+    && Number.isInteger(attempt?.proposal?.plan?.version)
+    && ["passed", "failed", "execution-failed"].includes(attempt?.verification?.status)
+    && ["accepted", "retry", "rejected"].includes(attempt?.critique?.decision);
+}
+
+/** Removes source diffs while retaining plan, verification, and critique evidence. */
+function summarizeAttemptResult(result) {
+  return Object.freeze({ status: result.status, attemptCount: result.attempts.length,
+    attempts: Object.freeze(result.attempts.map((attempt) => Object.freeze({
+      attemptNumber: attempt.attemptNumber, planVersion: attempt.proposal.plan.version,
+      changes: attempt.proposal.sourceDiff.changes,
+      verification: attempt.verification, critique: attempt.critique,
+    }))) });
 }
 
 /** Converts an Activity failure to bounded timeline evidence. */

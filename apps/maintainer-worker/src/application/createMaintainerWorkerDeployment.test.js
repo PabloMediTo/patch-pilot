@@ -12,7 +12,7 @@ const worker = { runCalls: 0, shutdownCalls: 0,
   async run() { this.runCalls += 1; },
   shutdown() { this.shutdownCalls += 1; } };
 const proposalGenerators = { generatePlan: async () => undefined,
-  generateDiff: async () => undefined };
+  generateDiff: async () => undefined, reviewProposal: async () => undefined };
 const environment = { PATCH_PILOT_OPENAI_API_KEY: "private-test-key" };
 const deployment = await createMaintainerWorkerDeployment({ environment, connection,
   timelineStore, timelineStream, proposalGenerators, worker });

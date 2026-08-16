@@ -21,6 +21,7 @@ Create and remove one disposable [repository workspace](../DICTIONARY.md#reposit
 
 - a unique generated checkout directory beneath the trusted root
 - the verified immutable base revision
+- a materialized full proposal diff against the exact immutable base
 - complete cleanup on checkout failure or explicit removal
 
 ## Adjacent parts
@@ -38,5 +39,11 @@ Git is invoked without a shell, interactive credential prompts are disabled, com
 Repository URLs with embedded credentials are rejected so secrets cannot enter command arguments or `.git/config`. After verification, the `origin` remote is removed so the repository location is not retained. A failed checkout is deleted before the error is returned.
 
 Removal accepts only generated `repository-*` children beneath the declared workspace root. It rejects the root itself, siblings, and arbitrary external paths.
+
+## Proposal materialization
+
+Every [proposal attempt](../DICTIONARY.md#proposal-attempt) restores its disposable checkout with `git reset --hard` to the already verified base revision and `git clean -fdx`. It writes the bounded full unified diff to a uniquely generated temporary directory inside that checkout, runs `git apply --check`, applies only after the check succeeds, and removes the temporary directory in `finally`. The operation rejects a mismatched HEAD, missing base revision, NUL content, or a diff above 256 KiB.
+
+Retries are complete replacements against the immutable base, not incremental patches over a failed attempt. Destructive Git commands are confined to the generated disposable checkout and never target the Patch Pilot repository or an arbitrary caller directory.
 
 This is filesystem and Git-reference isolation. Execution isolation for untrusted repository commands remains a separate required safety boundary.

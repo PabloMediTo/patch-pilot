@@ -52,7 +52,7 @@ The operational entrypoint creates this policy internally; callers cannot substi
 
 A proposal may modify at most 10 unique files and 500 total added plus deleted lines. Repository traversal and absolute paths are rejected.
 
-The MVP rejects changes to environment/secret files, private keys, dependency manifests, requirements files, lockfiles, migration directories, distribution output, and generated artifacts. These outcomes require rejection or a future explicit policy rather than an automatic exception.
+The MVP rejects changes to environment/secret files, private keys, dependency manifests, requirements files, lockfiles, migration directories, distribution output, and generated artifacts. Proposal parsing also rejects redirected patch headers, renames, copies, binary patches, symbolic-link or submodule modes, and unsupported file-mode changes before materialization. These outcomes require rejection or a future explicit policy rather than an automatic exception.
 
 ## Repository-context limits
 

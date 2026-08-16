@@ -43,7 +43,7 @@ The plan is versioned from its first representation. Later modification or retry
 
 ## Diff contract
 
-The diff generator receives the validated plan and returns a git-style unified diff. The proposal boundary parses file headers and hunks itself to derive changed paths and added/deleted line counts; generator-supplied metrics are not trusted.
+The diff generator receives the validated plan and returns a git-style unified diff. The proposal boundary parses file headers and hunks itself to derive changed paths and added/deleted line counts; generator-supplied metrics are not trusted. It also requires `---`/`+++` metadata to match the declared path and rejects rename, copy, binary, symlink, submodule, and unsupported mode metadata before workspace materialization.
 
 Renames are outside the MVP. Every diff file must contain a changed hunk, remain repository-relative, and appear exactly once in the plan. A diff that omits a planned file or adds an unplanned file is rejected before it becomes a proposal.
 

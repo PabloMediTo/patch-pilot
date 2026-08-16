@@ -27,7 +27,8 @@ Compose patch application, verification, critique, and revision into an immutabl
 - change proposals produce the initial bounded proposal
 - verification and critiques own each attempt's evidence and decision
 - the revision port produces a new proposal after a correctable finding
-- durable workflow orchestration will persist attempts and handle infrastructure retries
+- repository workspaces restore the immutable base and materialize each full proposal diff
+- durable workflow orchestration records attempts and handles infrastructure retries
 - approval may start only from the completed final proposal
 
 ## Retry contract
@@ -35,3 +36,9 @@ Compose patch application, verification, critique, and revision into an immutabl
 The first proposal is attempt one. A retry decision may create at most two further attempts. Each revision must remain ready and advance the plan version by exactly one. All earlier proposals and evidence remain unchanged and reviewable.
 
 Acceptance completes immediately. Rejection terminates immediately. A retry decision on attempt three returns `exhausted`; no fourth modification is requested. Execution failures reject this local loop without consuming a modification revision because Temporal Activity retry policy is a separate concern.
+
+## Executable Activity
+
+The worker runs the loop in one fresh exact-revision checkout. Every attempt first restores the checkout to its immutable base and applies the complete proposal, then records standard verification and critique evidence. A retry passes the prior plan, verification, and critique to the structured generators, validates the replacement through the same proposal boundary, and requires the exact next plan version.
+
+The Temporal Activity may execute at most three attempts and always removes its checkout after the asynchronous loop settles. Workflow timeline events retain attempt number, plan version, independently measured changed-file evidence, bounded verification output, and critique. They omit every unified source diff; the eventual review snapshot owns the accepted exact diff.

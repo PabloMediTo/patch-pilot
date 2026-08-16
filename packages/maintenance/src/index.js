@@ -13,6 +13,7 @@ export {
 export { executeProposalAttempts } from "./proposal-attempts/index.js";
 export {
   createImmutableRepositoryWorkspace,
+  materializeRepositoryWorkspaceDiff,
   removeRepositoryWorkspace,
 } from "./repository-workspaces/index.js";
 export { collectRepositoryPlanningContext,

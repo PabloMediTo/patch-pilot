@@ -23,12 +23,22 @@ const PLAN_SCHEMA = Object.freeze({
 });
 const DIFF_SCHEMA = Object.freeze({ type: "object", additionalProperties: false,
   required: ["unifiedDiff"], properties: { unifiedDiff: { type: "string", minLength: 1 } } });
+const CRITIQUE_SCHEMA = Object.freeze({ type: "object", additionalProperties: false,
+  required: ["decision", "rationale", "findings"], properties: {
+    decision: { type: "string", enum: ["accepted", "retry", "rejected"] },
+    rationale: { type: "string", minLength: 1 },
+    findings: { type: "array", maxItems: 10, items: { type: "object",
+      additionalProperties: false, required: ["severity", "message"], properties: {
+        severity: { type: "string", enum: ["warning", "blocking"] },
+        message: { type: "string", minLength: 1 },
+      } } },
+  } });
 
 /**
  * Creates structured plan and diff generators backed by the OpenAI Responses API.
  *
  * @param {{ apiKey: string, model?: string, endpoint?: string, fetchResponse?: Function }} input Provider configuration and HTTP port.
- * @returns {{ generatePlan: Function, generateDiff: Function }} Immutable proposal-generator ports.
+ * @returns {{ generatePlan: Function, generateDiff: Function, reviewProposal: Function }} Immutable proposal-generator ports.
  */
 export function createOpenAiProposalGenerators(input) {
   assertConfiguration(input);
@@ -41,15 +51,22 @@ export function createOpenAiProposalGenerators(input) {
       maxOutputTokens: 8_000, system: PLAN_INSTRUCTIONS, context }),
     generateDiff: (context) => request({ name: "patch_pilot_diff", schema: DIFF_SCHEMA,
       maxOutputTokens: 16_000, system: DIFF_INSTRUCTIONS, context }),
+    reviewProposal: (context) => request({ name: "patch_pilot_critique", schema: CRITIQUE_SCHEMA,
+      maxOutputTokens: 4_000, system: CRITIQUE_INSTRUCTIONS, context }),
   });
 }
 
 const PLAN_INSTRUCTIONS = `Create the smallest implementation plan that fixes the reproduced issue.
 Use only supplied repository files. Every file must be repository-relative and owned by one step.
-Do not plan dependency, lockfile, generated, migration, secret, key, or certificate changes.`;
+Do not plan dependency, lockfile, generated, migration, secret, key, or certificate changes.
+When revisionEvidence is present, replace the prior proposal and address its verification and critique.`;
 const DIFF_INSTRUCTIONS = `Produce one git-style unified diff implementing the validated plan.
 Change exactly the planned files, keep paths repository-relative, include diff --git headers and hunks,
-and do not rename files. Return only the schema-defined value.`;
+and do not rename files. When revisionEvidence is present, produce a complete patch against the original
+repository context rather than an incremental patch. Return only the schema-defined value.`;
+const CRITIQUE_INSTRUCTIONS = `Review the verified proposal for issue fit, scope, regression risk,
+and plan-to-diff consistency. Accept only when verification passed and no blocking finding remains.
+Request retry for correctable defects and reject unsafe or unsuitable changes.`;
 
 /** Creates one bounded structured-output requester. */
 function createRequester(config) {

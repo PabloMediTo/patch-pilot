@@ -14,7 +14,9 @@ const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
   "2026-08-16T16:03:00.000Z", "2026-08-16T16:04:00.000Z",
   "2026-08-16T16:05:00.000Z", "2026-08-16T16:06:00.000Z",
   "2026-08-16T16:07:00.000Z", "2026-08-16T16:08:00.000Z",
-  "2026-08-16T16:09:00.000Z", "2026-08-16T16:10:00.000Z"];
+  "2026-08-16T16:09:00.000Z", "2026-08-16T16:10:00.000Z",
+  "2026-08-16T16:11:00.000Z", "2026-08-16T16:12:00.000Z",
+  "2026-08-16T16:13:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const readyProposal = Object.freeze({ status: "ready",
@@ -24,6 +26,10 @@ const readyProposal = Object.freeze({ status: "ready",
   }]) }), sourceDiff: Object.freeze({ unifiedDiff: "secret source diff",
     changes: Object.freeze([{ path: "src/math.ts", addedLines: 1, deletedLines: 1 }]) }),
   safety: Object.freeze({ status: "allowed", reasons: Object.freeze([]) }) });
+const acceptedAttempt = Object.freeze({ attemptNumber: 1, proposal: readyProposal,
+  verification: Object.freeze({ status: "passed", evidence: Object.freeze({ exitCode: 0 }) }),
+  critique: Object.freeze({ decision: "accepted", rationale: "Verified.",
+    findings: Object.freeze([]) }) });
 const result = await orchestrateMaintenanceRun({ run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
@@ -32,9 +38,11 @@ const result = await orchestrateMaintenanceRun({ run,
     relevantFiles: [{ path: "src/math.ts", content: "export const add = () => 3;",
       byteLength: 27 }], totalBytes: 27, candidateCount: 4 }),
   createProposal: async () => readyProposal,
+  executeProposalAttempts: async () => ({ status: "completed",
+    attempts: [acceptedAttempt], proposal: readyProposal }),
   now: () => times.shift() });
 
-assert.equal(result.status, "proposal-ready");
+assert.equal(result.status, "attempts-completed");
 assert.equal(result.reproduction.status, "reproduced");
 assert.equal(result.repositoryContext.relevantFiles[0].path, "src/math.ts");
 assert.equal(events[6].payload.repositoryContext.relevantFiles[0].content, undefined);
@@ -62,6 +70,12 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:09:00.000Z" },
   { eventId: `${run.id}:timeline:proposal-ready`, type: "run.proposal.ready",
     occurredAt: "2026-08-16T16:10:00.000Z" },
+  { eventId: `${run.id}:timeline:attempts-started`, type: "run.attempts.started",
+    occurredAt: "2026-08-16T16:11:00.000Z" },
+  { eventId: `${run.id}:timeline:attempts-completed`, type: "run.attempts.completed",
+    occurredAt: "2026-08-16T16:12:00.000Z" },
+  { eventId: `${run.id}:timeline:attempts-accepted`, type: "run.attempts.accepted",
+    occurredAt: "2026-08-16T16:13:00.000Z" },
 ]);
 
 const blockedEvents = [];
@@ -143,6 +157,7 @@ assert.equal(malformedContextEvents.at(-1).type, "run.planning.context.failed");
 
 const activityCalls = [];
 const timelineEvents = [];
+let executionCalls = 0;
 const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "controlled-root",
   timelineStore: { append: async (event) => {
     timelineEvents.push(event);
@@ -172,10 +187,22 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
     return { unifiedDiff: ["diff --git a/src/math.ts b/src/math.ts", "@@ -1 +1 @@",
       "-export const add = () => 3;", "+export const add = () => 2;"].join("\n") };
   },
+  reviewProposal: async (input) => {
+    activityCalls.push({ operation: "review", input });
+    return { decision: "accepted", rationale: "Focused and verified.", findings: [] };
+  },
+  materializeDiff: async (input) => {
+    activityCalls.push({ operation: "materialize", input });
+    return { status: "materialized" };
+  },
   removeWorkspace: async (input) => { activityCalls.push({ operation: "remove", input }); },
-  executeCommand: async () => ({ exitCode: 1, stdout: "",
-    stderr: "expected 2 but received 3", durationMs: 50,
-    hasTimedOut: false, hasTruncatedOutput: false }),
+  executeCommand: async () => {
+    const call = executionCalls;
+    executionCalls += 1;
+    return { exitCode: call < 2 ? 1 : 0, stdout: call > 1 ? "passed" : "",
+      stderr: call > 1 ? "" : "expected 2 but received 3", durationMs: 50,
+      hasTimedOut: false, hasTruncatedOutput: false };
+  },
 });
 assert.deepEqual(await activities.inspectRepository(run), inspection);
 assert.deepEqual(activityCalls.map(({ operation }) => operation), ["create", "detect", "remove"]);
@@ -198,6 +225,15 @@ const proposal = await activities.createProposal({ run, reproduction, repository
 assert.equal(proposal.status, "ready");
 assert.deepEqual(activityCalls.slice(-2).map(({ operation }) => operation), ["plan", "diff"]);
 assert.equal(activityCalls.at(-2).input.issue.context, run.issueContext);
+
+const attempts = await activities.executeProposalAttempts({ run, inspection, reproduction,
+  repositoryContext, proposal });
+assert.equal(attempts.status, "completed");
+assert.equal(attempts.attempts.length, 2);
+assert.deepEqual(activityCalls.slice(-8).map(({ operation }) => operation),
+  ["create", "detect", "materialize", "plan", "diff", "materialize", "review", "remove"]);
+assert.equal(activityCalls.at(-5).input.revisionEvidence.verification.status, "failed");
+assert.equal(activityCalls.at(-3).input.baseRevision, run.baseRevision);
 
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });

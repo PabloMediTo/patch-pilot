@@ -73,7 +73,7 @@ The executable `boundaries.config.mjs` file that canonically declares production
 
 ### Change Proposal
 
-The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented first stage produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, and records the canonical safety decision; verification, critique, persistence, and pull-request description remain later stages.
+The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented workflow produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, records the canonical safety decision, and advances ready proposals through bounded verification and critique attempts. Review persistence and pull-request description remain later stages.
 
 ### Co-Located Docs
 
@@ -142,7 +142,7 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, and planning-context events, use fresh exact-revision disposable checkouts, skip unsupported projects explicitly, and reproduce supported failures through the canonical safe executor. Only accepted reproduction with ready bounded [repository planning context](#repository-planning-context) records planning readiness; all other known outcomes terminate explicitly. Proposal attempts, approval waiting, and delivery orchestration remain planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, planning-context, proposal, and attempt events, use fresh exact-revision disposable checkouts, reproduce and verify through the canonical safe executor, and permit no more than two full proposal revisions. Unsupported, policy-blocked, rejected, and exhausted outcomes terminate explicitly. Review-snapshot recording, approval waiting, and delivery orchestration remain planned.
 
 ### Monorepo
 
@@ -158,7 +158,7 @@ The GitHub-ready branch, title, description, linked issue, diff, and verificatio
 
 ### Proposal Attempt
 
-One visible apply-verify-critique pass for a versioned [change proposal](#change-proposal). The first pass and every retry retain their own proposal, [verification evidence](#verification-evidence), and [critique decision](#critique-decision); the MVP permits at most three attempts in total.
+One visible apply-verify-critique pass for a versioned [change proposal](#change-proposal). The executable Activity restores the disposable checkout to the immutable base before applying each complete diff. The first pass and every retry retain their own proposal, [verification evidence](#verification-evidence), and [critique decision](#critique-decision); the MVP permits at most three attempts in total.
 
 ### Proposal Generator
 
@@ -178,7 +178,7 @@ The deterministic bounded repository text selected after accepted [failure repro
 
 ### Repository Workspace
 
-A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. The implemented sandbox copies it into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
+A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Proposal attempts restore and clean this exact base before checking and applying each complete bounded diff. The implemented sandbox copies the resulting workspace into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
 
 ### Run Submission
 
@@ -186,7 +186,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, and planning-context lifecycle; source context is represented only by paths and byte metrics. Live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, planning-context, proposal, and attempt lifecycle; source context and unified diffs are deliberately omitted while paths, metrics, verification, and critique evidence remain visible. Live local-service verification remains open.
 
 ### Supported Project
 

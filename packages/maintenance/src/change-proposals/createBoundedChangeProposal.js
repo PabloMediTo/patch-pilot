@@ -8,7 +8,7 @@ const MAX_PLAN_FILES = 10;
 /**
  * Generates one reviewable implementation plan and a safety-assessed source diff.
  *
- * @param {{ issue: object, reproduction: object, repositoryContext: object, generatePlan: Function, generateDiff: Function }} input Reproduced issue, inspected context, and structured generator ports.
+ * @param {{ issue: object, reproduction: object, repositoryContext: object, planVersion?: number, generatePlan: Function, generateDiff: Function }} input Reproduced issue, inspected context, and structured generator ports.
  * @returns {Promise<object>} Ready or blocked immutable change proposal.
  * @throws {Error} When prerequisites or generator outputs are malformed.
  */
@@ -21,7 +21,7 @@ export async function createBoundedChangeProposal(input) {
     repositoryContext: input.repositoryContext,
     limits: Object.freeze({ maxSteps: MAX_PLAN_STEPS, maxFiles: MAX_PLAN_FILES }),
   }));
-  const plan = createPlan(generatedPlan);
+  const plan = createPlan(generatedPlan, input.planVersion ?? 1);
   const generatedDiff = await input.generateDiff(Object.freeze({
     issue: input.issue,
     reproduction: input.reproduction,
@@ -66,16 +66,17 @@ function assertProposalPrerequisites(input) {
  * Normalizes and freezes a bounded structured implementation plan.
  *
  * @param {unknown} candidate Generated plan candidate.
+ * @param {number} version Positive immutable plan version.
  * @returns {object} Immutable implementation plan.
  * @throws {Error} When the plan is malformed or exceeds its bounds.
  */
-function createPlan(candidate) {
+function createPlan(candidate, version) {
   const hasSummary = typeof candidate?.summary === "string" && candidate.summary.trim() !== "";
   const hasBoundedSteps = Array.isArray(candidate?.steps)
     && candidate.steps.length > 0
     && candidate.steps.length <= MAX_PLAN_STEPS;
 
-  if (!hasSummary || !hasBoundedSteps) {
+  if (!hasSummary || !hasBoundedSteps || !Number.isInteger(version) || version < 1) {
     throw new Error("Generated implementation plan is malformed or exceeds eight steps.");
   }
 
@@ -87,7 +88,7 @@ function createPlan(candidate) {
   }
 
   return Object.freeze({
-    version: 1,
+    version,
     summary: candidate.summary.trim(),
     steps: Object.freeze(steps),
   });
@@ -162,10 +163,8 @@ function parseUnifiedDiff(unifiedDiff) {
     } else if (line.startsWith("@@ ")) {
       assertCurrentChange(currentChange);
       isInsideHunk = true;
-    } else if (isInsideHunk && line.startsWith("+") && !line.startsWith("+++")) {
-      currentChange.addedLines += 1;
-    } else if (isInsideHunk && line.startsWith("-") && !line.startsWith("---")) {
-      currentChange.deletedLines += 1;
+    } else {
+      measureDiffLine(line, currentChange, isInsideHunk);
     }
   }
 
@@ -174,6 +173,32 @@ function parseUnifiedDiff(unifiedDiff) {
   }
 
   return changes.map((change) => Object.freeze(change));
+}
+
+/** Measures one hunk operation or validates non-operation diff content. */
+function measureDiffLine(line, currentChange, isInsideHunk) {
+  if (isInsideHunk && line.startsWith("+")) currentChange.addedLines += 1;
+  else if (isInsideHunk && line.startsWith("-")) currentChange.deletedLines += 1;
+  else assertSupportedDiffLine(line, currentChange, isInsideHunk);
+}
+
+/** Rejects metadata that could redirect or broaden the independently measured patch. */
+function assertSupportedDiffLine(line, currentChange, isInsideHunk) {
+  if (isInsideHunk) {
+    const hasValidHunkLine = line === "" || line.startsWith(" ")
+      || line === "\\ No newline at end of file";
+    if (!hasValidHunkLine) throw new Error("Unified diff contains unsupported hunk content.");
+    return;
+  }
+  assertCurrentChange(currentChange);
+  const path = currentChange.path;
+  const hasSupportedMetadata = line === "" || line === `--- a/${path}`
+    || line === `+++ b/${path}` || line === "--- /dev/null" || line === "+++ /dev/null"
+    || /^index [0-9a-f]+\.\.[0-9a-f]+(?: 100(?:644|755))?$/u.test(line)
+    || /^(?:new file mode|deleted file mode) 100(?:644|755)$/u.test(line);
+  if (!hasSupportedMetadata) {
+    throw new Error("Unified diff contains unsupported or mismatched file metadata.");
+  }
 }
 
 /**

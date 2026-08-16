@@ -299,6 +299,7 @@ export const boundaryConfig = {
           allowedModuleDependencies: [],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [
+            "node:buffer",
             "node:child_process",
             "node:fs/promises",
             "node:path",
