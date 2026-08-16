@@ -31,7 +31,7 @@ Authenticate bounded GitHub App webhook deliveries, extract their immutable enve
 - [GitHub delivery reconciliation](github-delivery-reconciliation.md) consumes authenticated pull-request envelopes
 - the GitHub revision port resolves the repository default branch to an immutable commit SHA
 - the maintenance package creates the initial run state
-- future persistence and Temporal adapters consume accepted run submissions idempotently
+- [run persistence](run-persistence.md) atomically records accepted submissions before the future Temporal adapter starts work
 
 ## Authentication and opt-in
 
@@ -39,4 +39,4 @@ The signature is calculated over the untouched UTF-8 body with HMAC-SHA256 and c
 
 The implemented `POST /github/webhooks` route applies the API's 64-KiB default body limit, rejects invalid signatures with `401`, rejects malformed authenticated envelopes with `400`, and acknowledges accepted, ignored, or recorded deliveries with `202`. A reused delivery identity containing conflicting evidence returns `409`. Responses are JSON and disable caching.
 
-Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. The GitHub delivery identifier becomes part of the run identity so the persistence adapter can make repeated deliveries idempotent. The submitted run also retains the default branch resolved with the immutable base revision so later pull-request delivery uses the reviewed target rather than reinterpreting repository defaults.
+Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. The GitHub delivery identifier becomes part of the run identity so the Postgres persistence adapter can make repeated deliveries idempotently across both run and source-delivery identities. The submitted run also retains the default branch resolved with a full immutable base commit so later pull-request delivery uses the reviewed target rather than reinterpreting repository defaults. Connecting this store to the authenticated webhook dispatcher and Temporal remains the next composition step.

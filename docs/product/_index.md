@@ -37,6 +37,13 @@
 - Read when: A task changes run states, agent steps, retries, approval, or delivery behavior.
 - Tags: product, workflow, temporal, retry, approval
 
+### Run Persistence
+
+- Path: `docs/product/run-persistence.md`
+- Summary: Canonical submitted-run identity, Postgres first-writer persistence, and webhook-redelivery conflict recovery.
+- Read when: A task changes initial run validation, run storage, submission idempotency, or the persistence boundary before Temporal starts.
+- Tags: product, runs, postgres, persistence, idempotency, temporal
+
 ### System Composition
 
 - Path: `docs/product/system-composition.md`

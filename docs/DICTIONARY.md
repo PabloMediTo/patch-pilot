@@ -130,7 +130,7 @@ structured `_index.md` files for discoverability.
 
 ### Maintenance Run
 
-One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
+One durable execution of the Autonomous GitHub Maintainer for a specific repository, issue, and immutable base revision. Its implemented initial state validates the complete target identity and is atomically persisted in Postgres before workflow dispatch, with unique run and source-delivery identities. A run advances through inspection, reproduction, planning, modification, verification, critique, and human approval.
 
 ### Monorepo
 
@@ -162,7 +162,7 @@ A disposable checkout used by one maintenance run. Its Git boundary creates a un
 
 ### Run Submission
 
-An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, default branch, issue, actor, and immutable base revision so later persistence, workflow, and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently.
+An authenticated request to begin one [maintenance run](#maintenance-run). For GitHub ingestion, it retains the delivery, installation, repository, default branch, issue, actor, and full immutable base revision. The concrete Postgres store atomically records the first submission and reloads it after matching run- or delivery-identity conflicts so later workflow and [GitHub delivery](#github-delivery) adapters can process repeated work idempotently.
 
 ### Run Timeline
 

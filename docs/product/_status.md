@@ -5,7 +5,7 @@
 - The product idea and initial system boundaries are documented.
 - Delivery is organized in Markplane epics and initial tasks.
 - The API, worker, and web application shells have executable composition roots and public application interfaces.
-- The maintenance package can create the initial `submitted` state for a run bound to a repository, issue, default branch, and immutable base revision while preserving compatibility with non-GitHub callers that omit the branch.
+- The maintenance package creates the initial `submitted` state only from a valid repository identity, positive issue and optional GitHub identities, and a full immutable base revision. Atomic [run persistence](run-persistence.md) stores that evidence in Postgres, assigns the submission timestamp, and reloads the first writer after run- or delivery-identity conflicts.
 - A pinned [local development environment](../DICTIONARY.md#local-development-environment) provides Postgres, Redis, Temporal, and Temporal UI with readiness checks.
 - Signed GitHub `issues` webhooks can request a run explicitly through the `patch-pilot` label, resolve an immutable base revision through an injected port, and emit an initial [run submission](../DICTIONARY.md#run-submission).
 - A [repository workspace](../DICTIONARY.md#repository-workspace) can be created as a unique disposable checkout at an exact full commit SHA, with bounded non-interactive Git execution and guarded cleanup.
@@ -39,7 +39,7 @@
 
 ## Next milestone
 
-Connect authenticated opted-in issue webhooks to durable run persistence and the first Temporal maintenance workflow, including timeline and review-snapshot recording. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
+Connect authenticated opted-in issue webhooks through the implemented run store to the first Temporal maintenance workflow, including timeline and review-snapshot recording. Live Postgres/GitHub, Postgres/Redis, and Docker safety verification remain open where local runtime availability is still required.
 
 ## Open questions
 

@@ -23,7 +23,7 @@ const result = await createGitHubIssueRunSubmission({
   rawBody,
   signature,
   secret,
-  resolveBaseRevision: async () => "abc123",
+  resolveBaseRevision: async () => "a".repeat(40),
   submitRun: async (run) => submittedRuns.push(run),
 });
 
@@ -35,7 +35,7 @@ assert.deepEqual(submittedRuns, [
     repository: "octo/example",
     issueNumber: 42,
     defaultBranch: "main",
-    baseRevision: "abc123",
+    baseRevision: "a".repeat(40),
     actorId: 23,
     sourceDeliveryId: "delivery-123",
     status: "submitted",
@@ -49,7 +49,7 @@ await assert.rejects(
     rawBody,
     signature: "sha256=invalid",
     secret,
-    resolveBaseRevision: async () => "abc123",
+    resolveBaseRevision: async () => "a".repeat(40),
     submitRun: async (run) => submittedRuns.push(run),
   }),
   /Invalid GitHub webhook signature/,

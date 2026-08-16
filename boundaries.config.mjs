@@ -272,7 +272,7 @@ export const boundaryConfig = {
         runs: {
           architectureRole: "conceptual-module",
           allowedModuleDependencies: [],
-          allowedExternalDependencies: [],
+          allowedExternalDependencies: ["pg"],
           allowedCoreDependencies: [],
         },
         "repository-workspaces": {
