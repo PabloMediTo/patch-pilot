@@ -37,7 +37,7 @@ Produce the first reviewable [change proposal](../DICTIONARY.md#change-proposal)
 
 ## Plan contract
 
-The plan generator receives immutable issue, reproduction, repository-context, and limit data. Issue title and descriptive context are preserved by authenticated run submission, and the worker now collects deterministic bounded repository file evidence after accepted reproduction. Concrete plan/diff generator-provider composition remains later workflow work. The generator may return at most eight ordered steps. Every step requires a concrete description, rationale, and one or more repository-relative files. One file belongs to exactly one step so ownership remains unambiguous.
+The plan generator receives immutable issue, reproduction, repository-context, and limit data. Issue title and descriptive context are preserved by authenticated run submission, and the worker collects deterministic bounded repository file evidence after accepted reproduction. The concrete [proposal generator](../DICTIONARY.md#proposal-generator) returns strict structured candidates. A plan may contain at most eight ordered steps and ten files. Every step requires a concrete description, rationale, and one or more repository-relative files. One file belongs to exactly one step so ownership remains unambiguous.
 
 The plan is versioned from its first representation. Later modification or retry work must create a new version rather than silently changing the plan reviewed by a human.
 

@@ -1,4 +1,5 @@
-import { collectRepositoryPlanningContext, createImmutableRepositoryWorkspace, detectSupportedProject,
+import { collectRepositoryPlanningContext, createBoundedChangeProposal,
+  createImmutableRepositoryWorkspace, detectSupportedProject,
   recordRunTimelineEvent, removeRepositoryWorkspace,
   reproduceIssueFailure } from "@patch-pilot/maintenance";
 
@@ -7,10 +8,10 @@ import { createSandboxCommandExecutor } from "../sandbox-execution/index.js";
 const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
 
 /**
- * Creates concrete timeline, inspection, reproduction, and planning-context Activities.
+ * Creates concrete timeline, repository, and proposal-generation Activities.
  *
- * @param {{ timelineStore: object, timelineStream: object, workspaceRoot: string, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
- * @returns {{ recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function }} Temporal Activities.
+ * @param {{ timelineStore: object, timelineStream: object, workspaceRoot: string, generatePlan: Function, generateDiff: Function, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
+ * @returns {{ recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function }} Temporal Activities.
  */
 export function createMaintenanceWorkflowActivities(input) {
   assertPorts(input);
@@ -30,6 +31,18 @@ export function createMaintenanceWorkflowActivities(input) {
       createWorkspace, detectProject, removeWorkspace, executeCommand }),
     collectPlanningContext: (run) => collectPlanningContextActivity({ run,
       workspaceRoot: input.workspaceRoot, createWorkspace, collectPlanningContext, removeWorkspace }),
+    createProposal: (request) => createProposalActivity({ ...request,
+      generatePlan: input.generatePlan, generateDiff: input.generateDiff }),
+  });
+}
+
+/** Generates one bounded proposal from durable workflow evidence. */
+function createProposalActivity(input) {
+  assertRunTarget(input.run);
+  return createBoundedChangeProposal({
+    issue: Object.freeze({ title: input.run.issueTitle, context: input.run.issueContext }),
+    reproduction: input.reproduction, repositoryContext: input.repositoryContext,
+    generatePlan: input.generatePlan, generateDiff: input.generateDiff,
   });
 }
 
@@ -99,8 +112,9 @@ function sanitizeInspection(project) {
 function assertPorts(input) {
   if (typeof input?.timelineStore?.append !== "function"
     || typeof input?.timelineStream?.publish !== "function"
-    || typeof input.workspaceRoot !== "string" || input.workspaceRoot.trim() === "") {
-    throw new Error("Maintenance workflow Activities require timeline and workspace resources.");
+    || typeof input.workspaceRoot !== "string" || input.workspaceRoot.trim() === ""
+    || typeof input.generatePlan !== "function" || typeof input.generateDiff !== "function") {
+    throw new Error("Maintenance workflow Activities require timeline, workspace, and generator resources.");
   }
 }
 

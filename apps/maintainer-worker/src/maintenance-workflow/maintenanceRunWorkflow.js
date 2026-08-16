@@ -8,6 +8,9 @@ const timelineActivities = proxyActivities({ startToCloseTimeout: "30 seconds",
 const inspectionActivities = proxyActivities({ startToCloseTimeout: "10 minutes",
   retry: { maximumAttempts: 3, initialInterval: "5 seconds", backoffCoefficient: 2,
     maximumInterval: "1 minute" } });
+const proposalActivities = proxyActivities({ startToCloseTimeout: "5 minutes",
+  retry: { maximumAttempts: 3, initialInterval: "5 seconds", backoffCoefficient: 2,
+    maximumInterval: "1 minute" } });
 
 /**
  * Runs the durable inspection and reproduction phases of one submitted maintenance run.
@@ -21,5 +24,6 @@ export function maintenanceRunWorkflow(run) {
     inspectRepository: inspectionActivities.inspectRepository,
     reproduceIssue: inspectionActivities.reproduceIssue,
     collectPlanningContext: inspectionActivities.collectPlanningContext,
+    createProposal: proposalActivities.createProposal,
     now: () => new Date().toISOString() });
 }

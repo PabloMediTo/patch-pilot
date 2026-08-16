@@ -9,7 +9,8 @@ epic: EPIC-czc3e
 plan: null
 depends_on:
 - TASK-q8h4v
-blocks: []
+blocks:
+- TASK-m4p8x
 related: []
 assignee: null
 tags:

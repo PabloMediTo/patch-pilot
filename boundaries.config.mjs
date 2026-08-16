@@ -138,7 +138,7 @@ export const boundaryConfig = {
       modules: {
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["maintenance-workflow"],
+          allowedModuleDependencies: ["maintenance-workflow", "proposal-generation"],
           allowedExternalDependencies: ["@temporalio/worker"],
           allowedCoreDependencies: ["node:url"],
         },
@@ -160,10 +160,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: ["@temporalio/workflow"],
           allowedCoreDependencies: [],
         },
+        "proposal-generation": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:buffer"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "docker-cli", "maintenance-workflow", "sandbox-execution"],
+          allowedModuleDependencies: ["application", "docker-cli", "maintenance-workflow", "proposal-generation", "sandbox-execution"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },

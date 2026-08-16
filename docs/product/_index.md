@@ -156,6 +156,13 @@
 - Read when: A task changes implementation planning, generated source diffs, proposal generator ports, diff parsing, or plan-to-file traceability.
 - Tags: product, proposal, plan, diff, generation, traceability, safety
 
+### Proposal Generation
+
+- Path: `docs/product/proposal-generation.md`
+- Summary: OpenAI Responses adapter, strict structured-output schemas, provider credential boundary, and durable proposal evidence limits.
+- Read when: A task changes plan or diff provider selection, model configuration, prompts, structured output, provider errors, or proposal Activity composition.
+- Tags: product, proposal, generation, openai, responses, structured-output, worker
+
 ### Verification
 
 - Path: `docs/product/verification.md`

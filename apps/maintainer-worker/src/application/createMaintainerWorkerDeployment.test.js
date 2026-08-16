@@ -11,8 +11,11 @@ const timelineStream = { publish: async () => undefined, ...createCloseable() };
 const worker = { runCalls: 0, shutdownCalls: 0,
   async run() { this.runCalls += 1; },
   shutdown() { this.shutdownCalls += 1; } };
-const deployment = await createMaintainerWorkerDeployment({ environment: {}, connection,
-  timelineStore, timelineStream, worker });
+const proposalGenerators = { generatePlan: async () => undefined,
+  generateDiff: async () => undefined };
+const environment = { PATCH_PILOT_OPENAI_API_KEY: "private-test-key" };
+const deployment = await createMaintainerWorkerDeployment({ environment, connection,
+  timelineStore, timelineStream, proposalGenerators, worker });
 
 await deployment.run();
 await deployment.close();
@@ -26,7 +29,10 @@ assert.throws(() => deployment.run(), /closing/u);
 
 await assert.rejects(createMaintainerWorkerDeployment({
   environment: { PATCH_PILOT_TEMPORAL_TASK_QUEUE: " " }, connection,
-  timelineStore, timelineStream, worker }), /valid Temporal/u);
+  timelineStore, timelineStream, proposalGenerators, worker }), /valid Temporal/u);
+
+await assert.rejects(createMaintainerWorkerDeployment({ environment: {}, connection,
+  timelineStore, timelineStream, proposalGenerators, worker }), /OpenAI values/u);
 
 const workflowsPath = fileURLToPath(new URL("../maintenance-workflow/maintenanceRunWorkflow.js",
   import.meta.url));

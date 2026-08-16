@@ -160,6 +160,10 @@ The GitHub-ready branch, title, description, linked issue, diff, and verificatio
 
 One visible apply-verify-critique pass for a versioned [change proposal](#change-proposal). The first pass and every retry retain their own proposal, [verification evidence](#verification-evidence), and [critique decision](#critique-decision); the MVP permits at most three attempts in total.
 
+### Proposal Generator
+
+The worker-owned provider adapter that converts bounded issue, reproduction, and [repository planning context](#repository-planning-context) evidence into structured plan and unified-diff candidates. The implemented adapter uses OpenAI Responses with strict JSON Schema, disabled response storage, bounded responses, and a pinned configurable model snapshot. It cannot bypass the provider-free [change proposal](#change-proposal) validation and safety boundary.
+
 ### Review Screen
 
 The human-facing view of one reviewable maintenance run. It presents ordered timeline events, the plan and semantic diff, bounded verification evidence, and approve or reject actions only when the run is awaiting its first decision. The [control-plane API](#control-plane-api) authorizes `GET /runs/:runId/review-evidence`; its query composes the canonical snapshot, timeline, and optional decision, while the web server forwards only cookie or bearer credentials, bounds the evidence response, and renders escaped HTML under restrictive browser security headers. Approval actions send generated idempotency keys and bounded JSON through the same origin. The environment-configured web and API deployments, persisted-state query, and lifecycle wiring are implemented; live persistence verification remains planned.

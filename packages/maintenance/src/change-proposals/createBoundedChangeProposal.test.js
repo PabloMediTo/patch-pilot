@@ -138,6 +138,15 @@ await runTest("rejects plans with duplicate file ownership or more than eight st
     }),
     /exceeds eight steps/u,
   );
+
+  await assert.rejects(
+    createBoundedChangeProposal({ ...baseInput,
+      generatePlan: async () => ({ summary: "Too many files.", steps: [{
+        description: "Change too many files.", rationale: "Generated rationale.",
+        files: Array.from({ length: 11 }, (_, index) => `src/file-${index + 1}.js`),
+      }] }), generateDiff: async () => ({}) }),
+    /at most ten files/u,
+  );
 });
 
 /**

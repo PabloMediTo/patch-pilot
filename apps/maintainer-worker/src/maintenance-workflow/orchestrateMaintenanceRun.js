@@ -1,8 +1,8 @@
 /**
- * Orchestrates durable inspection and reproduction through explicit Activity ports.
+ * Orchestrates durable inspection, reproduction, context, and proposal phases.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, now: Function }} input Persisted run and deterministic workflow ports.
- * @returns {Promise<object>} Planning-context or terminal workflow outcome.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @returns {Promise<object>} Proposal or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
   assertPersistedRun(input?.run);
@@ -34,8 +34,29 @@ async function finishReproduction(input, inspection, reproduction) {
   await recordEvent(input, "planning-ready", { reproduction: "reproduced",
     relevantFileCount: repositoryContext.relevantFiles.length,
     totalBytes: repositoryContext.totalBytes });
-  return Object.freeze({ status: "planning-ready", runId: input.run.id,
-    inspection, reproduction, repositoryContext });
+  const proposal = await runProposalPhase(input, reproduction, repositoryContext);
+  if (proposal.status === "blocked") {
+    await recordTerminalOutcome(input, "proposal-blocked", proposal.safety.reasons.join(","));
+    return Object.freeze({ status: "proposal-blocked", runId: input.run.id,
+      inspection, reproduction, repositoryContext, proposal });
+  }
+  await recordEvent(input, "proposal-ready", summarizeProposal(proposal));
+  return Object.freeze({ status: "proposal-ready", runId: input.run.id,
+    inspection, reproduction, repositoryContext, proposal });
+}
+
+/** Generates and validates one bounded proposal with explicit lifecycle evidence. */
+async function runProposalPhase(input, reproduction, repositoryContext) {
+  await recordEvent(input, "proposal-started", { contextFileCount: repositoryContext.relevantFiles.length });
+  try {
+    const proposal = await input.createProposal({ run: input.run, reproduction, repositoryContext });
+    assertProposal(proposal);
+    await recordEvent(input, "proposal-completed", summarizeProposal(proposal));
+    return proposal;
+  } catch (error) {
+    await recordEvent(input, "proposal-failed", { message: safeMessage(error) });
+    throw error;
+  }
 }
 
 /** Collects bounded planning context with explicit lifecycle evidence. */
@@ -165,6 +186,30 @@ function summarizePlanningContext(context) {
     relevantFiles: Object.freeze(context.relevantFiles.map((file) => Object.freeze({
       path: file.path, byteLength: file.byteLength,
     }))) });
+}
+
+/** Requires a bounded proposal Activity result owned by the maintenance package. */
+function assertProposal(proposal) {
+  const statuses = new Set(["ready", "blocked"]);
+  const hasPlan = Number.isInteger(proposal?.plan?.version) && proposal.plan.version > 0
+    && typeof proposal.plan.summary === "string" && proposal.plan.summary.trim() !== ""
+    && Array.isArray(proposal.plan.steps) && proposal.plan.steps.length > 0
+    && proposal.plan.steps.length <= 8;
+  const hasDiff = typeof proposal?.sourceDiff?.unifiedDiff === "string"
+    && proposal.sourceDiff.unifiedDiff.trim() !== "" && Array.isArray(proposal.sourceDiff.changes);
+  const hasSafety = proposal?.safety?.status === (proposal?.status === "ready" ? "allowed" : "blocked")
+    && Array.isArray(proposal?.safety?.reasons);
+  if (!statuses.has(proposal?.status) || !hasPlan || !hasDiff || !hasSafety) {
+    throw new Error("Proposal Activity returned an invalid outcome.");
+  }
+}
+
+/** Removes the source diff while retaining plan and changed-file evidence. */
+function summarizeProposal(proposal) {
+  return Object.freeze({ status: proposal.status, planVersion: proposal.plan.version,
+    summary: proposal.plan.summary, plannedFiles: Object.freeze(proposal.plan.steps
+      .flatMap((step) => step.files)), changes: proposal.sourceDiff.changes,
+    safety: proposal.safety });
 }
 
 /** Converts an Activity failure to bounded timeline evidence. */

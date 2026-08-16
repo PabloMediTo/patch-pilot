@@ -16,13 +16,14 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - `PATCH_PILOT_TEMPORAL_ADDRESS`, `PATCH_PILOT_TEMPORAL_NAMESPACE`, and `PATCH_PILOT_TEMPORAL_TASK_QUEUE`
 - `PATCH_PILOT_POSTGRES_URL` and `PATCH_PILOT_REDIS_URL`
 - `PATCH_PILOT_WORKSPACE_ROOT` for generated disposable checkouts
+- `PATCH_PILOT_OPENAI_API_KEY` and optional `PATCH_PILOT_OPENAI_MODEL` for structured proposal generation
 - persisted submitted runs delivered by Temporal
 
 ## Outputs
 
 - a registered deterministic `maintenanceRunWorkflow` bundle
-- canonical submission, inspection, reproduction, and planning-context lifecycle timeline events
-- an explicit planning-ready gate or terminal classified outcome
+- canonical submission, inspection, reproduction, planning-context, and proposal lifecycle timeline events
+- an explicit proposal-ready gate or terminal classified outcome
 - a sanitized supported or unsupported project inspection without a local path
 - classified reproduction evidence from the safe command executor for supported projects
 - bounded repository planning context after accepted reproduction
@@ -35,6 +36,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - [repository workspaces](repository-workspaces.md) create and remove the inspection checkout
 - [supported project detection](project-detection.md) classifies the checked-out root
 - [repository planning context](repository-planning-context.md) selects safe relevant text evidence
+- [proposal generation](proposal-generation.md) owns the provider adapter and credential boundary
 - later workflow phases will compose proposal attempts, review, approval, and delivery
 
 ## Implemented workflow phases
@@ -45,7 +47,7 @@ The inspection Activity creates a checkout at the exact recorded revision, runs 
 
 The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow accepts only the known reproduction classifications. Every valid non-reproduced classification records an explicit terminal event, while malformed Activity evidence fails visibly.
 
-After accepted reproduction, a separate Activity creates a third checkout, collects bounded repository planning context, and removes the workspace in `finally`. Ready context records planning readiness; unavailable or malformed context terminates or fails explicitly. Timeline evidence omits full source content. Dependency installation, generator-provider composition, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
+After accepted reproduction, a separate Activity creates a third checkout, collects bounded repository planning context, and removes the workspace in `finally`. Ready context records planning readiness; unavailable or malformed context terminates or fails explicitly. A five-minute, three-attempt proposal Activity uses the worker-owned OpenAI Responses adapter and the maintenance package's bounded proposal use case. Ready and policy-blocked outcomes are distinct; malformed provider or Activity evidence fails visibly. Timeline evidence omits full source content and the unified diff. Dependency installation, modification attempts, review snapshot recording, approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
 
 ## Lifecycle
 

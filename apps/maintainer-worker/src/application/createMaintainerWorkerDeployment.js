@@ -3,6 +3,7 @@ import { NativeConnection, Worker } from "@temporalio/worker";
 import { fileURLToPath, URL } from "node:url";
 
 import { createMaintenanceWorkflowActivities } from "../maintenance-workflow/index.js";
+import { createOpenAiProposalGenerators } from "../proposal-generation/index.js";
 
 const WORKFLOWS_PATH = fileURLToPath(new URL("../maintenance-workflow/maintenanceRunWorkflow.js",
   import.meta.url));
@@ -12,7 +13,7 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * Composes one executable Temporal worker and its Activity provider lifecycle.
  *
- * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, worker?: object }} options Environment and optional controlled resources.
+ * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
  * @returns {Promise<{ run: Function, close: Function }>} Worker deployment lifecycle.
  */
 export async function createMaintainerWorkerDeployment(options) {
@@ -25,8 +26,10 @@ export async function createMaintainerWorkerDeployment(options) {
       connectionString: config.postgresUrl });
     timelineStream = options?.timelineStream ?? await createRedisRunTimelineStream({
       url: config.redisUrl });
+    const generators = options?.proposalGenerators ?? createOpenAiProposalGenerators({
+      apiKey: config.openAiApiKey, model: config.openAiModel });
     const activities = createMaintenanceWorkflowActivities({ timelineStore, timelineStream,
-      workspaceRoot: config.workspaceRoot });
+      workspaceRoot: config.workspaceRoot, ...generators });
     const worker = options?.worker ?? await Worker.create({ connection,
       namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue,
       workflowsPath: WORKFLOWS_PATH, activities });
@@ -46,9 +49,11 @@ function createConfig(environment) {
     postgresUrl: environment?.PATCH_PILOT_POSTGRES_URL ?? DEFAULT_POSTGRES_URL,
     redisUrl: environment?.PATCH_PILOT_REDIS_URL ?? DEFAULT_REDIS_URL,
     workspaceRoot: environment?.PATCH_PILOT_WORKSPACE_ROOT ?? ".patch-pilot/workspaces",
+    openAiApiKey: environment?.PATCH_PILOT_OPENAI_API_KEY,
+    openAiModel: environment?.PATCH_PILOT_OPENAI_MODEL ?? "gpt-5.4-mini-2026-03-17",
   });
   if (Object.values(config).some((value) => typeof value !== "string" || value.trim() === "")) {
-    throw new Error("Worker deployment requires valid Temporal, storage, and workspace values.");
+    throw new Error("Worker deployment requires valid Temporal, storage, workspace, and OpenAI values.");
   }
   return config;
 }

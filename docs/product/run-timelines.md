@@ -30,6 +30,7 @@ Persist the canonical ordered [run timeline](../DICTIONARY.md#run-timeline) in P
 - workers record progress after completing workflow operations
 - the maintenance workflow records planning readiness only after accepted reproduction and terminal evidence for every non-planning outcome
 - planning-context events retain selected paths and byte metrics while full source content remains in Temporal Activity evidence
+- proposal events retain plan identity, paths, change metrics, and safety outcome while omitting the unified source diff
 - Postgres remains the audit and catch-up source
 - Redis fans new events out to connected API instances
 - the control-plane API combines history queries and live subscriptions into one ordered feed for the web interface

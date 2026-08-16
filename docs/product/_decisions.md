@@ -22,6 +22,10 @@ Authenticated issue submission persists a trimmed title, the descriptive body ou
 
 Planning receives a deterministic safe subset of repository text rather than unrestricted filesystem access or a full checkout snapshot. Selection is issue-aware but provider-free, excludes secrets and non-source areas, and has fixed candidate, file, per-file, and total-byte limits. Full selected text stays in Temporal Activity evidence; the live timeline retains only paths and sizes. Generator providers cannot broaden this collection boundary.
 
+## Structured provider output behind domain validation
+
+The MVP worker uses the OpenAI Responses API with strict JSON Schema output and a pinned `gpt-5.4-mini` snapshot for plan and diff candidates. Provider selection, credentials, HTTP behavior, and prompts remain in a worker application role. The maintenance package still parses, bounds, traces, and safety-assesses every result independently, so schema conformance never substitutes for product validation. Requests disable provider-side response storage, and the timeline omits the generated source diff.
+
 ## Human-controlled delivery
 
 The system may inspect, plan, modify, and verify autonomously in isolation. Publishing a branch or pull request requires an explicit approval decision. Automatic merge is outside the MVP.

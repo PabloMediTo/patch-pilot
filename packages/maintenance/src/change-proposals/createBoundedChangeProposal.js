@@ -3,6 +3,7 @@ import { posix } from "node:path";
 import { assessChangeSafety, createMvpSafetyPolicy } from "../safety/index.js";
 
 const MAX_PLAN_STEPS = 8;
+const MAX_PLAN_FILES = 10;
 
 /**
  * Generates one reviewable implementation plan and a safety-assessed source diff.
@@ -18,7 +19,7 @@ export async function createBoundedChangeProposal(input) {
     issue: input.issue,
     reproduction: input.reproduction,
     repositoryContext: input.repositoryContext,
-    limits: Object.freeze({ maxSteps: MAX_PLAN_STEPS, maxFiles: 10 }),
+    limits: Object.freeze({ maxSteps: MAX_PLAN_STEPS, maxFiles: MAX_PLAN_FILES }),
   }));
   const plan = createPlan(generatedPlan);
   const generatedDiff = await input.generateDiff(Object.freeze({
@@ -80,8 +81,9 @@ function createPlan(candidate) {
 
   const steps = candidate.steps.map((step, index) => createPlanStep(step, index));
   const plannedFiles = steps.flatMap((step) => step.files);
-  if (new Set(plannedFiles).size !== plannedFiles.length) {
-    throw new Error("Each planned file must be owned by exactly one implementation step.");
+  if (plannedFiles.length > MAX_PLAN_FILES
+    || new Set(plannedFiles).size !== plannedFiles.length) {
+    throw new Error("A plan may own at most ten files; each planned file must be owned by exactly one implementation step.");
   }
 
   return Object.freeze({
