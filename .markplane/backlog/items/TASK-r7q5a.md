@@ -40,6 +40,7 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 
 - Added a `run-timelines` conceptual module with concrete `pg` and `redis` provider adapters.
 - Postgres lazily installs an idempotent timeline schema and atomically allocates a unique increasing sequence per run in the same statement that inserts the event.
+- Adapter-owned Postgres pools now enforce a five-second connection timeout and ten-second client-query and server-statement timeouts, with focused configuration and lifecycle coverage; injected pools retain caller ownership.
 - Timeline queries return canonical events ordered by their run-local sequence.
 - Redis uses one namespaced Pub/Sub channel per run and publishes only after Postgres returns the stored canonical event.
 - Publisher and subscriber clients now install provider error listeners before connection so Redis events cannot terminate the process independently; connect, publish, and subscribe promises still reject as the visible failure channel, with focused coverage.

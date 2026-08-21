@@ -45,11 +45,11 @@ ORDER BY sequence ASC;
 /**
  * Creates the canonical Postgres timeline persistence adapter.
  *
- * @param {{ connectionString?: string, pool?: object }} [options] Connection or injected pool.
+ * @param {{ connectionString?: string, pool?: object, createPool?: Function }} [options] Connection, pool, or pool factory.
  * @returns {Promise<object>} Append, list, and close operations.
  */
 export async function createPostgresRunTimelineStore(options = {}) {
-  const pool = options.pool ?? await createPool(options.connectionString);
+  const pool = options.pool ?? await createPool(options.connectionString, options.createPool);
   let schemaPromise;
 
   return Object.freeze({
@@ -93,11 +93,19 @@ function assertMatchingEvent(storedEvent, requestedEvent) {
  * Loads the Postgres provider only for a concrete runtime connection.
  *
  * @param {string | undefined} connectionString Postgres connection URL.
+ * @param {Function | undefined} poolFactory Optional provider pool factory.
  * @returns {Promise<object>} Connection pool.
  */
-async function createPool(connectionString) {
+async function createPool(connectionString, poolFactory) {
+  const factory = poolFactory ?? await createDefaultPoolFactory();
+  return factory({ connectionString, connectionTimeoutMillis: 5_000,
+    query_timeout: 10_000, statement_timeout: 10_000 });
+}
+
+/** Loads the provider lazily and returns its concrete pool constructor boundary. */
+async function createDefaultPoolFactory() {
   const { default: pg } = await import("pg");
-  return new pg.Pool({ connectionString });
+  return (configuration) => new pg.Pool(configuration);
 }
 
 /**

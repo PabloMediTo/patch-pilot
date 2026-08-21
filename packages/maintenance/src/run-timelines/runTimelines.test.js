@@ -99,6 +99,27 @@ await runTest("initializes Postgres once and maps ordered timeline rows", async 
     payload: { issue: 42, nested: { first: 1, second: 2 } } }), /different evidence/u);
 });
 
+await runTest("bounds Postgres connection and query behavior", async () => {
+  let poolConfiguration;
+  let hasClosed = false;
+  const store = await createPostgresRunTimelineStore({
+    connectionString: "postgres://controlled",
+    createPool: (configuration) => {
+      poolConfiguration = configuration;
+      return { end: async () => { hasClosed = true; } };
+    },
+  });
+
+  assert.deepEqual(poolConfiguration, {
+    connectionString: "postgres://controlled",
+    connectionTimeoutMillis: 5_000,
+    query_timeout: 10_000,
+    statement_timeout: 10_000,
+  });
+  await store.close();
+  assert.equal(hasClosed, true);
+});
+
 await runTest("publishes and subscribes through one run-scoped Redis channel", async () => {
   const calls = [];
   const publisher = createRedisClientStub(calls);
