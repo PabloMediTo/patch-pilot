@@ -124,3 +124,20 @@ await assert.rejects(
   /copy failed/u,
 );
 assert.deepEqual(cleanupCalls, ["create", "cp", "rm"]);
+
+const failedCleanupCalls = [];
+await assert.rejects(
+  runInDockerSandbox({
+    spec: { cwd: workspaceDirectory, workspaceDirectory, executable: "npm",
+      args: ["test"], limits: policy.execution },
+    createContainerName: () => "patch-pilot-run-3",
+    executeDocker: async ({ args }) => {
+      failedCleanupCalls.push(args[0]);
+      return args[0] === "rm"
+        ? { exitCode: 1, hasTimedOut: false, hasTruncatedOutput: false }
+        : { exitCode: 0, hasTimedOut: false, hasTruncatedOutput: false };
+    },
+  }),
+  /cleanup failed/u,
+);
+assert.deepEqual(failedCleanupCalls, ["create", "cp", "start", "rm"]);

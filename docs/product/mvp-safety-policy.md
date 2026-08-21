@@ -60,11 +60,11 @@ Planning context uses a separate read policy because files such as `package.json
 
 ## Container adapter
 
-The maintenance package maps the canonical specification to Docker without exposing an image or limit choice to callers. It selects pinned Node.js or Python images, creates a container with CPU, memory, writable-layer disk, process, output, timeout, capability, and network limits, copies the disposable repository workspace into the size-limited container layer, attaches to the command, and forcibly removes the container afterward. It deliberately does not bind-mount the host workspace because a bind mount would bypass the container writable-layer disk quota.
+The maintenance package maps the canonical specification to Docker without exposing an image or limit choice to callers. It selects pinned Node.js or Python images, creates a container with CPU, memory, writable-layer disk, process, output, timeout, capability, and network limits, copies the disposable repository workspace into the size-limited container layer, attaches to the command, and forcibly removes the container afterward. The adapter validates the bounded cleanup result and fails closed when forced removal exits unsuccessfully, times out, or exceeds its output bound; a successful target command can therefore never hide failed cleanup. It deliberately does not bind-mount the host workspace because a bind mount would bypass the container writable-layer disk quota.
 
 ## Current enforcement boundary
 
-Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, the bounded Docker CLI process port, and their worker composition are implemented and unit-tested. The maintenance workflow now invokes this composed executor for reproduction in a fresh exact-revision workspace and supplies the workspace boundary required by policy. The executor creates unpredictable container names internally, invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape.
+Policy decisions, the sandbox specification, Docker command construction, failure handling, fail-closed forced-cleanup evidence, the bounded Docker CLI process port, and their worker composition are implemented and unit-tested. The maintenance workflow now invokes this composed executor for reproduction in a fresh exact-revision workspace and supplies the workspace boundary required by policy. The executor creates unpredictable container names internally, invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape.
 
 Run the live verifier with:
 

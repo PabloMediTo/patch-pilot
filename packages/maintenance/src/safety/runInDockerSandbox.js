@@ -36,7 +36,10 @@ export async function runInDockerSandbox(input) {
       maxOutputBytes: input.spec.limits.maxOutputBytes,
     });
   } finally {
-    await input.executeDocker({ args: ["rm", "--force", name], timeoutMs: 30_000, maxOutputBytes: 65_536 });
+    const cleanupResult = await input.executeDocker({
+      args: ["rm", "--force", name], timeoutMs: 30_000, maxOutputBytes: 65_536,
+    });
+    assertDockerStep(cleanupResult, "cleanup");
   }
 }
 
