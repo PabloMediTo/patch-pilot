@@ -68,6 +68,14 @@ await assert.rejects(verifySandboxIntegration({ workspaceDirectory: "controlled-
   hasHostMutation: async () => false, isContainerPresent: async () => false }),
 /timeout limit was not enforced/u);
 
+const failedCreateRequests = [];
+await assert.rejects(verifySandboxIntegration({ workspaceDirectory: "controlled-workspace",
+  containerNames: createContainerNames(), executeSandbox: async () => createResult(canonicalEvidence),
+  executeDocker: createDockerProbeExecutor({ create: "failed", requests: failedCreateRequests }),
+  hasHostMutation: async () => false, isContainerPresent: async () => false }),
+/creation failed/u);
+assert.deepEqual(failedCreateRequests.slice(0, 2).map(({ args }) => args[1]), ["create", "rm"]);
+
 /** Creates one successful sandbox result containing structured probe evidence. */
 function createResult(evidence) {
   return { exitCode: 0,
@@ -86,7 +94,11 @@ function createDockerProbeExecutor(overrides = {}) {
   return async (request) => {
     overrides.requests?.push(request);
     const isStart = request.args[1] === "start";
+    const isCreate = request.args[1] === "create";
     const name = request.args.at(-1);
+    if (isCreate && overrides.create === "failed") {
+      return createProcessResult({ exitCode: 1 });
+    }
     if (!isStart) return createProcessResult();
     if (name.includes("output")) return overrides.output === "missed"
       ? createProcessResult() : createProcessResult({ hasTruncatedOutput: true, exitCode: -1 });

@@ -55,6 +55,7 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - Added `npm run test:sandbox-integration`, which drives a disposable Node fixture through the real worker executor and validates effective cgroup CPU, memory, disk and PID limits, disabled network, dropped capabilities, `no-new-privileges`, workspace copy isolation, bounded evidence, and forced cleanup.
 - Extended the runner with short controlled output-overflow and timeout probes through the real bounded Docker CLI port; both require exact evidence classification and forced container cleanup without weakening the canonical production limits.
 - The provider-free verifier has focused pass/failure tests, validates the exact test-only process bounds, and emits only fixed check names. It intentionally fails instead of skipping when Docker or a required invariant is unavailable.
+- Process-limit probe cleanup now runs after every create attempt, including failed or uncertain creation, then checks retained state and preserves simultaneous operation and cleanup failures; focused coverage proves a failed create still invokes forced removal.
 - Remaining before completion: retain one successful live result from this command. On the current machine the runner reaches the expected Docker-create failure because Docker is unavailable.
 
 ## References

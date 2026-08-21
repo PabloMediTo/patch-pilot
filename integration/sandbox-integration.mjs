@@ -53,20 +53,34 @@ function assertInput(input) {
 
 /** Verifies one deliberately short Docker CLI timeout or output-bound probe. */
 async function verifyDockerProcessProbe(probe) {
-  const createResult = await probe.input.executeDocker(createProcessRequest(probe));
-  assertProcessSuccess(createResult, "creation");
+  const failures = [];
   try {
+    const createResult = await probe.input.executeDocker(createProcessRequest(probe));
+    assertProcessSuccess(createResult, "creation");
     const result = await probe.input.executeDocker(createStartRequest(probe));
     assertExpectedProcessLimit(result, probe.kind);
-  } finally {
+  } catch (error) {
+    failures.push(error);
+  }
+  try {
     const removeResult = await probe.input.executeDocker({
       args: ["container", "rm", "--force", probe.containerName],
       timeoutMs: 30_000, maxOutputBytes: PROCESS_OUTPUT_BYTES,
     });
     assertProcessSuccess(removeResult, "cleanup");
+  } catch (error) {
+    failures.push(error);
   }
-  if (await probe.input.isContainerPresent(probe.containerName)) {
-    throw new Error("Sandbox process-limit probe retained container state.");
+  try {
+    if (await probe.input.isContainerPresent(probe.containerName)) {
+      throw new Error("Sandbox process-limit probe retained container state.");
+    }
+  } catch (error) {
+    failures.push(error);
+  }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) {
+    throw new AggregateError(failures, "Sandbox process-limit probe cleanup failed.");
   }
 }
 
