@@ -5,6 +5,7 @@ const EXPECTED_PIDS = 256;
 const PROCESS_OUTPUT_BYTES = 65_536;
 const PROCESS_TIMEOUT_MS = 1_000;
 const PROCESS_IMAGE = "node:24.18.0-bookworm-slim";
+const CONTAINER_NAME = /^patch-pilot-[a-z0-9][a-z0-9_.-]{0,62}$/u;
 
 /**
  * Executes and verifies one real canonical sandbox probe without exposing raw command output.
@@ -41,10 +42,13 @@ export async function verifySandboxIntegration(input) {
 
 /** Requires exact runner ports and identities. */
 function assertInput(input) {
-  const hasContainerNames = ["sandbox", "output", "timeout"].every((key) =>
-    typeof input?.containerNames?.[key] === "string" && input.containerNames[key].trim() !== "");
+  const containerNames = ["sandbox", "output", "timeout"]
+    .map((key) => input?.containerNames?.[key]);
+  const hasContainerNames = containerNames.every((name) =>
+    typeof name === "string" && CONTAINER_NAME.test(name));
+  const hasDistinctContainerNames = new Set(containerNames).size === containerNames.length;
   if (typeof input?.workspaceDirectory !== "string" || input.workspaceDirectory.trim() === ""
-    || !hasContainerNames
+    || !hasContainerNames || !hasDistinctContainerNames
     || typeof input.executeSandbox !== "function" || typeof input.hasHostMutation !== "function"
     || typeof input.executeDocker !== "function" || typeof input.isContainerPresent !== "function") {
     throw new Error("Sandbox integration requires workspace, container, and runtime ports.");

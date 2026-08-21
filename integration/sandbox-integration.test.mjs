@@ -76,6 +76,19 @@ await assert.rejects(verifySandboxIntegration({ workspaceDirectory: "controlled-
 /creation failed/u);
 assert.deepEqual(failedCreateRequests.slice(0, 2).map(({ args }) => args[1]), ["create", "rm"]);
 
+let hasExecutedWithInvalidNames = false;
+for (const containerNames of [
+  { ...createContainerNames(), output: "--all" },
+  { ...createContainerNames(), timeout: "patch-pilot-output-integration" },
+]) {
+  await assert.rejects(verifySandboxIntegration({ workspaceDirectory: "controlled-workspace",
+    containerNames, executeSandbox: async () => { hasExecutedWithInvalidNames = true; },
+    executeDocker: async () => { hasExecutedWithInvalidNames = true; },
+    hasHostMutation: async () => false, isContainerPresent: async () => false }),
+  /requires workspace, container, and runtime ports/u);
+}
+assert.equal(hasExecutedWithInvalidNames, false);
+
 /** Creates one successful sandbox result containing structured probe evidence. */
 function createResult(evidence) {
   return { exitCode: 0,
