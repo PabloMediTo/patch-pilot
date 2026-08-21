@@ -25,7 +25,10 @@ export async function createRedisRunTimelineStream(options = {}) {
       subscriberConnection ??= connectClient(subscriber);
       await subscriberConnection;
       const channel = createChannel(runId);
-      await subscriber.subscribe(channel, (message) => receiveEvent(JSON.parse(message)));
+      await subscriber.subscribe(channel, (message) => {
+        const event = parseTimelineMessage(message, runId);
+        if (event !== undefined) receiveEvent(event);
+      });
       return async () => subscriber.unsubscribe(channel);
     },
     close: async () => {
@@ -33,6 +36,48 @@ export async function createRedisRunTimelineStream(options = {}) {
       await closeClient(publisher);
     },
   });
+}
+
+/**
+ * Treats Redis as an untrusted delivery hint and rejects malformed or cross-run messages.
+ * Postgres remains the canonical source used to repair a discarded live delivery.
+ *
+ * @param {unknown} message Redis message body.
+ * @param {string} runId Subscribed run identifier.
+ * @returns {object | undefined} Valid timeline event or no live delivery.
+ */
+function parseTimelineMessage(message, runId) {
+  let event;
+  try {
+    event = JSON.parse(message);
+  } catch {
+    return undefined;
+  }
+  if (!isTimelineEvent(event, runId)) return undefined;
+  return event;
+}
+
+/** Validates the canonical fields required by downstream ordering and rendering. */
+function isTimelineEvent(event, runId) {
+  return event !== null
+    && typeof event === "object"
+    && typeof event.eventId === "string"
+    && event.eventId.trim() !== ""
+    && event.runId === runId
+    && Number.isSafeInteger(event.sequence)
+    && event.sequence > 0
+    && typeof event.type === "string"
+    && event.type.trim() !== ""
+    && typeof event.occurredAt === "string"
+    && isCanonicalUtcTimestamp(event.occurredAt)
+    && event.payload !== null
+    && typeof event.payload === "object";
+}
+
+/** Requires the same canonical UTC timestamp representation emitted by persisted events. */
+function isCanonicalUtcTimestamp(value) {
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
 }
 
 /**

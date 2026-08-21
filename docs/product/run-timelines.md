@@ -47,6 +47,8 @@ Each run uses `patch-pilot:run:<run-id>:timeline`. Publication occurs only after
 
 The adapter installs error listeners on both Redis clients before any connection begins. Provider error events are contained so they cannot terminate the Node.js process independently; the corresponding connect, publish, or subscribe promise remains the authoritative failure channel and still rejects to the caller. Connection attempts use a five-second socket timeout and at most five reconnect delays capped at 500 milliseconds, preventing an unavailable Redis service from hanging startup indefinitely. Closing the stream closes both owned clients.
 
+Subscribed messages are treated as untrusted delivery hints. The adapter discards malformed JSON, incomplete event envelopes, invalid sequences or timestamps, and events whose run ID does not match the subscribed channel. It does not surface those messages to downstream ordering or rendering; Postgres catch-up remains the repair path for any discarded live delivery.
+
 If publication fails, the operation returns `persisted-stream-failed` with safe error evidence. The stored event remains available for catch-up and must not be rolled back merely because a live viewer missed it. An Activity retry may republish the same canonical sequence; API feeds and browser consumers deduplicate it by sequence.
 
 ## Control-plane feed
@@ -69,6 +71,6 @@ Unmatched paths remain available to other handlers. A matched non-GET request re
 
 ## Current verification boundary
 
-Bounded Postgres connections and queries, SQL allocation, mapping, ordering, publication order, run-scoped channels, bounded Redis connection retries, Redis event containment with promise rejection, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, HTTP route/authentication gates, API dispatch, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections.
+Bounded Postgres connections and queries, SQL allocation, mapping, ordering, publication order, run-scoped channels, malformed and cross-run Redis message rejection, bounded Redis connection retries, Redis event containment with promise rejection, catch-up buffering, deduplication, SSE resume/heartbeat/disconnect behavior, HTTP route/authentication gates, API dispatch, failure cleanup, and adapter lifecycle are covered with focused test doubles. The actual Postgres and Redis clients are installed and loaded lazily for runtime connections.
 
 `npm run test:timeline-integration` exercises both real providers together. It subscribes first, persists two uniquely scoped events, requires both Redis deliveries within five seconds, and passes the write results, live deliveries, and ordered Postgres history to a provider-free evidence verifier. The verifier requires exact canonical sequences, types, bounded probe payloads, successful persistence-and-streaming outcomes, and matching unique provider event IDs; focused tests cover success, partial streaming failure, ordering drift, missing delivery, and identity mismatch. The live command emits only a sanitized passed-check report and fails rather than skipping when services are unavailable. Its first successful execution remains required once Docker or equivalent local services are available.

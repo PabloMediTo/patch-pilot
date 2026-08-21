@@ -140,8 +140,26 @@ await runTest("publishes and subscribes through one run-scoped Redis channel", a
     "connect",
     "subscribe:patch-pilot:run:run-7:timeline",
   ]);
-  assert.deepEqual(received, { runId: "run-7", sequence: 2 });
+  assert.deepEqual(received, createRedisTimelineEvent());
   assert.equal(hasUnsubscribed, true);
+});
+
+await runTest("discards malformed and cross-run Redis timeline messages", async () => {
+  const subscriber = createRedisClientStub([]);
+  subscriber.subscribe = async (_channel, receiver) => {
+    receiver("not-json");
+    receiver(JSON.stringify({ ...createRedisTimelineEvent(), runId: "run-other" }));
+    receiver(JSON.stringify({ ...createRedisTimelineEvent(), sequence: 0 }));
+    receiver(JSON.stringify(createRedisTimelineEvent()));
+  };
+  const stream = await createRedisRunTimelineStream({
+    publisher: createRedisClientStub([]), subscriber,
+  });
+  const received = [];
+
+  await assert.doesNotReject(stream.subscribe("run-7", (event) => received.push(event)));
+
+  assert.deepEqual(received, [createRedisTimelineEvent()]);
 });
 
 await runTest("contains Redis error events while operation promises remain visible", async () => {
@@ -191,10 +209,22 @@ function createRedisClientStub(calls, errorListeners = []) {
     publish: async (channel) => { calls.push(`publish:${channel}`); },
     subscribe: async (channel, receiver) => {
       calls.push(`subscribe:${channel}`);
-      receiver(JSON.stringify({ runId: "run-7", sequence: 2 }));
+      receiver(JSON.stringify(createRedisTimelineEvent()));
     },
     unsubscribe: async (channel) => { calls.push(`unsubscribe:${channel}`); },
     close: async function close() { this.isOpen = false; calls.push("close"); },
+  };
+}
+
+/** Returns one complete canonical event delivered through the Redis test double. */
+function createRedisTimelineEvent() {
+  return {
+    eventId: "event-redis-2",
+    runId: "run-7",
+    sequence: 2,
+    type: "inspection.completed",
+    occurredAt: "2026-08-14T10:02:00.000Z",
+    payload: { status: "ready" },
   };
 }
 

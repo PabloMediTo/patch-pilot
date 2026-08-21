@@ -45,6 +45,7 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Redis uses one namespaced Pub/Sub channel per run and publishes only after Postgres returns the stored canonical event.
 - Publisher and subscriber clients now install provider error listeners before connection so Redis events cannot terminate the process independently; connect, publish, and subscribe promises still reject as the visible failure channel, with focused coverage.
 - Redis connections now use a five-second socket timeout and at most five capped reconnect delays; an unavailable service rejects through the controlled promise path instead of keeping the runtime or live integration command open indefinitely.
+- Redis subscriptions now discard malformed JSON, incomplete event envelopes, invalid ordering fields, and cross-run messages before they reach the feed; Postgres catch-up remains the canonical repair path, with focused rejection coverage.
 - A Redis publication failure returns a visible partial-failure outcome without rolling back or hiding the Postgres event.
 - Provider imports are lazy so pure unit tests do not open network-driver handles.
 - Added focused tests for persistence-before-stream ordering, Redis failure, SQL ordering/allocation, channel isolation, and nested JSON immutability.
