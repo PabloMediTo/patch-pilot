@@ -38,11 +38,12 @@
 - The GitHub App transport now signs bounded RS256 app JWTs, exchanges them for repository-scoped least-privilege [installation tokens](../DICTIONARY.md#github-app-installation-token), coalesces and refreshes the cache before expiration, pins REST API version `2026-03-10`, and bounds request duration and response bytes without exposing credentials.
 - Provider-free [GitHub delivery observations](../DICTIONARY.md#github-delivery-observation) now reconcile supported pull-request lifecycle webhooks against immutable delivery identity, distinguish matched state from provider drift, ignore unrelated or untracked events, and normalize exact webhook redelivery. The delivery runtime composes lookup and atomic observation persistence behind its managed pool. The bounded `POST /github/webhooks` route verifies the untouched body before parsing and maps accepted, invalid, and conflicting deliveries to stable no-store HTTP responses. Live Postgres and GitHub webhook verification remain open.
 - Live runtime proof for CPU, memory, disk, timeout, output, and network enforcement remains open because Docker is unavailable locally; untrusted commands therefore stay disabled.
+- A sanitized [end-to-end pilot](end-to-end-pilot.md) readiness command now checks the Docker engine, Compose model, required configuration names, and representative Python/TypeScript repository and issue identities. It uses exact shell-free commands, never emits environment values, and exits nonzero while this machine lacks Docker or provider configuration. It does not replace live provider proof.
 - Strict architecture enforcement permits the API ingestion role to use the maintenance package and the exact `node:buffer` and `node:crypto` providers.
 
 ## Next milestone
 
-Run the end-to-end pilot against representative Python and TypeScript repositories once Temporal, Postgres, Redis, GitHub App credentials, OpenAI access, and a supported container runtime are available. The controlled workflow path is implemented; remaining proof is live integration and safety enforcement.
+Resolve every `npm run pilot:readiness` blocker, then run the documented end-to-end pilot against representative Python and TypeScript repositories. The controlled workflow path and preflight are implemented; remaining proof is live integration and safety enforcement.
 
 ## Open questions
 

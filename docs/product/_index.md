@@ -79,6 +79,13 @@
 - Read when: A task proposes functionality for the first releasable product or changes its limits.
 - Tags: product, mvp, scope, safety, python, typescript
 
+### End-to-End Pilot
+
+- Path: `docs/product/end-to-end-pilot.md`
+- Summary: Sanitized readiness checks and live execution sequence for representative Python and TypeScript MVP runs.
+- Read when: You are preparing, running, or evaluating the two-repository end-to-end pilot.
+- Tags: product, pilot, integration, python, typescript, readiness
+
 ### Local Development Environment
 
 - Path: `docs/product/local-development.md`

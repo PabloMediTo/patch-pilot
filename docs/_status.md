@@ -31,6 +31,7 @@ Current reality:
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
 - The controlled issue-to-tested-draft-PR workflow path is implemented through the maintenance package and application shells; remaining live provider and runtime verification stays open in Markplane.
+- `npm run pilot:readiness` now reports Docker, Compose, configuration-name, and Python/TypeScript target readiness without exposing environment values; it currently reports this machine as blocked.
 
 Open questions:
 

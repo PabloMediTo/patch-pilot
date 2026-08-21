@@ -15,6 +15,14 @@ The image versions are pinned in `compose.yaml`. This environment uses Temporal'
 
 ## Commands
 
+Check whether Docker, required configuration names, and both pilot targets are ready without printing configuration values:
+
+```powershell
+npm run pilot:readiness
+```
+
+A nonzero result is expected while prerequisites are missing. See the [end-to-end pilot](end-to-end-pilot.md) for the report contract and live sequence.
+
 Start the environment and wait for health checks:
 
 ```powershell

@@ -38,5 +38,8 @@ Deliver **Run end-to-end pilot on Python and TypeScript repositories** within th
 - The controlled workflow path now reaches an idempotent draft-pull-request delivery after exact human approval.
 - Rejection terminates without a GitHub provider call; delivery conflicts and blocked evidence remain explicit outcomes.
 - The remaining pilot requires live Temporal, Postgres, Redis, OpenAI, GitHub App, and container-runtime access for representative Python and TypeScript repositories.
+- Added `npm run pilot:readiness` as a shell-free sanitized preflight for Docker engine, Compose configuration, provider/runtime variable names, and both repository/issue targets.
+- The preflight has focused ready/blocked tests and never emits configuration values. On the current machine it correctly remains blocked because Docker and provider configuration are absent.
+- The documented live sequence prevents a readiness result from being mistaken for completed end-to-end evidence; this task stays `draft` until both real runs are retained.
 
 ## References

@@ -99,6 +99,10 @@ The deployable application boundary that authenticates users, accepts commands, 
 
 The evidence-backed result of reviewing a ready [change proposal](#change-proposal) after verification. It accepts the proposal, requests a correctable retry, or rejects it. Passing verification is necessary but does not by itself prove that scope and regression risk are acceptable.
 
+### End-to-End Pilot
+
+The live acceptance exercise for the complete MVP path on one representative Python repository and one representative TypeScript repository. The implemented `npm run pilot:readiness` preflight checks local Docker/Compose availability, required configuration names, and both repository/issue identities while never printing values. A ready report is only permission to begin the live exercise; the pilot completes only after durable run evidence and rejection or linked draft-pull-request outcomes are observed.
+
 ### Expected Failure Fragment
 
 The bounded text that identifies the issue's reported failure in test output. A run requester must place exactly one non-empty fragment of at most 500 characters between `<!-- patch-pilot:expected-failure -->` and `<!-- /patch-pilot:expected-failure -->` in the opted-in GitHub issue. Patch Pilot persists the trimmed text instead of guessing from general issue prose and accepts [failure reproduction](#failure-reproduction) only when the failing command output contains that exact fragment.
