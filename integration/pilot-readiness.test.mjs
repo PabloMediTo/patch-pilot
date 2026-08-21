@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
+import { generateKeyPairSync } from "node:crypto";
 
 import { assessPilotReadiness } from "./pilot-readiness.mjs";
+
+const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 1024 });
+const privateKeyPem = privateKey.export({ format: "pem", type: "pkcs8" });
 
 const environment = Object.freeze({
   PATCH_PILOT_OPENAI_API_KEY: "controlled-openai-key",
   PATCH_PILOT_GITHUB_APP_ID: "123",
-  PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: "controlled-private-key",
+  PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: privateKeyPem,
   PATCH_PILOT_GITHUB_WEBHOOK_SECRET: "controlled-webhook-secret",
   PATCH_PILOT_API_BEARER_TOKEN: "controlled-bearer-token-with-32-characters",
   PATCH_PILOT_API_ACTOR_ID: "operator:pilot",
@@ -46,7 +50,15 @@ assert.deepEqual(blocked.tooling.checks.map(({ status, reason }) => ({ status, r
   { status: "blocked", reason: "docker-compose-unavailable" },
   { status: "blocked", reason: "compose-config-unavailable" },
 ]);
-assert.equal(JSON.stringify(blocked).includes("controlled-private-key"), false);
+assert.equal(JSON.stringify(blocked).includes("BEGIN PRIVATE KEY"), false);
+
+const malformedPrivateKey = await assessPilotReadiness({ environment: {
+  ...environment, PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: "controlled-invalid-private-key",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(malformedPrivateKey.status, "blocked");
+assert.deepEqual(malformedPrivateKey.configuration.invalidVariables,
+  ["PATCH_PILOT_GITHUB_APP_PRIVATE_KEY"]);
+assert.equal(JSON.stringify(malformedPrivateKey).includes("controlled-invalid"), false);
 
 const invalidAuthentication = await assessPilotReadiness({ environment: {
   ...environment,

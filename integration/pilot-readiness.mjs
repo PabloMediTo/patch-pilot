@@ -1,12 +1,14 @@
+import { createPrivateKey } from "node:crypto";
+
 const REQUIRED_VALUES = Object.freeze([
   "PATCH_PILOT_OPENAI_API_KEY",
-  "PATCH_PILOT_GITHUB_APP_PRIVATE_KEY",
   "PATCH_PILOT_GITHUB_WEBHOOK_SECRET",
 ]);
 const VALIDATED_VALUES = Object.freeze({
   PATCH_PILOT_API_BEARER_TOKEN: (value) => value.length >= 32 && !/\s/u.test(value),
   PATCH_PILOT_API_ACTOR_ID: (value) => /^[A-Za-z0-9_.:@-]{1,128}$/u.test(value),
   PATCH_PILOT_GITHUB_APP_ID: (value) => /^[1-9][0-9]*$/u.test(value),
+  PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: isPrivateKey,
   PATCH_PILOT_PYTHON_PILOT_REPOSITORY: (value) => isRepository(value.trim()),
   PATCH_PILOT_PYTHON_PILOT_ISSUE: (value) => isPositiveIssueNumber(value.trim()),
   PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY: (value) => isRepository(value.trim()),
@@ -112,4 +114,14 @@ function isPositiveIssueNumber(value) {
   if (!/^[1-9][0-9]*$/u.test(value)) return false;
   const issueNumber = Number(value);
   return Number.isSafeInteger(issueNumber) && issueNumber <= 2_147_483_647;
+}
+
+/** Requires key material that both deployments can parse before contacting GitHub. */
+function isPrivateKey(value) {
+  try {
+    createPrivateKey(value);
+    return true;
+  } catch {
+    return false;
+  }
 }

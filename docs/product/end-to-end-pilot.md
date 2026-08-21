@@ -7,7 +7,7 @@ Prove the complete MVP path on one representative Python repository and one repr
 ## Not responsible for
 
 - provisioning Docker, provider accounts, GitHub App installations, or secrets
-- treating configuration presence as proof that a provider credential is valid
+- treating configuration presence or local key parsing as proof that a provider credential is valid
 - weakening sandbox limits to make a pilot pass
 - merging the resulting draft pull request
 
@@ -42,7 +42,7 @@ Run:
 npm run pilot:readiness
 ```
 
-The command invokes Docker with exact argument vectors and no shell. It checks the Docker engine, Docker Compose, and `docker compose config --quiet`. It also validates the presence of provider/runtime configuration, the API runtime's exact whitespace-free minimum bearer-token shape, its safe 1-to-128-character actor identity, a positive GitHub App identifier, two distinct case-insensitively compared `owner/repository` pilot targets, and positive issue numbers no greater than the durable Postgres `integer` maximum of `2147483647`. Reusing one repository for both language roles marks both repository variable names invalid without exposing either value. Malformed authentication values and oversized issue identities likewise report only invalid variable names.
+The command invokes Docker with exact argument vectors and no shell. It checks the Docker engine, Docker Compose, and `docker compose config --quiet`. It also validates the presence of provider/runtime configuration, the API runtime's exact whitespace-free minimum bearer-token shape, its safe 1-to-128-character actor identity, a positive GitHub App identifier, locally parseable private-key material, two distinct case-insensitively compared `owner/repository` pilot targets, and positive issue numbers no greater than the durable Postgres `integer` maximum of `2147483647`. Reusing one repository for both language roles marks both repository variable names invalid without exposing either value. Malformed authentication or key values and oversized issue identities likewise report only invalid variable names. Parsing the key proves only that both deployments can start with it; GitHub still has to authenticate it during live execution.
 
 The JSON result is `ready` only when every check passes. A blocked result exits nonzero and includes only check names, fixed failure reasons, and missing or malformed environment-variable names. It never prints environment values. Readiness is a prerequisite, not a successful pilot claim: provider authentication, service health, workflow evidence, and draft-pull-request results still require live execution.
 
