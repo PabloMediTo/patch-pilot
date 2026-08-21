@@ -47,6 +47,7 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Redis connections now use a five-second socket timeout and at most five capped reconnect delays; an unavailable service rejects through the controlled promise path instead of keeping the runtime or live integration command open indefinitely.
 - Redis subscriptions now discard malformed JSON, incomplete event envelopes, invalid ordering fields, and cross-run messages before they reach the feed; Postgres catch-up remains the canonical repair path, with focused rejection coverage.
 - Redis stream shutdown now closes only adapter-created clients. Fully injected clients retain caller ownership, while a subscriber duplicated by the adapter is still closed by it; focused tests cover all ownership shapes.
+- Shutdown now removes the adapter's error listeners and attempts cleanup of both owned Redis clients even if one close fails, preserving one failure directly or simultaneous failures together.
 - A Redis publication failure returns a visible partial-failure outcome without rolling back or hiding the Postgres event.
 - Provider imports are lazy so pure unit tests do not open network-driver handles.
 - Added focused tests for persistence-before-stream ordering, Redis failure, SQL ordering/allocation, channel isolation, and nested JSON immutability.

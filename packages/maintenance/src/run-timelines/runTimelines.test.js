@@ -179,6 +179,26 @@ await runTest("closes both Redis clients created by the adapter", async () => {
   assert.deepEqual(publisherCalls, ["close"]);
 });
 
+await runTest("attempts both owned Redis cleanups when one close fails", async () => {
+  const publisherCalls = [];
+  const subscriberCalls = [];
+  const publisher = createRedisClientStub(publisherCalls);
+  const subscriber = createRedisClientStub(subscriberCalls);
+  publisher.isOpen = true;
+  subscriber.isOpen = true;
+  publisher.duplicate = () => subscriber;
+  subscriber.close = async () => {
+    subscriberCalls.push("close");
+    throw new Error("subscriber close failed");
+  };
+  const stream = await createRedisRunTimelineStream({ createClient: () => publisher });
+
+  await assert.rejects(stream.close(), /subscriber close failed/u);
+
+  assert.deepEqual(subscriberCalls, ["close"]);
+  assert.deepEqual(publisherCalls, ["close"]);
+});
+
 await runTest("discards malformed and cross-run Redis timeline messages", async () => {
   const subscriber = createRedisClientStub([]);
   subscriber.subscribe = async (_channel, receiver) => {
@@ -210,6 +230,8 @@ await runTest("contains Redis error events while operation promises remain visib
   assert.equal(errorListeners.length, 2);
   await assert.rejects(stream.publish({ runId: "run-8", sequence: 1 }), /Redis unavailable/u);
   assert.doesNotThrow(() => errorListeners[1](new Error("subscriber event")));
+  await stream.close();
+  assert.equal(errorListeners.length, 0);
 });
 
 await runTest("bounds Redis connection and reconnect behavior", async () => {
@@ -240,6 +262,11 @@ function createRedisClientStub(calls, errorListeners = []) {
   return {
     isOpen: false,
     on: (event, listener) => { if (event === "error") errorListeners.push(listener); },
+    off: (event, listener) => {
+      if (event !== "error") return;
+      const index = errorListeners.indexOf(listener);
+      if (index !== -1) errorListeners.splice(index, 1);
+    },
     connect: async function connect() { this.isOpen = true; calls.push("connect"); },
     publish: async (channel) => { calls.push(`publish:${channel}`); },
     subscribe: async (channel, receiver) => {

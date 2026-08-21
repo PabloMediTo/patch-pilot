@@ -9,8 +9,8 @@ export async function createRedisRunTimelineStream(options = {}) {
   const ownsSubscriber = options.subscriber === undefined;
   const publisher = options.publisher ?? await createRedisClient(options.url, options.createClient);
   const subscriber = options.subscriber ?? publisher.duplicate();
-  attachRedisErrorListener(publisher);
-  attachRedisErrorListener(subscriber);
+  const detachPublisherErrorListener = attachRedisErrorListener(publisher);
+  const detachSubscriberErrorListener = attachRedisErrorListener(subscriber);
   let publisherConnection;
   let subscriberConnection;
 
@@ -34,8 +34,9 @@ export async function createRedisRunTimelineStream(options = {}) {
       return async () => subscriber.unsubscribe(channel);
     },
     close: async () => {
-      if (ownsSubscriber) await closeClient(subscriber);
-      if (ownsPublisher) await closeClient(publisher);
+      detachSubscriberErrorListener();
+      detachPublisherErrorListener();
+      await closeOwnedClients({ publisher, subscriber, ownsPublisher, ownsSubscriber });
     },
   });
 }
@@ -86,9 +87,20 @@ function isCanonicalUtcTimestamp(value) {
  * Prevents the provider's parallel error event from bypassing rejected operation promises.
  *
  * @param {object} client Redis client.
+ * @returns {Function} Idempotent listener removal.
  */
 function attachRedisErrorListener(client) {
-  if (typeof client.on === "function") client.on("error", handleRedisClientError);
+  if (typeof client.on !== "function") return () => undefined;
+  client.on("error", handleRedisClientError);
+  let isAttached = true;
+  return () => {
+    if (!isAttached) return;
+    isAttached = false;
+    if (typeof client.off === "function") client.off("error", handleRedisClientError);
+    else if (typeof client.removeListener === "function") {
+      client.removeListener("error", handleRedisClientError);
+    }
+  };
 }
 
 /** Leaves operation failures to connect, publish, and subscribe promises. */
@@ -153,4 +165,16 @@ async function closeClient(client) {
   if (client.isOpen) {
     await client.close();
   }
+}
+
+/** Attempts every owned-client cleanup and preserves all resulting failures. */
+async function closeOwnedClients({ publisher, subscriber, ownsPublisher, ownsSubscriber }) {
+  const operations = [];
+  if (ownsSubscriber) operations.push(closeClient(subscriber));
+  if (ownsPublisher) operations.push(closeClient(publisher));
+  const results = await Promise.allSettled(operations);
+  const failures = results.filter(({ status }) => status === "rejected")
+    .map(({ reason }) => reason);
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) throw new AggregateError(failures, "Timeline Redis cleanup failed.");
 }
