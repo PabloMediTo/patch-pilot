@@ -44,6 +44,7 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - The adapter copies the repository into the quota-controlled container layer instead of bind-mounting the host workspace, then forcibly removes the container after success or preparation failure.
 - Unit tests cover command construction, runtime selection, working-directory mapping, command order, and cleanup after a failed copy.
 - The production adapter now validates bounded `rm --force` evidence and fails closed when cleanup exits unsuccessfully, times out, or exceeds its output bound; focused coverage prevents a successful target command from hiding failed container removal.
+- Failed, timed-out, and output-truncated create evidence now triggers bounded best-effort removal because container state may already exist; focused tests preserve the create failure after successful cleanup and both safe causes when cleanup also fails.
 - Added a worker-owned Docker CLI process port that invokes exact argument vectors without a shell, enforces timeout and output bounds, and returns standard execution evidence.
 - Focused tests cover success evidence, timeout classification, output truncation, and invalid requests.
 - Registered the `docker-cli` worker role with only the exact `node:child_process` provider permission.

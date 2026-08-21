@@ -141,3 +141,34 @@ await assert.rejects(
   /cleanup failed/u,
 );
 assert.deepEqual(failedCleanupCalls, ["create", "cp", "start", "rm"]);
+
+const failedCreateCalls = [];
+await assert.rejects(
+  runInDockerSandbox({
+    spec: { cwd: workspaceDirectory, workspaceDirectory, executable: "npm",
+      args: ["test"], limits: policy.execution },
+    createContainerName: () => "patch-pilot-run-4",
+    executeDocker: async ({ args }) => {
+      failedCreateCalls.push(args[0]);
+      return args[0] === "create"
+        ? { exitCode: -1, hasTimedOut: true, hasTruncatedOutput: false }
+        : { exitCode: 0, hasTimedOut: false, hasTruncatedOutput: false };
+    },
+  }),
+  /create failed/u,
+);
+assert.deepEqual(failedCreateCalls, ["create", "rm"]);
+
+await assert.rejects(
+  runInDockerSandbox({
+    spec: { cwd: workspaceDirectory, workspaceDirectory, executable: "npm",
+      args: ["test"], limits: policy.execution },
+    createContainerName: () => "patch-pilot-run-5",
+    executeDocker: async () => ({ exitCode: -1, hasTimedOut: true,
+      hasTruncatedOutput: false }),
+  }),
+  (error) => error instanceof AggregateError
+    && error.message === "Docker sandbox create failed and cleanup could not be confirmed."
+    && error.errors.map(({ message }) => message).join("|")
+      === "Docker sandbox create failed.|Docker sandbox cleanup failed.",
+);

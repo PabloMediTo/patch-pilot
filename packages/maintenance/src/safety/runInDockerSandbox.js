@@ -21,7 +21,17 @@ export async function runInDockerSandbox(input) {
     timeoutMs: 60_000,
     maxOutputBytes: input.spec.limits.maxOutputBytes,
   });
-  assertDockerStep(createResult, "create");
+  try {
+    assertDockerStep(createResult, "create");
+  } catch (createError) {
+    try {
+      await removeDockerContainer(input.executeDocker, name);
+    } catch (cleanupError) {
+      throw new AggregateError([createError, cleanupError],
+        "Docker sandbox create failed and cleanup could not be confirmed.");
+    }
+    throw createError;
+  }
 
   try {
     const copyResult = await input.executeDocker({
@@ -36,11 +46,16 @@ export async function runInDockerSandbox(input) {
       maxOutputBytes: input.spec.limits.maxOutputBytes,
     });
   } finally {
-    const cleanupResult = await input.executeDocker({
-      args: ["rm", "--force", name], timeoutMs: 30_000, maxOutputBytes: 65_536,
-    });
-    assertDockerStep(cleanupResult, "cleanup");
+    await removeDockerContainer(input.executeDocker, name);
   }
+}
+
+/** Forcibly removes one possibly created container and validates bounded cleanup evidence. */
+async function removeDockerContainer(executeDocker, name) {
+  const cleanupResult = await executeDocker({
+    args: ["rm", "--force", name], timeoutMs: 30_000, maxOutputBytes: 65_536,
+  });
+  assertDockerStep(cleanupResult, "cleanup");
 }
 
 /** Builds canonical Docker create arguments. */
