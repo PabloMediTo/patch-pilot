@@ -42,7 +42,7 @@ Run:
 npm run pilot:readiness
 ```
 
-The command invokes Docker with exact argument vectors and no shell. It checks the Docker engine, Docker Compose, and `docker compose config --quiet`. It also validates the presence of provider/runtime configuration, the minimum bearer-token length, a positive GitHub App identifier, two `owner/repository` pilot targets, and positive issue numbers.
+The command invokes Docker with exact argument vectors and no shell. It checks the Docker engine, Docker Compose, and `docker compose config --quiet`. It also validates the presence of provider/runtime configuration, the minimum bearer-token length, a positive GitHub App identifier, two distinct case-insensitively compared `owner/repository` pilot targets, and positive issue numbers. Reusing one repository for both language roles marks both repository variable names invalid without exposing either value.
 
 The JSON result is `ready` only when every check passes. A blocked result exits nonzero and includes only check names, fixed failure reasons, and missing or malformed environment-variable names. It never prints environment values. Readiness is a prerequisite, not a successful pilot claim: provider authentication, service health, workflow evidence, and draft-pull-request results still require live execution.
 

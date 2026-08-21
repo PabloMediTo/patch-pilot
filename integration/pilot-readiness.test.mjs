@@ -48,4 +48,16 @@ assert.deepEqual(blocked.tooling.checks.map(({ status, reason }) => ({ status, r
 ]);
 assert.equal(JSON.stringify(blocked).includes("controlled-private-key"), false);
 
+const duplicateTargets = await assessPilotReadiness({ environment: {
+  ...environment,
+  PATCH_PILOT_PYTHON_PILOT_REPOSITORY: "Pilot/Shared-Repository",
+  PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY: " pilot/shared-repository ",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(duplicateTargets.status, "blocked");
+assert.deepEqual(duplicateTargets.configuration.invalidVariables, [
+  "PATCH_PILOT_PYTHON_PILOT_REPOSITORY",
+  "PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY",
+]);
+assert.equal(JSON.stringify(duplicateTargets).includes("Shared-Repository"), false);
+
 await assert.rejects(assessPilotReadiness({}), /environment, project directory/u);

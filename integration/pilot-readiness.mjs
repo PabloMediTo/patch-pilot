@@ -60,14 +60,27 @@ function assessConfiguration(environment) {
     .filter((name) => !hasValue(environment[name]));
   const missingVariables = [...REQUIRED_VALUES
     .filter((name) => !hasValue(environment[name])), ...missingValidatedValues];
-  const invalidVariables = Object.entries(VALIDATED_VALUES)
+  const individuallyInvalidVariables = Object.entries(VALIDATED_VALUES)
     .filter(([name, validator]) => hasValue(environment[name])
       && !validator(environment[name].trim()))
     .map(([name]) => name);
+  const invalidVariables = [...new Set([
+    ...individuallyInvalidVariables, ...findConflictingPilotTargets(environment),
+  ])];
   const hasFailure = missingVariables.length > 0 || invalidVariables.length > 0;
   return Object.freeze({ status: hasFailure ? "blocked" : "ready",
     missingVariables: Object.freeze(missingVariables),
     invalidVariables: Object.freeze(invalidVariables) });
+}
+
+/** Prevents the two language roles from claiming one repository as two pilot targets. */
+function findConflictingPilotTargets(environment) {
+  const pythonName = "PATCH_PILOT_PYTHON_PILOT_REPOSITORY";
+  const typescriptName = "PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY";
+  const pythonRepository = normalizeRepository(environment[pythonName]);
+  const typescriptRepository = normalizeRepository(environment[typescriptName]);
+  return pythonRepository !== null && pythonRepository === typescriptRepository
+    ? [pythonName, typescriptName] : [];
 }
 
 /** Requires controlled inputs so the readiness check never owns shell interpretation. */
@@ -87,6 +100,11 @@ function hasValue(value) {
 /** Validates one exact owner/name GitHub repository identity. */
 function isRepository(value) {
   return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u.test(value);
+}
+
+/** Normalizes one valid GitHub identity for case-insensitive conflict detection. */
+function normalizeRepository(value) {
+  return hasValue(value) && isRepository(value.trim()) ? value.trim().toLowerCase() : null;
 }
 
 /** Validates one decimal positive integer without coercion. */
