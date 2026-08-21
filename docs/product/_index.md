@@ -51,6 +51,13 @@
 - Read when: A task changes how persisted runs start Temporal workflows, workflow IDs, task queues, dispatch retries, or Temporal client ownership.
 - Tags: product, runs, temporal, workflow, submission, idempotency
 
+### Workflow Approval
+
+- Path: `docs/product/workflow-approval.md`
+- Summary: Persistence-before-signal ordering, exact decision validation, Temporal approval notification, and retry semantics.
+- Read when: A task changes how persisted approval decisions wake maintenance workflows, signal names, signal retries, or Temporal client ownership.
+- Tags: product, approval, temporal, workflow, signal, idempotency
+
 ### Maintenance Worker Runtime
 
 - Path: `docs/product/maintenance-worker-runtime.md`

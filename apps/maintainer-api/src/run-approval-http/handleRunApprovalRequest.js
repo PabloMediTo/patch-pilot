@@ -19,15 +19,20 @@ export async function handleRunApprovalRequest(input) {
     decision: route.decision, reason: body?.reason, decidedAt: input.clock().toISOString(),
     loadApprovalState: input.loadApprovalState, saveFirstDecision: input.saveFirstDecision,
   });
+  if (["created", "replayed"].includes(result.status)) {
+    await input.notifyApprovalDecision(result.decision);
+  }
   return writeApprovalOutcome(input.response, result);
 }
 
 /** Validates required integration ports. */
 function assertPorts(input) {
-  const functions = [input?.authenticateRequest, input?.readRequestBody, input?.loadApprovalState, input?.saveFirstDecision, input?.clock];
+  const functions = [input?.authenticateRequest, input?.readRequestBody,
+    input?.loadApprovalState, input?.saveFirstDecision,
+    input?.notifyApprovalDecision, input?.clock];
   if (typeof input?.request?.url !== "string" || typeof input?.response?.writeHead !== "function"
     || typeof input.response.end !== "function" || functions.some((port) => typeof port !== "function")) {
-    throw new Error("Approval HTTP handler requires request, response, auth, body, persistence, and clock ports.");
+    throw new Error("Approval HTTP handler requires request, response, auth, body, persistence, signal, and clock ports.");
   }
 }
 

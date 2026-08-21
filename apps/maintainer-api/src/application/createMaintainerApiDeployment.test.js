@@ -14,9 +14,16 @@ const pool = { endCalls: 0, async query(sql, values) {
 const timelineStream = { closeCalls: 0, async subscribe() { return async () => undefined; },
   async close() { this.closeCalls += 1; } };
 const dispatchedRuns = [];
-const temporalRunSubmissionRuntime = { closeCalls: 0,
-  async dispatchRun(run) { dispatchedRuns.push(run); return { status: "started",
-    workflowId: run.id }; },
+const approvalSignals = [];
+const temporalResource = { closeCalls: 0, client: { workflow: {
+  async start(_workflowType, options) {
+    dispatchedRuns.push(options.args[0]);
+    return { workflowId: options.workflowId };
+  },
+  getHandle(workflowId) { return { signal: async (name, decision) => {
+    approvalSignals.push({ workflowId, name, decision });
+  } }; },
+} },
   async close() { this.closeCalls += 1; } };
 const githubDeliveryRuntime = {
   closeCalls: 0,
@@ -30,7 +37,7 @@ const githubDeliveryRuntime = {
 const port = await reservePort();
 const deployment = await createMaintainerApiDeployment({ environment: createEnvironment(port),
   pool, timelineStream, githubDeliveryRuntime,
-  temporalRunSubmissionRuntime,
+  temporalResource,
   githubRequest: async () => ({ statusCode: 200, body: { object: { sha: "a".repeat(40) } } }) });
 
 await deployment.listen();
@@ -57,23 +64,25 @@ assert.deepEqual(await deployment.deliverApprovedPullRequest({}), { status: "cre
 await deployment.close();
 await deployment.close();
 assert.equal(timelineStream.closeCalls, 1);
-assert.equal(temporalRunSubmissionRuntime.closeCalls, 1);
+assert.equal(temporalResource.closeCalls, 1);
+assert.deepEqual(approvalSignals, []);
 assert.equal(githubDeliveryRuntime.closeCalls, 1);
 assert.equal(pool.endCalls, 1);
 
 await assert.rejects(createMaintainerApiDeployment({ environment: {}, pool,
-  timelineStream, temporalRunSubmissionRuntime, githubDeliveryRuntime }), /valid listener/u);
+  timelineStream, temporalResource, githubDeliveryRuntime }), /valid listener/u);
 
 const failedPool = { endCalls: 0, async query() { return { rows: [] }; },
   async end() { this.endCalls += 1; } };
 const failedStream = { closeCalls: 0, async close() { this.closeCalls += 1; } };
-const failedTemporalRuntime = { closeCalls: 0, async dispatchRun() {},
-  async close() { this.closeCalls += 1; } };
+const failedTemporalResource = { closeCalls: 0, client: { workflow: {
+  start: async () => undefined, getHandle: () => ({ signal: async () => undefined }),
+} }, async close() { this.closeCalls += 1; } };
 await assert.rejects(createMaintainerApiDeployment({ environment: createEnvironment(3001),
   pool: failedPool, timelineStream: failedStream,
-  temporalRunSubmissionRuntime: failedTemporalRuntime }));
+  temporalResource: failedTemporalResource }));
 assert.equal(failedStream.closeCalls, 1);
-assert.equal(failedTemporalRuntime.closeCalls, 1);
+assert.equal(failedTemporalResource.closeCalls, 1);
 assert.equal(failedPool.endCalls, 1);
 
 /** Creates complete deployment environment values without real credentials. */

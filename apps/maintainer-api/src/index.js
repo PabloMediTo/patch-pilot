@@ -11,5 +11,5 @@ export { handleRunReviewEvidenceRequest } from "./run-review-evidence-http/index
 export { createRunReviewQuery } from "./run-review-query/index.js";
 export { openRunTimelineFeed, openRunTimelineSseSession } from "./run-timeline-feed/index.js";
 export { handleRunTimelineRequest } from "./run-timeline-http/index.js";
-export { createTemporalRunDispatcher,
-  createTemporalRunSubmissionRuntime } from "./workflow-submission/index.js";
+export { createTemporalApprovalNotifier } from "./workflow-approval/index.js";
+export { createTemporalRunDispatcher } from "./workflow-submission/index.js";

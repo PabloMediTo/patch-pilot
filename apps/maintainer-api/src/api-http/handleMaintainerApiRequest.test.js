@@ -25,7 +25,9 @@ function createInput(overrides = {}) {
       loadApprovalState: async () => ({ runStatus: "awaiting-approval", decision: null,
         reviewBinding: { baseRevision: "a".repeat(40), diffHash: "b".repeat(64), planVersion: 1,
           verification: { status: "passed", evidenceHash: "c".repeat(64) } } }),
-      saveFirstDecision: async (decision) => ({ status: "created", decision }), clock: () => new Date("2026-08-15T10:00:00.000Z") },
+      saveFirstDecision: async (decision) => ({ status: "created", decision }),
+      notifyApprovalDecision: async () => undefined,
+      clock: () => new Date("2026-08-15T10:00:00.000Z") },
     timeline: { authorizeRunAccess: async () => overrides.authorized ?? true, store: {}, stream: {}, scheduleHeartbeat: () => () => undefined },
   };
 }

@@ -21,6 +21,7 @@ const server = createMaintainerApiServer({
       reviewBinding: { baseRevision: "a".repeat(40), diffHash: "b".repeat(64), planVersion: 1,
         verification: { status: "passed", evidenceHash: "c".repeat(64) } } }),
     saveFirstDecision: async (decision) => { savedDecision = decision; return { status: "created", decision }; },
+    notifyApprovalDecision: async () => undefined,
     clock: () => new Date("2026-08-15T10:00:00.000Z") },
   timeline: { store: {}, stream: {} },
 });

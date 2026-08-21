@@ -28,6 +28,7 @@ Start one persisted [maintenance run](../DICTIONARY.md#maintenance-run) as a Tem
 - [run persistence](run-persistence.md) supplies the canonical submitted run before dispatch
 - [GitHub run ingestion](github-ingestion.md) returns the webhook acknowledgement after dispatch
 - the [control-plane runtime](control-plane-runtime.md) owns the reusable Temporal client connection
+- [workflow approval](workflow-approval.md) shares that connection for a separate persisted-decision command
 - the [maintenance worker runtime](maintenance-worker-runtime.md) owns `maintenanceRunWorkflow` and its Activities
 
 ## Identity and retry rules
@@ -36,4 +37,4 @@ The persisted run ID is also the Temporal workflow ID. The API starts the named 
 
 Persistence always happens before workflow submission. If Temporal is unavailable after the Postgres write, the webhook request fails visibly. GitHub can then redeliver the same delivery: Postgres reloads the first writer and the API retries the same deterministic Temporal start without creating a second workflow. Conflicting persisted identities never reach Temporal.
 
-The executable worker now registers the workflow and advances a submitted run through inspection, reproduction, planning context, bounded proposal generation, proposal attempts, canonical review-snapshot recording, and an exactly bound durable approval wait. Connecting the API's persisted decision to that wait and subsequent delivery remain implementation responsibilities.
+The executable worker now registers the workflow and advances a submitted run through inspection, reproduction, planning context, bounded proposal generation, proposal attempts, canonical review-snapshot recording, and an exactly bound durable approval wait. The API's separate workflow-approval role now wakes that wait; subsequent delivery remains an implementation responsibility.

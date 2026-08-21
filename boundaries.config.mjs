@@ -49,8 +49,8 @@ export const boundaryConfig = {
         },
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["api-authentication", "api-server", "github-delivery", "github-ingestion", "run-review-query", "workflow-submission"],
-          allowedExternalDependencies: ["pg"],
+          allowedModuleDependencies: ["api-authentication", "api-server", "github-delivery", "github-ingestion", "run-review-query", "workflow-approval", "workflow-submission"],
+          allowedExternalDependencies: ["@temporalio/client", "pg"],
           allowedCoreDependencies: [],
         },
         "github-ingestion": {
@@ -95,6 +95,12 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:url"],
         },
+        "workflow-approval": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: [],
+        },
         "workflow-submission": {
           architectureRole: "application-role",
           allowedModuleDependencies: [],
@@ -116,6 +122,7 @@ export const boundaryConfig = {
             "run-review-query",
             "run-timeline-feed",
             "run-timeline-http",
+            "workflow-approval",
             "workflow-submission",
           ],
           allowedExternalDependencies: [],

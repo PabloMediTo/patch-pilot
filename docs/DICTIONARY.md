@@ -61,7 +61,7 @@ A deployable monorepo workspace that acts as a thin composition shell. It owns s
 
 ### Approval Decision
 
-The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, and binds the choice to the canonical base revision, diff hash, plan version, passed verification status, and verification-evidence hash. It replays the same idempotency key and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys while retaining legacy unbound rows as non-deliverable audit history; the authenticated API handler, concrete server, and environment-backed deployment map bounded idempotent submissions to the shared store. Approval permits GitHub delivery only for that exact evidence; rejection ends the run without publishing repository changes. Live persistence verification remains planned.
+The recorded human choice to approve or reject a reviewed [change proposal](#change-proposal). The implemented use case accepts only the first decision while the run awaits approval, requires a reason for rejection, and binds the choice to the canonical base revision, diff hash, plan version, passed verification status, and verification-evidence hash. It replays the same idempotency key and reports competing decisions as conflicts. Its Postgres adapter enforces one decision per run and unique idempotency keys while retaining legacy unbound rows as non-deliverable audit history; the authenticated API handler persists before [workflow approval](#workflow-approval), retries exact replays, and withholds HTTP success when Temporal signaling fails. Approval permits GitHub delivery only for that exact evidence; rejection ends the run without publishing repository changes. Live persistence verification remains planned.
 
 ### Autonomous GitHub Maintainer
 
@@ -73,7 +73,7 @@ The executable `boundaries.config.mjs` file that canonically declares production
 
 ### Change Proposal
 
-The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented workflow produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, records the canonical safety decision, and advances ready proposals through bounded verification and critique attempts. Review persistence and pull-request description remain later stages.
+The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented workflow produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, records the canonical safety decision, advances ready proposals through bounded verification and critique attempts, and persists the accepted final result as a [review snapshot](#review-snapshot). Pull-request description and workflow delivery orchestration remain later stages.
 
 ### Co-Located Docs
 
@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, one Temporal submission connection, GitHub ingestion and pull-request reconciliation, and deterministic signal-driven shutdown. It starts persisted issue runs but does not execute worker Activities.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, one reusable Temporal client resource, GitHub ingestion, workflow submission and approval notification, pull-request reconciliation, and deterministic signal-driven shutdown. It starts persisted issue runs and signals persisted decisions but does not execute worker Activities.
 
 ### Critique Decision
 
@@ -142,7 +142,7 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, planning-context, proposal, and attempt events, use fresh exact-revision disposable checkouts, reproduce and verify through the canonical safe executor, and permit no more than two full proposal revisions. Unsupported, policy-blocked, rejected, and exhausted outcomes terminate explicitly. Review-snapshot recording, approval waiting, and delivery orchestration remain planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, planning-context, proposal, attempt, review, and approval events, use fresh exact-revision disposable checkouts, reproduce and verify through the canonical safe executor, and permit no more than two full proposal revisions. It atomically records an accepted [review snapshot](#review-snapshot), waits durably for an exactly bound [approval decision](#approval-decision), advances approval, and terminates human rejection explicitly. Unsupported, policy-blocked, critique-rejected, exhausted, and malformed outcomes also terminate visibly. Approved GitHub delivery orchestration remains planned.
 
 ### Monorepo
 
@@ -170,7 +170,7 @@ The human-facing view of one reviewable maintenance run. It presents ordered tim
 
 ### Review Snapshot
 
-The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run, and the API query joins those separate records only when serving review or approval state. Workflow recording and live persistence verification remain planned.
+The immutable approval-gate record produced only after the final [change proposal](#change-proposal) has passed verification and received an accepted [critique decision](#critique-decision). It contains run identity, plan, exact diff, bounded verification, critique, and SHA-256 evidence bindings while deliberately excluding the [run timeline](#run-timeline) and [approval decision](#approval-decision), which remain separate canonical records. Its concrete Postgres store uses one first-writer row per run, the worker records it through a retry-safe Activity before durable approval waiting, and the API query joins the separate records only when serving review or approval state. Live persistence verification remains planned.
 
 ### Repository Planning Context
 
@@ -186,7 +186,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, planning-context, proposal, and attempt lifecycle; source context and unified diffs are deliberately omitted while paths, metrics, verification, and critique evidence remain visible. Live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, planning-context, proposal, attempt, review, approval waiting, and approval outcome; source context and unified diffs are deliberately omitted while paths, metrics, verification, critique, and bounded decision evidence remain visible. Live local-service verification remains open.
 
 ### Supported Project
 
@@ -196,9 +196,13 @@ A repository root whose manifests and test configuration match one deterministic
 
 Structured proof produced by repository checks, including the exact command, exit code, bounded output, duration, timeout, and truncation state. The implemented verifier classifies this evidence as passed, failed, or execution-failed. Human approval relies on the evidence rather than an agent claim that a fix works.
 
+### Workflow Approval
+
+The persistence-before-signal handoff of one canonical [approval decision](#approval-decision) to its waiting [maintenance workflow](#maintenance-workflow). Only a created decision or exact idempotent replay is sent as `reviewDecision` to the Temporal workflow whose ID equals the run ID. The API acknowledges success only after Temporal accepts the signal; provider failure remains visible so the same idempotency key can reload and signal the first writer again. Conflicts never signal, and the worker independently requires the same run and complete [review snapshot](#review-snapshot) binding.
+
 ### Workflow Submission
 
-The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. The executable worker consumes this handoff through inspection and failure reproduction; later [maintenance workflow](#maintenance-workflow) phases remain planned.
+The idempotent handoff of one persisted [maintenance run](#maintenance-run) to Temporal. The control-plane API uses the run ID as the workflow ID, starts `maintenanceRunWorkflow` on the configured task queue, treats only Temporal's exact already-started outcome as a replay, and leaves provider failures visible for GitHub redelivery. The executable worker consumes this handoff through review and durable approval waiting; [workflow approval](#workflow-approval) is a separate command over the same API-owned Temporal client resource.
 
 ### Workspace
 

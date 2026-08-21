@@ -85,7 +85,10 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - The worker now persists the accepted final proposal, passed verification, and accepted critique through a dedicated Activity before entering durable approval waiting; timeline evidence contains the binding but never the source diff or command output.
 - The worker deployment owns and closes its Postgres review store alongside its timeline resources.
 - Registered the `reviewDecision` Temporal signal before orchestration and added a bounded waiter that accepts only a valid approved or rejected decision for the same run and complete review binding.
-- The workflow records explicit waiting and decision events, advances approved runs for later delivery, and terminates rejected runs with the human reason; API-to-Temporal signaling remains the next integration step.
+- The workflow records explicit waiting and decision events, advances approved runs for later delivery, and terminates rejected runs with the human reason.
+- Added provider-free `workflow-approval` signaling that accepts only complete persisted decisions and sends the exact `reviewDecision` payload to the run's Temporal handle.
+- Approval HTTP success now follows persistence and successful signaling; exact idempotency replays signal again, conflicts do not signal, and Temporal failures remain retryable server errors without a premature response.
+- The API application owns one shared Temporal client resource used independently by workflow submission and approval notification, with idempotent lifecycle cleanup.
 - Registered the query role and its single application edge, with focused tests for complete, undecided, missing-review, invalid-port, and exact-binding outcomes.
 - Added the executable API deployment with one shared Postgres pool, one Redis stream, environment validation, listener startup, and idempotent HTTP/provider shutdown.
 - Pull-request webhooks now reach the persisted reconciliation path from the real main-process composition; issue-to-Temporal dispatch remains a separate workflow milestone.

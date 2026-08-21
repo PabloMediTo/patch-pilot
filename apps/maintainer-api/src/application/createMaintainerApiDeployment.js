@@ -10,8 +10,10 @@ import pg from "pg";
 
 import { createGitHubDeliveryRuntime } from "../github-delivery/index.js";
 import { createGitHubWebhookIngestion } from "../github-ingestion/index.js";
-import { createTemporalRunSubmissionRuntime } from "../workflow-submission/index.js";
+import { createTemporalApprovalNotifier } from "../workflow-approval/index.js";
+import { createTemporalRunDispatcher } from "../workflow-submission/index.js";
 import { createMaintainerApiRuntime } from "./createMaintainerApiRuntime.js";
+import { createTemporalClientResource } from "./createTemporalClientResource.js";
 
 const DEFAULT_POSTGRES_URL = "postgres://patch_pilot:patch_pilot@127.0.0.1:5432/patch_pilot";
 const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
@@ -22,20 +24,19 @@ const DEFAULT_TEMPORAL_TASK_QUEUE = "patch-pilot-maintenance";
 /**
  * Composes all stateful API adapters behind one deployment lifecycle.
  *
- * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function, temporalRunSubmissionRuntime?: object }} options Environment and optional controlled test resources.
+ * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function, temporalResource?: object }} options Environment and optional controlled test resources.
  * @returns {Promise<{ server: object, listen: Function, deliverApprovedPullRequest: Function, close: Function }>} API deployment operations.
  */
 export async function createMaintainerApiDeployment(options) {
   const config = createDeploymentConfig(options?.environment);
   const pool = options?.pool ?? new pg.Pool({ connectionString: config.postgresUrl });
-  let timelineStream, githubDeliveryRuntime, temporalRunSubmissionRuntime;
+  let timelineStream, githubDeliveryRuntime, temporalResource;
 
   try {
     timelineStream = options?.timelineStream
       ?? await createRedisRunTimelineStream({ url: config.redisUrl });
-    temporalRunSubmissionRuntime = options?.temporalRunSubmissionRuntime
-      ?? await createTemporalRunSubmissionRuntime({ address: config.temporalAddress,
-        namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue });
+    temporalResource = await createWorkflowCommandResource({
+      resource: options?.temporalResource, config });
     githubDeliveryRuntime = options?.githubDeliveryRuntime
       ?? await createGitHubDeliveryRuntime({ pool, appId: config.githubAppId,
         privateKey: config.githubAppPrivateKey });
@@ -49,21 +50,40 @@ export async function createMaintainerApiDeployment(options) {
     ]);
     const ingestWebhook = createGitHubWebhookIngestion({ requestGitHub,
       saveSubmittedRun: runStore.saveSubmittedRun,
-      dispatchRun: temporalRunSubmissionRuntime.dispatchRun,
+      dispatchRun: temporalResource.dispatchRun,
       reconcilePullRequestWebhook: githubDeliveryRuntime.reconcilePullRequestWebhook });
     const runtime = createMaintainerApiRuntime({ environment: options.environment,
       githubWebhook: { secret: config.githubWebhookSecret,
         ingestWebhook },
-      reviewStore, timelineStore, approvalStore, timelineStream });
+      reviewStore, timelineStore, approvalStore, timelineStream,
+      notifyApprovalDecision: temporalResource.notifyApprovalDecision });
     const lifecycle = createDeploymentLifecycle({ ...runtime, timelineStream,
-      temporalRunSubmissionRuntime,
+      temporalResource,
       githubDeliveryRuntime, host: config.host, port: config.port });
     return Object.freeze({ server: runtime.server, listen: lifecycle.listen,
       deliverApprovedPullRequest: githubDeliveryRuntime.deliverApprovedPullRequest,
       close: lifecycle.close });
   } catch (error) {
-    await closeFailedComposition({ pool, timelineStream, temporalRunSubmissionRuntime,
+    await closeFailedComposition({ pool, timelineStream, temporalResource,
       githubDeliveryRuntime });
+    throw error;
+  }
+}
+
+/** Shares one Temporal client lifecycle across independent workflow commands. */
+async function createWorkflowCommandResource(input) {
+  let resource;
+  try {
+    resource = input.resource ?? await createTemporalClientResource({
+      address: input.config.temporalAddress, namespace: input.config.temporalNamespace });
+    return Object.freeze({ client: resource.client,
+      close: () => resource.close(),
+      dispatchRun: createTemporalRunDispatcher({ client: resource.client,
+        taskQueue: input.config.temporalTaskQueue }),
+      notifyApprovalDecision: createTemporalApprovalNotifier({ client: resource.client }),
+    });
+  } catch (error) {
+    await resource?.close?.();
     throw error;
   }
 }
@@ -125,7 +145,7 @@ async function closeDeploymentResources(resources) {
   const ingressResult = await Promise.allSettled([closeServer(resources.server)]);
   const providerResults = await Promise.allSettled([
     resources.timelineStream.close(),
-    resources.temporalRunSubmissionRuntime.close(),
+    resources.temporalResource.close(),
     resources.githubDeliveryRuntime.close(),
   ]);
   const failures = [...ingressResult, ...providerResults]
@@ -147,8 +167,8 @@ function closeServer(server) {
 async function closeFailedComposition(resources) {
   const operations = [];
   if (resources.timelineStream !== undefined) operations.push(resources.timelineStream.close());
-  if (resources.temporalRunSubmissionRuntime !== undefined) {
-    operations.push(resources.temporalRunSubmissionRuntime.close());
+  if (resources.temporalResource !== undefined) {
+    operations.push(resources.temporalResource.close());
   }
   if (resources.githubDeliveryRuntime !== undefined) operations.push(resources.githubDeliveryRuntime.close());
   else operations.push(resources.pool.end());
