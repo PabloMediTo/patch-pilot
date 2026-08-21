@@ -1,7 +1,7 @@
 import { collectRepositoryPlanningContext, createBoundedChangeProposal,
   createImmutableRepositoryWorkspace, detectSupportedProject, executeProposalAttempts,
   materializeRepositoryWorkspaceDiff,
-  recordRunTimelineEvent, removeRepositoryWorkspace,
+  recordRunReviewSnapshot, recordRunTimelineEvent, removeRepositoryWorkspace,
   reproduceIssueFailure } from "@patch-pilot/maintenance";
 
 import { createSandboxCommandExecutor } from "../sandbox-execution/index.js";
@@ -11,8 +11,8 @@ const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
 /**
  * Creates concrete timeline, repository, and proposal-generation Activities.
  *
- * @param {{ timelineStore: object, timelineStream: object, workspaceRoot: string, generatePlan: Function, generateDiff: Function, reviewProposal: Function, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, materializeDiff?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
- * @returns {{ recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function }} Temporal Activities.
+ * @param {{ timelineStore: object, timelineStream: object, reviewStore: object, workspaceRoot: string, generatePlan: Function, generateDiff: Function, reviewProposal: Function, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, materializeDiff?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
+ * @returns {{ recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function }} Temporal Activities.
  */
 export function createMaintenanceWorkflowActivities(input) {
   assertPorts(input);
@@ -39,6 +39,8 @@ export function createMaintenanceWorkflowActivities(input) {
       workspaceRoot: input.workspaceRoot, createWorkspace, detectProject, materializeDiff,
       removeWorkspace, executeCommand, generatePlan: input.generatePlan,
       generateDiff: input.generateDiff, reviewProposal: input.reviewProposal }),
+    recordReviewSnapshot: (request) => recordRunReviewSnapshot({ ...request,
+      saveSnapshot: input.reviewStore.saveSnapshot }),
   });
 }
 
@@ -150,10 +152,11 @@ function sanitizeInspection(project) {
 function assertPorts(input) {
   if (typeof input?.timelineStore?.append !== "function"
     || typeof input?.timelineStream?.publish !== "function"
+    || typeof input?.reviewStore?.saveSnapshot !== "function"
     || typeof input.workspaceRoot !== "string" || input.workspaceRoot.trim() === ""
     || typeof input.generatePlan !== "function" || typeof input.generateDiff !== "function"
     || typeof input.reviewProposal !== "function") {
-    throw new Error("Maintenance workflow Activities require timeline, workspace, and generator resources.");
+    throw new Error("Maintenance workflow Activities require timeline, review, workspace, and generator resources.");
   }
 }
 

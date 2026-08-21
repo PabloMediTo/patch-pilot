@@ -1,7 +1,7 @@
 /**
  * Orchestrates durable inspection, reproduction, context, and proposal phases.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, now: Function }} input Persisted run and deterministic workflow ports.
  * @returns {Promise<object>} Proposal or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
@@ -56,9 +56,29 @@ async function finishPlanning(input, evidence) {
       attempts: attemptResult.attempts });
   }
   await recordEvent(input, "attempts-accepted", summarizeAttemptResult(attemptResult));
-  return Object.freeze({ status: "attempts-completed", runId: input.run.id,
+  const review = await runReviewPhase(input, attemptResult);
+  return Object.freeze({ status: "awaiting-approval", runId: input.run.id,
     inspection, reproduction, repositoryContext, proposal: attemptResult.proposal,
-    attempts: attemptResult.attempts });
+    attempts: attemptResult.attempts, review });
+}
+
+/** Persists the accepted final attempt as the immutable approval gate. */
+async function runReviewPhase(input, attemptResult) {
+  const finalAttempt = attemptResult.attempts.at(-1);
+  await recordEvent(input, "review-started", {
+    planVersion: finalAttempt.proposal.plan.version,
+  });
+  try {
+    const outcome = await input.recordReviewSnapshot({ run: input.run,
+      proposal: finalAttempt.proposal, verification: finalAttempt.verification,
+      critique: finalAttempt.critique, recordedAt: input.now() });
+    assertReviewOutcome(outcome);
+    await recordEvent(input, "review-ready", summarizeReviewOutcome(outcome));
+    return outcome.snapshot;
+  } catch (error) {
+    await recordEvent(input, "review-failed", { message: safeMessage(error) });
+    throw error;
+  }
 }
 
 /** Executes and validates the bounded modification-verification-critique loop. */
@@ -253,6 +273,28 @@ function assertAttemptResult(result) {
     || !hasMatchingTerminalAttempt(result.status, finalAttempt)) {
     throw new Error("Proposal-attempt Activity returned an invalid outcome.");
   }
+}
+
+/** Requires one idempotently persisted review snapshot with exact binding evidence. */
+function assertReviewOutcome(outcome) {
+  const snapshot = outcome?.snapshot;
+  const hasBinding = /^[0-9a-f]{40}$/u.test(snapshot?.reviewBinding?.baseRevision)
+    && /^[0-9a-f]{64}$/u.test(snapshot?.reviewBinding?.diffHash)
+    && Number.isInteger(snapshot?.reviewBinding?.planVersion)
+    && snapshot.reviewBinding.planVersion > 0
+    && snapshot?.reviewBinding?.verification?.status === "passed"
+    && /^[0-9a-f]{64}$/u.test(snapshot.reviewBinding.verification.evidenceHash);
+  if (!["created", "existing"].includes(outcome?.status)
+    || snapshot?.run?.status !== "awaiting-approval" || !hasBinding) {
+    throw new Error("Review snapshot Activity returned an invalid outcome.");
+  }
+}
+
+/** Removes plan, diff, and command output while retaining approval identity. */
+function summarizeReviewOutcome(outcome) {
+  return Object.freeze({ persistence: outcome.status,
+    reviewBinding: outcome.snapshot.reviewBinding,
+    recordedAt: outcome.snapshot.recordedAt });
 }
 
 /** Ensures the result label agrees with the final critique and verification. */

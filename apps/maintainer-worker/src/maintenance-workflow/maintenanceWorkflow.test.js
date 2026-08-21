@@ -16,7 +16,8 @@ const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
   "2026-08-16T16:07:00.000Z", "2026-08-16T16:08:00.000Z",
   "2026-08-16T16:09:00.000Z", "2026-08-16T16:10:00.000Z",
   "2026-08-16T16:11:00.000Z", "2026-08-16T16:12:00.000Z",
-  "2026-08-16T16:13:00.000Z"];
+  "2026-08-16T16:13:00.000Z", "2026-08-16T16:14:00.000Z",
+  "2026-08-16T16:15:00.000Z", "2026-08-16T16:16:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const readyProposal = Object.freeze({ status: "ready",
@@ -27,9 +28,16 @@ const readyProposal = Object.freeze({ status: "ready",
     changes: Object.freeze([{ path: "src/math.ts", addedLines: 1, deletedLines: 1 }]) }),
   safety: Object.freeze({ status: "allowed", reasons: Object.freeze([]) }) });
 const acceptedAttempt = Object.freeze({ attemptNumber: 1, proposal: readyProposal,
-  verification: Object.freeze({ status: "passed", evidence: Object.freeze({ exitCode: 0 }) }),
+  verification: Object.freeze({ status: "passed", evidence: Object.freeze({
+    command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }),
+    exitCode: 0, stdout: "passed", stderr: "", durationMs: 50,
+    hasTimedOut: false, hasTruncatedOutput: false,
+  }) }),
   critique: Object.freeze({ decision: "accepted", rationale: "Verified.",
     findings: Object.freeze([]) }) });
+const reviewBinding = Object.freeze({ baseRevision: run.baseRevision,
+  diffHash: "b".repeat(64), planVersion: 1,
+  verification: Object.freeze({ status: "passed", evidenceHash: "c".repeat(64) }) });
 const result = await orchestrateMaintenanceRun({ run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
@@ -40,9 +48,13 @@ const result = await orchestrateMaintenanceRun({ run,
   createProposal: async () => readyProposal,
   executeProposalAttempts: async () => ({ status: "completed",
     attempts: [acceptedAttempt], proposal: readyProposal }),
+  recordReviewSnapshot: async (request) => Object.freeze({ status: "created",
+    snapshot: Object.freeze({ run: Object.freeze({ ...run, status: "awaiting-approval" }),
+      reviewBinding, recordedAt: request.recordedAt }) }),
   now: () => times.shift() });
 
-assert.equal(result.status, "attempts-completed");
+assert.equal(result.status, "awaiting-approval");
+assert.deepEqual(result.review.reviewBinding, reviewBinding);
 assert.equal(result.reproduction.status, "reproduced");
 assert.equal(result.repositoryContext.relevantFiles[0].path, "src/math.ts");
 assert.equal(events[6].payload.repositoryContext.relevantFiles[0].content, undefined);
@@ -76,7 +88,13 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:12:00.000Z" },
   { eventId: `${run.id}:timeline:attempts-accepted`, type: "run.attempts.accepted",
     occurredAt: "2026-08-16T16:13:00.000Z" },
+  { eventId: `${run.id}:timeline:review-started`, type: "run.review.started",
+    occurredAt: "2026-08-16T16:14:00.000Z" },
+  { eventId: `${run.id}:timeline:review-ready`, type: "run.review.ready",
+    occurredAt: "2026-08-16T16:16:00.000Z" },
 ]);
+assert.equal(events.at(-1).payload.recordedAt, "2026-08-16T16:15:00.000Z");
+assert.equal(events.at(-1).payload.reviewBinding.diffHash, "b".repeat(64));
 
 const blockedEvents = [];
 const blocked = await orchestrateMaintenanceRun({ run,
@@ -164,6 +182,10 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
     return Object.freeze({ ...event, sequence: 1 });
   } },
   timelineStream: { publish: async () => undefined },
+  reviewStore: { saveSnapshot: async (snapshot) => {
+    activityCalls.push({ operation: "save-review", input: snapshot });
+    return { status: "created", snapshot };
+  } },
   createWorkspace: async (input) => {
     activityCalls.push({ operation: "create", input });
     return { workspaceDirectory: "controlled-root/repository-1" };
@@ -235,7 +257,18 @@ assert.deepEqual(activityCalls.slice(-8).map(({ operation }) => operation),
 assert.equal(activityCalls.at(-5).input.revisionEvidence.verification.status, "failed");
 assert.equal(activityCalls.at(-3).input.baseRevision, run.baseRevision);
 
+const review = await activities.recordReviewSnapshot({ run, proposal: attempts.proposal,
+  verification: attempts.attempts.at(-1).verification,
+  critique: attempts.attempts.at(-1).critique,
+  recordedAt: "2026-08-16T16:15:00.000Z" });
+assert.equal(review.status, "created");
+assert.equal(review.snapshot.run.status, "awaiting-approval");
+assert.equal(activityCalls.at(-1).operation, "save-review");
+assert.equal(activityCalls.at(-1).input.proposal.diff,
+  attempts.proposal.sourceDiff.unifiedDiff);
+
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });
 assert.equal(timelineEvents[0].eventId, "event-1");
-assert.throws(() => createMaintenanceWorkflowActivities({}), /timeline, workspace, and generator/u);
+assert.throws(() => createMaintenanceWorkflowActivities({}),
+  /timeline, review, workspace, and generator/u);

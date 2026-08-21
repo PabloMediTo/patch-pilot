@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
-import { createPostgresRunReviewStore, createRunReviewSnapshot } from "./index.js";
+import { createPostgresRunReviewStore, createRunReviewSnapshot,
+  recordRunReviewSnapshot } from "./index.js";
 
 const input = { run: { id: "run-1", repository: "octo/example", issueNumber: 42,
   baseRevision: "a".repeat(40) }, proposal: { status: "ready",
@@ -30,6 +31,26 @@ assert.throws(() => createRunReviewSnapshot({ ...input,
   critique: { decision: "retry" } }), /accepted, passed/u);
 assert.throws(() => createRunReviewSnapshot({ ...input,
   recordedAt: 1 }), /accepted, passed/u);
+
+input.proposal.plan.steps[0].description = "Apply fix";
+const createdRecord = await recordRunReviewSnapshot({ ...input,
+  saveSnapshot: async (candidate) => ({ status: "created", snapshot: candidate }) });
+assert.equal(createdRecord.status, "created");
+assert.deepEqual(createdRecord.snapshot, snapshot);
+const reorderedSnapshot = { recordedAt: snapshot.recordedAt,
+  reviewBinding: snapshot.reviewBinding, critique: snapshot.critique,
+  verification: snapshot.verification, proposal: snapshot.proposal, run: snapshot.run };
+const replayedRecord = await recordRunReviewSnapshot({ ...input,
+  saveSnapshot: async () => ({ status: "existing", snapshot: reorderedSnapshot }) });
+assert.equal(replayedRecord.status, "existing");
+const conflictingRecord = await recordRunReviewSnapshot({ ...input,
+  saveSnapshot: async () => ({ status: "existing", snapshot: {
+    ...snapshot, proposal: { ...snapshot.proposal, diff: "different" },
+  } }) });
+assert.equal(conflictingRecord.status, "conflict");
+await assert.rejects(recordRunReviewSnapshot({ ...input,
+  saveSnapshot: async () => ({ status: "created", snapshot: null }) }), /different created/u);
+await assert.rejects(recordRunReviewSnapshot(input), /persistence port/u);
 
 const row = mapRow(snapshot);
 const queries = [];

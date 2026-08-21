@@ -22,7 +22,7 @@
 - The worker now owns a shell-free, timeout- and output-bounded Docker CLI process port that returns standard command evidence.
 - The worker composes that port with the immutable safety policy and Docker adapter into one target-repository command executor; blocked commands cannot reach Docker, and container identities are generated internally.
 - The web application can build an immutable review model, safely render API-owned persisted evidence, stream live timeline entries, and expose state-gated approve/reject forms behind one same-origin dispatcher, concrete Node HTTP server, and environment-configured main process.
-- A [review snapshot](../DICTIONARY.md#review-snapshot) can now be created only from a ready final proposal with passed verification and accepted critique. It derives the exact approval binding and has an atomic immutable Postgres store. The API query joins it with ordered timeline history and an optional approval decision while preserving first-decision availability; live verification remains open.
+- A [review snapshot](../DICTIONARY.md#review-snapshot) can now be created only from a ready final proposal with passed verification and accepted critique. It derives the exact approval binding and has an atomic immutable Postgres store. The worker records the accepted final attempt through a retry-safe Activity, rejects different first-writer evidence, emits bounded review-ready timeline evidence, and returns `awaiting-approval`. The API query joins the snapshot with ordered timeline history and an optional approval decision while preserving first-decision availability; live verification remains open.
 - The maintenance package validates human approval decisions, requires rejection reasons, binds the decision to canonical base-revision, diff, plan-version, and passed-verification hashes, replays matching idempotency keys, and prevents later competing decisions through an atomic first-writer persistence contract.
 - Approval decisions have a concrete Postgres store with idempotent schema evolution, parameterized writes, database uniqueness constraints, evidence-binding columns, and existing-decision recovery after write conflicts; legacy unbound rows remain readable but cannot authorize delivery. Live verification remains open.
 - The API exposes a framework-independent authenticated approval POST handler with required idempotency keys and stable success, replay, validation, authorization, and conflict responses.
@@ -42,7 +42,7 @@
 
 ## Next milestone
 
-Persist the accepted final attempt as the canonical review snapshot and make `maintenanceRunWorkflow` enter durable human-approval waiting with the exact evidence binding. Later workflow milestones will add approved delivery orchestration. Live Postgres/GitHub, Postgres/Redis, Temporal, OpenAI, and Docker safety verification remain open where credentials or local runtime availability are required.
+Make `maintenanceRunWorkflow` enter durable human-approval waiting with the exact review binding and connect persisted API decisions to that wait. Later workflow milestones will add approved delivery orchestration. Live Postgres/GitHub, Postgres/Redis, Temporal, OpenAI, and Docker safety verification remain open where credentials or local runtime availability are required.
 
 ## Open questions
 

@@ -19,7 +19,8 @@ export {
 export { collectRepositoryPlanningContext,
   detectSupportedProject } from "./repository-understanding/index.js";
 export { reproduceIssueFailure } from "./reproductions/index.js";
-export { createPostgresRunReviewStore, createRunReviewSnapshot } from "./reviews/index.js";
+export { createPostgresRunReviewStore, createRunReviewSnapshot,
+  recordRunReviewSnapshot } from "./reviews/index.js";
 export { createMaintenanceRun, createPostgresMaintenanceRunStore } from "./runs/index.js";
 export {
   createPostgresRunTimelineStore,

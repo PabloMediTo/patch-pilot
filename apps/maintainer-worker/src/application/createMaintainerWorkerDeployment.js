@@ -1,4 +1,5 @@
-import { createPostgresRunTimelineStore, createRedisRunTimelineStream } from "@patch-pilot/maintenance";
+import { createPostgresRunReviewStore, createPostgresRunTimelineStore,
+  createRedisRunTimelineStream } from "@patch-pilot/maintenance";
 import { NativeConnection, Worker } from "@temporalio/worker";
 import { fileURLToPath, URL } from "node:url";
 
@@ -13,29 +14,31 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * Composes one executable Temporal worker and its Activity provider lifecycle.
  *
- * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
+ * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, reviewStore?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
  * @returns {Promise<{ run: Function, close: Function }>} Worker deployment lifecycle.
  */
 export async function createMaintainerWorkerDeployment(options) {
   const config = createConfig(options?.environment);
-  let connection, timelineStore, timelineStream;
+  let connection, timelineStore, timelineStream, reviewStore;
   try {
     connection = options?.connection ?? await NativeConnection.connect({
       address: config.temporalAddress });
     timelineStore = options?.timelineStore ?? await createPostgresRunTimelineStore({
+      connectionString: config.postgresUrl });
+    reviewStore = options?.reviewStore ?? await createPostgresRunReviewStore({
       connectionString: config.postgresUrl });
     timelineStream = options?.timelineStream ?? await createRedisRunTimelineStream({
       url: config.redisUrl });
     const generators = options?.proposalGenerators ?? createOpenAiProposalGenerators({
       apiKey: config.openAiApiKey, model: config.openAiModel });
     const activities = createMaintenanceWorkflowActivities({ timelineStore, timelineStream,
-      workspaceRoot: config.workspaceRoot, ...generators });
+      reviewStore, workspaceRoot: config.workspaceRoot, ...generators });
     const worker = options?.worker ?? await Worker.create({ connection,
       namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue,
       workflowsPath: WORKFLOWS_PATH, activities });
-    return createLifecycle({ worker, connection, timelineStore, timelineStream });
+    return createLifecycle({ worker, connection, timelineStore, timelineStream, reviewStore });
   } catch (error) {
-    await closeResources({ connection, timelineStore, timelineStream });
+    await closeResources({ connection, timelineStore, timelineStream, reviewStore });
     throw error;
   }
 }
@@ -81,7 +84,8 @@ function createLifecycle(resources) {
 /** Closes every created provider and reports all cleanup failures together. */
 async function closeResources(resources) {
   const operations = [resources.timelineStream?.close?.(), resources.timelineStore?.close?.(),
-    resources.connection?.close?.()].filter((operation) => operation !== undefined);
+    resources.reviewStore?.close?.(), resources.connection?.close?.()]
+    .filter((operation) => operation !== undefined);
   const results = await Promise.allSettled(operations);
   const failures = results.filter((result) => result.status === "rejected")
     .map((result) => result.reason);

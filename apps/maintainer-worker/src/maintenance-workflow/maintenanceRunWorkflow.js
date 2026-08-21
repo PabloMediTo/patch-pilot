@@ -29,5 +29,6 @@ export function maintenanceRunWorkflow(run) {
     collectPlanningContext: inspectionActivities.collectPlanningContext,
     createProposal: proposalActivities.createProposal,
     executeProposalAttempts: attemptActivities.executeProposalAttempts,
+    recordReviewSnapshot: timelineActivities.recordReviewSnapshot,
     now: () => new Date().toISOString() });
 }
