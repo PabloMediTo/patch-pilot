@@ -36,4 +36,4 @@ The persisted run ID is also the Temporal workflow ID. The API starts the named 
 
 Persistence always happens before workflow submission. If Temporal is unavailable after the Postgres write, the webhook request fails visibly. GitHub can then redeliver the same delivery: Postgres reloads the first writer and the API retries the same deterministic Temporal start without creating a second workflow. Conflicting persisted identities never reach Temporal.
 
-The executable worker now registers the workflow and advances a submitted run through inspection, reproduction, planning context, bounded proposal generation, proposal attempts, and canonical review-snapshot recording. Durable approval waiting and delivery remain worker responsibilities.
+The executable worker now registers the workflow and advances a submitted run through inspection, reproduction, planning context, bounded proposal generation, proposal attempts, canonical review-snapshot recording, and an exactly bound durable approval wait. Connecting the API's persisted decision to that wait and subsequent delivery remain implementation responsibilities.

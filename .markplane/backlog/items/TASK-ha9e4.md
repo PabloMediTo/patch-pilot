@@ -82,8 +82,10 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added the provider-free API `run-review-query` role, which joins immutable review snapshots with ordered timeline history and an optional approval decision without duplicating canonical records.
 - The API application runtime now derives both review-evidence reads and exact approval state from the same three injected stores; missing decisions remain omitted so the web model preserves first-decision actions.
 - Added an idempotent review-recording use case that accepts an exact first-writer replay but classifies different persisted evidence as a conflict.
-- The worker now persists the accepted final proposal, passed verification, and accepted critique through a dedicated Activity before returning `awaiting-approval`; timeline evidence contains the binding but never the source diff or command output.
+- The worker now persists the accepted final proposal, passed verification, and accepted critique through a dedicated Activity before entering durable approval waiting; timeline evidence contains the binding but never the source diff or command output.
 - The worker deployment owns and closes its Postgres review store alongside its timeline resources.
+- Registered the `reviewDecision` Temporal signal before orchestration and added a bounded waiter that accepts only a valid approved or rejected decision for the same run and complete review binding.
+- The workflow records explicit waiting and decision events, advances approved runs for later delivery, and terminates rejected runs with the human reason; API-to-Temporal signaling remains the next integration step.
 - Registered the query role and its single application edge, with focused tests for complete, undecided, missing-review, invalid-port, and exact-binding outcomes.
 - Added the executable API deployment with one shared Postgres pool, one Redis stream, environment validation, listener startup, and idempotent HTTP/provider shutdown.
 - Pull-request webhooks now reach the persisted reconciliation path from the real main-process composition; issue-to-Temporal dispatch remains a separate workflow milestone.

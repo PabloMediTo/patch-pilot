@@ -29,6 +29,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - bounded repository planning context after accepted reproduction
 - immutable proposal-attempt history after apply, verify, critique, and bounded revision
 - one atomically persisted immutable review snapshot after an accepted final attempt
+- one durable approval wait that resolves only an exactly bound persisted decision
 - deterministic provider cleanup after worker polling stops
 
 ## Adjacent parts
@@ -39,7 +40,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - [supported project detection](project-detection.md) classifies the checked-out root
 - [repository planning context](repository-planning-context.md) selects safe relevant text evidence
 - [proposal generation](proposal-generation.md) owns the provider adapter and credential boundary
-- later workflow phases will compose durable approval waiting and delivery
+- the control-plane API will signal persisted decisions and later workflow phases will compose delivery
 
 ## Implemented workflow phases
 
@@ -53,7 +54,9 @@ After accepted reproduction, a separate Activity creates a third checkout, colle
 
 A separate 30-minute Activity creates a fourth exact-revision checkout and executes the existing apply-verify-critique loop. Every attempt resets that checkout to the immutable base, applies a complete checked diff, runs the supported command through the canonical safe executor, and invokes the structured reviewer only after passing verification. Failed verification requests a full revised proposal with the exact next plan version; two modification retries are permitted. The Activity awaits the whole loop before cleanup, while `finally` still guarantees removal after success or failure. Timeline evidence includes bounded verification and critique summaries but omits unified diffs.
 
-After an accepted final attempt, a short retryable Activity creates and atomically persists the canonical review snapshot through the worker-owned Postgres review store. An exact retry returns the existing first-writer evidence; a different row for the same run fails visibly. The workflow records `run.review.started`, then publishes `run.review.ready` with only the exact binding, persistence classification, and recording time before returning `awaiting-approval`. The worker closes its review store together with the timeline and Redis resources. Dependency installation, durable approval waiting, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
+After an accepted final attempt, a short retryable Activity creates and atomically persists the canonical review snapshot through the worker-owned Postgres review store. An exact retry returns the existing first-writer evidence; a different row for the same run fails visibly. The workflow records `run.review.started`, then publishes `run.review.ready` with only the exact binding, persistence classification, and recording time.
+
+The workflow registers its `reviewDecision` signal handler before orchestration and then records `run.approval.waiting`. Temporal's durable condition resolves only for an approved or rejected decision whose run identity and complete review binding match the persisted snapshot. Invalid signals remain non-terminal. A valid approval advances the workflow to `approved`; rejection records the reason and terminates as `approval-rejected`. The worker closes its review store together with the timeline and Redis resources. Dependency installation, API-to-Temporal decision signaling, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
 
 ## Lifecycle
 

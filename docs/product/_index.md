@@ -54,9 +54,9 @@
 ### Maintenance Worker Runtime
 
 - Path: `docs/product/maintenance-worker-runtime.md`
-- Summary: Temporal worker registration, first inspection workflow phase, Activity retry boundaries, and provider lifecycle.
-- Read when: A task changes worker startup, workflow registration, Activity composition, inspection orchestration, task queues, or worker shutdown.
-- Tags: product, worker, temporal, workflow, activities, inspection, lifecycle
+- Summary: Temporal worker registration, durable workflow phases through human approval waiting, Activity retry boundaries, and provider lifecycle.
+- Read when: A task changes worker startup, workflow registration, Activity composition, workflow orchestration, approval waiting, task queues, or worker shutdown.
+- Tags: product, worker, temporal, workflow, activities, approval, lifecycle
 
 ### System Composition
 

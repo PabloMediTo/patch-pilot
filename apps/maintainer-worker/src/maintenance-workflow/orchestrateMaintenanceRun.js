@@ -1,7 +1,9 @@
+import { awaitRunApproval } from "./awaitRunApproval.js";
+
 /**
  * Orchestrates durable inspection, reproduction, context, and proposal phases.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, waitForApproval: Function, now: Function }} input Persisted run and deterministic workflow ports.
  * @returns {Promise<object>} Proposal or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
@@ -56,10 +58,22 @@ async function finishPlanning(input, evidence) {
       attempts: attemptResult.attempts });
   }
   await recordEvent(input, "attempts-accepted", summarizeAttemptResult(attemptResult));
+  return finishAcceptedAttempts(input, { inspection, reproduction, repositoryContext },
+    attemptResult);
+}
+
+/** Records accepted attempt evidence and advances through human approval. */
+async function finishAcceptedAttempts(input, evidence, attemptResult) {
   const review = await runReviewPhase(input, attemptResult);
-  return Object.freeze({ status: "awaiting-approval", runId: input.run.id,
-    inspection, reproduction, repositoryContext, proposal: attemptResult.proposal,
-    attempts: attemptResult.attempts, review });
+  const approval = await awaitRunApproval({ ...input, review });
+  const result = Object.freeze({ status: approval.status === "approved"
+    ? "approved" : "approval-rejected", runId: input.run.id,
+    ...evidence, proposal: attemptResult.proposal,
+    attempts: attemptResult.attempts, review, approval });
+  if (approval.status === "rejected") {
+    await recordTerminalOutcome(input, "approval-rejected", approval.reason);
+  }
+  return result;
 }
 
 /** Persists the accepted final attempt as the immutable approval gate. */
@@ -289,6 +303,7 @@ function assertReviewOutcome(outcome) {
     throw new Error("Review snapshot Activity returned an invalid outcome.");
   }
 }
+
 
 /** Removes plan, diff, and command output while retaining approval identity. */
 function summarizeReviewOutcome(outcome) {

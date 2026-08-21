@@ -17,7 +17,8 @@ const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
   "2026-08-16T16:09:00.000Z", "2026-08-16T16:10:00.000Z",
   "2026-08-16T16:11:00.000Z", "2026-08-16T16:12:00.000Z",
   "2026-08-16T16:13:00.000Z", "2026-08-16T16:14:00.000Z",
-  "2026-08-16T16:15:00.000Z", "2026-08-16T16:16:00.000Z"];
+  "2026-08-16T16:15:00.000Z", "2026-08-16T16:16:00.000Z",
+  "2026-08-16T16:17:00.000Z", "2026-08-16T16:18:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const readyProposal = Object.freeze({ status: "ready",
@@ -38,7 +39,10 @@ const acceptedAttempt = Object.freeze({ attemptNumber: 1, proposal: readyProposa
 const reviewBinding = Object.freeze({ baseRevision: run.baseRevision,
   diffHash: "b".repeat(64), planVersion: 1,
   verification: Object.freeze({ status: "passed", evidenceHash: "c".repeat(64) }) });
-const result = await orchestrateMaintenanceRun({ run,
+const approvalDecision = Object.freeze({ runId: run.id, actorId: "operator:pablo",
+  idempotencyKey: "approval-1", status: "approved", reason: null,
+  decidedAt: "2026-08-16T16:17:30.000Z", reviewBinding });
+const successfulInput = { run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
   reproduceIssue: async () => ({ status: "reproduced", evidence: { exitCode: 1 } }),
@@ -51,10 +55,16 @@ const result = await orchestrateMaintenanceRun({ run,
   recordReviewSnapshot: async (request) => Object.freeze({ status: "created",
     snapshot: Object.freeze({ run: Object.freeze({ ...run, status: "awaiting-approval" }),
       reviewBinding, recordedAt: request.recordedAt }) }),
-  now: () => times.shift() });
+  waitForApproval: async (binding) => {
+    assert.deepEqual(binding, reviewBinding);
+    return approvalDecision;
+  },
+  now: () => times.shift() };
+const result = await orchestrateMaintenanceRun(successfulInput);
 
-assert.equal(result.status, "awaiting-approval");
+assert.equal(result.status, "approved");
 assert.deepEqual(result.review.reviewBinding, reviewBinding);
+assert.deepEqual(result.approval, approvalDecision);
 assert.equal(result.reproduction.status, "reproduced");
 assert.equal(result.repositoryContext.relevantFiles[0].path, "src/math.ts");
 assert.equal(events[6].payload.repositoryContext.relevantFiles[0].content, undefined);
@@ -92,9 +102,25 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:14:00.000Z" },
   { eventId: `${run.id}:timeline:review-ready`, type: "run.review.ready",
     occurredAt: "2026-08-16T16:16:00.000Z" },
+  { eventId: `${run.id}:timeline:approval-waiting`, type: "run.approval.waiting",
+    occurredAt: "2026-08-16T16:17:00.000Z" },
+  { eventId: `${run.id}:timeline:approval-approved`, type: "run.approval.approved",
+    occurredAt: "2026-08-16T16:18:00.000Z" },
 ]);
-assert.equal(events.at(-1).payload.recordedAt, "2026-08-16T16:15:00.000Z");
-assert.equal(events.at(-1).payload.reviewBinding.diffHash, "b".repeat(64));
+assert.equal(events.at(-3).payload.recordedAt, "2026-08-16T16:15:00.000Z");
+assert.equal(events.at(-2).payload.reviewBinding.diffHash, "b".repeat(64));
+assert.equal(events.at(-1).payload.idempotencyKey, undefined);
+
+const rejectionEvents = [];
+const rejectedApproval = await orchestrateMaintenanceRun({ ...successfulInput,
+  recordTimelineEvent: async (event) => { rejectionEvents.push(event); },
+  waitForApproval: async () => ({ ...approvalDecision, status: "rejected",
+    reason: "Needs a narrower fix" }),
+  now: () => "2026-08-16T17:00:00.000Z" });
+assert.equal(rejectedApproval.status, "approval-rejected");
+assert.equal(rejectionEvents.at(-2).type, "run.approval.rejected");
+assert.equal(rejectionEvents.at(-1).type, "run.terminal");
+assert.equal(rejectionEvents.at(-1).payload.outcome, "approval-rejected");
 
 const blockedEvents = [];
 const blocked = await orchestrateMaintenanceRun({ run,

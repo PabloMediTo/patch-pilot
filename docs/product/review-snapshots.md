@@ -40,4 +40,4 @@ A snapshot can be created only for a ready proposal whose verification passed an
 
 The Postgres store records one row per run with explicit binding columns and JSONB plan, verification, and critique evidence. First-writer insertion never updates a row. A uniqueness loss reloads the winner for idempotent comparison by its caller; failure to locate a winner is an explicit conflict. Timeline entries and approval decisions remain in their own canonical stores and are joined only at the API read boundary.
 
-The use case, store, API query composition, and focused tests are implemented. The worker now records the accepted final attempt through an idempotent Activity and exposes only its exact binding in timeline evidence. Live Postgres verification remains open.
+The use case, store, API query composition, and focused tests are implemented. The worker records the accepted final attempt through an idempotent Activity, exposes only its exact binding in timeline evidence, and uses that binding as the immutable prerequisite for its durable approval wait. Live Postgres verification remains open.

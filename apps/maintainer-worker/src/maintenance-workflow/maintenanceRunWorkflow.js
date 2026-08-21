@@ -1,6 +1,9 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { condition, defineSignal, proxyActivities, setHandler } from "@temporalio/workflow";
 
+import { createReviewDecisionWaiter } from "./createReviewDecisionWaiter.js";
 import { orchestrateMaintenanceRun } from "./orchestrateMaintenanceRun.js";
+
+const reviewDecisionSignal = defineSignal("reviewDecision");
 
 const timelineActivities = proxyActivities({ startToCloseTimeout: "30 seconds",
   retry: { maximumAttempts: 5, initialInterval: "1 second", backoffCoefficient: 2,
@@ -22,6 +25,8 @@ const attemptActivities = proxyActivities({ startToCloseTimeout: "30 minutes",
  * @returns {Promise<object>} Reproduction-phase or unsupported outcome.
  */
 export function maintenanceRunWorkflow(run) {
+  const decisionWaiter = createReviewDecisionWaiter({ runId: run?.id, waitUntil: condition });
+  setHandler(reviewDecisionSignal, decisionWaiter.receive);
   return orchestrateMaintenanceRun({ run,
     recordTimelineEvent: timelineActivities.recordTimelineEvent,
     inspectRepository: inspectionActivities.inspectRepository,
@@ -30,5 +35,6 @@ export function maintenanceRunWorkflow(run) {
     createProposal: proposalActivities.createProposal,
     executeProposalAttempts: attemptActivities.executeProposalAttempts,
     recordReviewSnapshot: timelineActivities.recordReviewSnapshot,
+    waitForApproval: decisionWaiter.waitForDecision,
     now: () => new Date().toISOString() });
 }
