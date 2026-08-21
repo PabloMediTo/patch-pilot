@@ -145,7 +145,7 @@ export const boundaryConfig = {
       modules: {
         application: {
           architectureRole: "application-role",
-          allowedModuleDependencies: ["github-delivery", "maintenance-workflow", "proposal-generation"],
+          allowedModuleDependencies: ["github-delivery", "maintenance-workflow", "proposal-generation", "repository-access"],
           allowedExternalDependencies: ["@temporalio/worker"],
           allowedCoreDependencies: ["node:url"],
         },
@@ -179,10 +179,16 @@ export const boundaryConfig = {
           allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:buffer"],
         },
+        "repository-access": {
+          architectureRole: "application-role",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
+          allowedCoreDependencies: ["node:buffer"],
+        },
       },
       compositionFiles: {
         "index.js": {
-          allowedModuleDependencies: ["application", "docker-cli", "github-delivery", "maintenance-workflow", "proposal-generation", "sandbox-execution"],
+          allowedModuleDependencies: ["application", "docker-cli", "github-delivery", "maintenance-workflow", "proposal-generation", "repository-access", "sandbox-execution"],
           allowedExternalDependencies: [],
           allowedCoreDependencies: [],
         },
@@ -291,8 +297,14 @@ export const boundaryConfig = {
         },
         deliveries: {
           architectureRole: "conceptual-module",
-          allowedModuleDependencies: [],
+          allowedModuleDependencies: ["github-authentication"],
           allowedExternalDependencies: ["pg"],
+          allowedCoreDependencies: ["node:buffer", "node:crypto", "node:timers", "node:url"],
+        },
+        "github-authentication": {
+          architectureRole: "conceptual-module",
+          allowedModuleDependencies: [],
+          allowedExternalDependencies: [],
           allowedCoreDependencies: ["node:buffer", "node:crypto", "node:timers", "node:url"],
         },
         "proposal-attempts": {
@@ -365,6 +377,7 @@ export const boundaryConfig = {
             "change-proposals",
             "critiques",
             "deliveries",
+            "github-authentication",
             "proposal-attempts",
             "repository-understanding",
             "repository-workspaces",

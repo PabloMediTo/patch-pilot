@@ -10,6 +10,9 @@ export {
   publishApprovedPullRequest,
   reconcileGitHubPullRequest,
 } from "./deliveries/index.js";
+export {
+  createGitHubInstallationTokenProvider,
+} from "./github-authentication/index.js";
 export { executeProposalAttempts } from "./proposal-attempts/index.js";
 export {
   createImmutableRepositoryWorkspace,

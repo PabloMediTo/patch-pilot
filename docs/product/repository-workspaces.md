@@ -14,7 +14,8 @@ Create and remove one disposable [repository workspace](../DICTIONARY.md#reposit
 ## Inputs
 
 - a trusted root directory dedicated to generated workspaces
-- a credential-free repository URL authorized for the current run; credentials may be supplied only through a non-interactive Git credential provider
+- a credential-free repository URL authorized for the current run
+- an optional complete authorization header supplied by the worker's non-interactive repository-access provider
 - a full lowercase 40- or 64-character commit object ID
 
 ## Outputs
@@ -36,7 +37,7 @@ Create and remove one disposable [repository workspace](../DICTIONARY.md#reposit
 
 Git is invoked without a shell, interactive credential prompts are disabled, command time and output are bounded, and only the requested commit is fetched without tags. The checkout uses Detached HEAD and must resolve exactly to the requested full commit ID.
 
-Repository URLs with embedded credentials are rejected so secrets cannot enter command arguments or `.git/config`. After verification, the `origin` remote is removed so the repository location is not retained. A failed checkout is deleted before the error is returned.
+Repository URLs with embedded credentials are rejected so secrets cannot enter command arguments or `.git/config`. When authorization is present, the URL must use HTTPS and only the `git fetch` child receives the header through Git's count/key/value environment configuration scoped to that exact repository URL; it is never placed in the argument vector or repository config. The worker maps GitHub's documented `x-access-token` username and installation-token password to an equivalent HTTP Basic header without putting either value in the URL. Header injection and oversized values are rejected. After verification, the `origin` remote is removed so the repository location is not retained. A failed checkout is deleted before the error is returned.
 
 Removal accepts only generated `repository-*` children beneath the declared workspace root. It rejects the root itself, siblings, and arbitrary external paths.
 

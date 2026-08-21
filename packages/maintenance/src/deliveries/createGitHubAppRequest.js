@@ -1,27 +1,30 @@
 import { Buffer } from "node:buffer";
-import { createPrivateKey, sign } from "node:crypto";
 import { clearTimeout, setTimeout } from "node:timers";
 import { URL } from "node:url";
+
+import { createGitHubInstallationTokenProvider } from "../github-authentication/index.js";
 
 const DEFAULT_API_BASE = "https://api.github.com/";
 const DEFAULT_API_VERSION = "2026-03-10";
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 1_048_576;
-const TOKEN_REFRESH_SKEW_MS = 60_000;
 const REPOSITORY_PATH = /^\/repos\/([^/]+)\/([^/]+)\//u;
 
 /**
  * Creates a bounded GitHub REST request port authenticated as one app installation.
  *
- * @param {{ appId: string | number, privateKey: string, fetchImpl?: Function, clock?: Function, apiBaseUrl?: string, apiVersion?: string, timeoutMs?: number, maxResponseBytes?: number }} options App credentials and transport policy.
+ * @param {{ appId: string | number, privateKey: string, permissions: object, fetchImpl?: Function, clock?: Function, apiBaseUrl?: string, apiVersion?: string, timeoutMs?: number, maxResponseBytes?: number, getInstallationToken?: Function }} options App credentials, exact token permissions, and transport policy.
  * @returns {Function} Authenticated repository-scoped GitHub request function.
  */
 export function createGitHubAppRequest(options) {
-  const state = Object.freeze({ config: createConfig(options), tokens: new Map(), pending: new Map() });
+  const config = createConfig(options);
+  const getInstallationToken = options?.getInstallationToken
+    ?? createGitHubInstallationTokenProvider(options);
   return async function requestGitHub(request) {
-    const target = createRequestTarget(state.config, request);
-    const token = await getInstallationToken(state, request.installationId, target.repositoryName);
-    return sendRepositoryRequest(state.config, { request, url: target.url, token });
+    const target = createRequestTarget(config, request);
+    const token = await getInstallationToken({ installationId: request.installationId,
+      repository: target.repository });
+    return sendRepositoryRequest(config, { request, url: target.url, token });
   };
 }
 
@@ -32,10 +35,8 @@ function createConfig(options) {
   const clock = options?.clock ?? (() => new Date());
   const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const maxResponseBytes = options?.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
-  const hasAppId = (typeof options?.appId === "string" && options.appId.trim() !== "")
-    || (Number.isInteger(options?.appId) && options.appId > 0);
-  if (!hasAppId || typeof options?.privateKey !== "string" || apiBaseUrl.protocol !== "https:"
-    || typeof fetchImpl !== "function" || typeof clock !== "function"
+  if (apiBaseUrl.protocol !== "https:" || typeof fetchImpl !== "function"
+    || typeof clock !== "function"
     || !Number.isInteger(timeoutMs) || timeoutMs <= 0
     || !Number.isInteger(maxResponseBytes) || maxResponseBytes <= 0) {
     throw new Error("GitHub App transport requires credentials, HTTPS, and positive limits.");
@@ -43,9 +44,8 @@ function createConfig(options) {
   apiBaseUrl.search = "";
   apiBaseUrl.hash = "";
   if (!apiBaseUrl.pathname.endsWith("/")) apiBaseUrl.pathname += "/";
-  return Object.freeze({ appId: String(options.appId), privateKey: createPrivateKey(options.privateKey),
-    fetchImpl, clock, apiBaseUrl, apiVersion: options.apiVersion ?? DEFAULT_API_VERSION,
-    timeoutMs, maxResponseBytes });
+  return Object.freeze({ fetchImpl, clock, apiBaseUrl,
+    apiVersion: options?.apiVersion ?? DEFAULT_API_VERSION, timeoutMs, maxResponseBytes });
 }
 
 /** Resolves and validates one repository-only API request target. */
@@ -56,21 +56,22 @@ function createRequestTarget(config, request) {
     || match === null || !isAllowedMethod) {
     throw new Error("GitHub App transport accepts only installation repository GET or POST requests.");
   }
-  const repositoryName = decodeRepositoryName(match[2]);
+  const repositoryOwner = decodeRepositoryPart(match[1]);
+  const repositoryName = decodeRepositoryPart(match[2]);
   const url = new URL(request.path.slice(1), config.apiBaseUrl);
   appendQuery(url, request.query);
-  return Object.freeze({ repositoryName, url });
+  return Object.freeze({ repository: `${repositoryOwner}/${repositoryName}`, url });
 }
 
-/** Rejects an encoded repository name that changes the route boundary. */
-function decodeRepositoryName(encodedName) {
-  let repositoryName;
-  try { repositoryName = decodeURIComponent(encodedName); }
+/** Rejects an encoded repository part that changes the route boundary. */
+function decodeRepositoryPart(encodedPart) {
+  let repositoryPart;
+  try { repositoryPart = decodeURIComponent(encodedPart); }
   catch { throw new Error("GitHub repository route contains invalid encoding."); }
-  if (repositoryName.trim() === "" || repositoryName.includes("/")) {
+  if (repositoryPart.trim() === "" || repositoryPart.includes("/")) {
     throw new Error("GitHub repository route contains an invalid name.");
   }
-  return repositoryName;
+  return repositoryPart;
 }
 
 /** Adds scalar query values without string-built URLs. */
@@ -85,56 +86,6 @@ function appendQuery(url, query) {
     }
     url.searchParams.set(key, String(value));
   }
-}
-
-/** Returns a cached installation token or coalesces one refresh. */
-async function getInstallationToken(state, installationId, repositoryName) {
-  const key = `${installationId}:${repositoryName.toLowerCase()}`;
-  const cached = state.tokens.get(key);
-  if (cached !== undefined && cached.expiresAtMs - TOKEN_REFRESH_SKEW_MS > readClock(state.config)) {
-    return cached.token;
-  }
-  const inFlight = state.pending.get(key);
-  if (inFlight !== undefined) return inFlight;
-  const promise = createInstallationToken(state.config, installationId, repositoryName)
-    .then((token) => { state.tokens.set(key, token); return token.token; })
-    .finally(() => state.pending.delete(key));
-  state.pending.set(key, promise);
-  return promise;
-}
-
-/** Exchanges an app JWT for one least-privilege repository token. */
-async function createInstallationToken(config, installationId, repositoryName) {
-  const response = await fetchBounded(config,
-    new URL(`app/installations/${installationId}/access_tokens`, config.apiBaseUrl),
-    Object.freeze({ method: "POST", headers: createHeaders(config, createAppJwt(config)),
-      body: JSON.stringify({ repositories: [repositoryName],
-        permissions: { contents: "write", pull_requests: "write" } }) }));
-  if (response.statusCode !== 201 || typeof response.body?.token !== "string"
-    || response.body.token.trim() === "") {
-    throw new Error(`GitHub installation token request failed with status ${response.statusCode}.`);
-  }
-  const expiresAtMs = Date.parse(response.body.expires_at);
-  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= readClock(config)) {
-    throw new Error("GitHub installation token has an invalid expiration.");
-  }
-  return Object.freeze({ token: response.body.token, expiresAtMs });
-}
-
-/** Creates GitHub's required RS256 app JWT with bounded claims. */
-function createAppJwt(config) {
-  const nowSeconds = Math.floor(readClock(config) / 1000);
-  const header = encodeJwtPart({ alg: "RS256", typ: "JWT" });
-  const payload = encodeJwtPart({ iat: nowSeconds - 60, exp: nowSeconds + 540, iss: config.appId });
-  const signingInput = `${header}.${payload}`;
-  const signature = sign("RSA-SHA256", Buffer.from(signingInput, "utf8"), config.privateKey)
-    .toString("base64url");
-  return `${signingInput}.${signature}`;
-}
-
-/** Encodes one compact JWT JSON section. */
-function encodeJwtPart(value) {
-  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
 }
 
 /** Sends one repository request with an installation token. */
@@ -199,13 +150,4 @@ function assertDeclaredResponseLength(response, maxBytes) {
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     throw new Error("GitHub response exceeds the configured byte limit.");
   }
-}
-
-/** Reads a valid wall-clock instant from the injected clock. */
-function readClock(config) {
-  const instant = config.clock();
-  if (!(instant instanceof Date) || Number.isNaN(instant.valueOf())) {
-    throw new Error("GitHub App transport clock must return a valid Date.");
-  }
-  return instant.valueOf();
 }

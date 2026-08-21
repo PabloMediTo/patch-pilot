@@ -8,7 +8,7 @@ import { runGit } from "./runGit.js";
 /**
  * Creates a disposable checkout whose detached HEAD exactly matches one commit SHA.
  *
- * @param {{ rootDirectory: string, repositoryUrl: string, baseRevision: string }} input Workspace root and immutable repository target.
+ * @param {{ rootDirectory: string, repositoryUrl: string, baseRevision: string, authorizationHeader?: string }} input Workspace root, immutable repository target, and optional ephemeral authorization.
  * @returns {Promise<{ workspaceDirectory: string, baseRevision: string }>} Verified checkout location and revision.
  * @throws {Error} When inputs, Git operations, or revision verification fail.
  */
@@ -32,14 +32,16 @@ export async function createImmutableRepositoryWorkspace(input) {
  * Fetches and verifies one immutable revision without retaining remote credentials.
  *
  * @param {string} workspaceDirectory Generated checkout directory.
- * @param {{ repositoryUrl: string, baseRevision: string }} input Repository target.
+ * @param {{ repositoryUrl: string, baseRevision: string, authorizationHeader?: string }} input Repository target and optional ephemeral authorization.
  * @returns {Promise<void>}
  * @throws {Error} When the resolved HEAD differs from the requested revision.
  */
 async function checkoutRevision(workspaceDirectory, input) {
   await runGit({ cwd: workspaceDirectory, args: ["init", "--quiet"] });
   await runGit({ cwd: workspaceDirectory, args: ["remote", "add", "origin", input.repositoryUrl] });
-  await runGit({ cwd: workspaceDirectory, args: ["fetch", "--depth=1", "--no-tags", "origin", input.baseRevision] });
+  await runGit({ cwd: workspaceDirectory,
+    args: ["fetch", "--depth=1", "--no-tags", "origin", input.baseRevision],
+    authorizationHeader: input.authorizationHeader, authorizationUrl: input.repositoryUrl });
   await runGit({ cwd: workspaceDirectory, args: ["checkout", "--quiet", "--detach", "FETCH_HEAD"] });
   await runGit({ cwd: workspaceDirectory, args: ["remote", "remove", "origin"] });
 
@@ -52,7 +54,7 @@ async function checkoutRevision(workspaceDirectory, input) {
 /**
  * Validates immutable checkout inputs before creating a directory.
  *
- * @param {{ rootDirectory: unknown, repositoryUrl: unknown, baseRevision: unknown }} input Candidate input.
+ * @param {{ rootDirectory: unknown, repositoryUrl: unknown, baseRevision: unknown, authorizationHeader?: unknown }} input Candidate input.
  * @returns {void}
  * @throws {Error} When a required value is missing or the revision is not a full Git object ID.
  */
@@ -61,9 +63,15 @@ function assertValidInput(input) {
   const hasRepositoryUrl = typeof input.repositoryUrl === "string" && input.repositoryUrl.trim() !== "";
   const hasFullRevision = typeof input.baseRevision === "string" && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(input.baseRevision);
   const hasEmbeddedCredentials = hasEmbeddedUrlCredentials(input.repositoryUrl);
+  const hasValidAuthorization = input.authorizationHeader === undefined
+    || (typeof input.authorizationHeader === "string"
+      && /^[^\r\n]{1,8192}$/u.test(input.authorizationHeader));
+  const hasSecureAuthorizationTarget = input.authorizationHeader === undefined
+    || hasHttpsProtocol(input.repositoryUrl);
 
-  if (!hasRootDirectory || !hasRepositoryUrl || !hasFullRevision || hasEmbeddedCredentials) {
-    throw new Error("Repository workspace requires a root, credential-free repository URL, and full lowercase commit SHA.");
+  if (!hasRootDirectory || !hasRepositoryUrl || !hasFullRevision || hasEmbeddedCredentials
+    || !hasValidAuthorization || !hasSecureAuthorizationTarget) {
+    throw new Error("Repository workspace requires a root, credential-free URL, full lowercase commit SHA, and safe HTTPS-only optional authorization.");
   }
 }
 
@@ -80,4 +88,10 @@ function hasEmbeddedUrlCredentials(repositoryUrl) {
 
   const parsedUrl = new URL(repositoryUrl);
   return parsedUrl.username !== "" || parsedUrl.password !== "";
+}
+
+/** Reports whether an authorized repository URL uses encrypted HTTP transport. */
+function hasHttpsProtocol(repositoryUrl) {
+  try { return new URL(repositoryUrl).protocol === "https:"; }
+  catch { return false; }
 }

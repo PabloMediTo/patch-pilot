@@ -16,11 +16,13 @@ const worker = { runCalls: 0, shutdownCalls: 0,
   shutdown() { this.shutdownCalls += 1; } };
 const proposalGenerators = { generatePlan: async () => undefined,
   generateDiff: async () => undefined, reviewProposal: async () => undefined };
+const authorizeRepository = async () => "Bearer controlled-token";
 const environment = { PATCH_PILOT_OPENAI_API_KEY: "private-test-key",
   PATCH_PILOT_GITHUB_APP_ID: "123",
   PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: "controlled-private-key" };
 const deployment = await createMaintainerWorkerDeployment({ environment, connection,
-  timelineStore, timelineStream, reviewStore, githubDeliveryRuntime, proposalGenerators, worker });
+  timelineStore, timelineStream, reviewStore, githubDeliveryRuntime, proposalGenerators,
+  authorizeRepository, worker });
 
 await deployment.run();
 await deployment.close();
@@ -37,11 +39,11 @@ assert.throws(() => deployment.run(), /closing/u);
 await assert.rejects(createMaintainerWorkerDeployment({
   environment: { PATCH_PILOT_TEMPORAL_TASK_QUEUE: " " }, connection,
   timelineStore, timelineStream, reviewStore, githubDeliveryRuntime,
-  proposalGenerators, worker }), /valid Temporal/u);
+  proposalGenerators, authorizeRepository, worker }), /valid Temporal/u);
 
 await assert.rejects(createMaintainerWorkerDeployment({ environment: {}, connection,
   timelineStore, timelineStream, reviewStore, githubDeliveryRuntime,
-  proposalGenerators, worker }), /OpenAI, and GitHub values/u);
+  proposalGenerators, authorizeRepository, worker }), /OpenAI, and GitHub values/u);
 
 const workflowsPath = fileURLToPath(new URL("../maintenance-workflow/maintenanceRunWorkflow.js",
   import.meta.url));

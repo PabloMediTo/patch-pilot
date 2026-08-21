@@ -6,6 +6,7 @@ import { fileURLToPath, URL } from "node:url";
 import { createGitHubDeliveryActivityRuntime } from "../github-delivery/index.js";
 import { createMaintenanceWorkflowActivities } from "../maintenance-workflow/index.js";
 import { createOpenAiProposalGenerators } from "../proposal-generation/index.js";
+import { createGitHubRepositoryAuthorization } from "../repository-access/index.js";
 
 const WORKFLOWS_PATH = fileURLToPath(new URL("../maintenance-workflow/maintenanceRunWorkflow.js",
   import.meta.url));
@@ -15,7 +16,7 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * Composes one executable Temporal worker and its Activity provider lifecycle.
  *
- * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, reviewStore?: object, githubDeliveryRuntime?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
+ * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, reviewStore?: object, githubDeliveryRuntime?: object, proposalGenerators?: object, authorizeRepository?: Function, worker?: object }} options Environment and optional controlled resources.
  * @returns {Promise<{ run: Function, close: Function }>} Worker deployment lifecycle.
  */
 export async function createMaintainerWorkerDeployment(options) {
@@ -35,10 +36,13 @@ export async function createMaintainerWorkerDeployment(options) {
         appId: config.githubAppId, privateKey: config.githubAppPrivateKey });
     const generators = options?.proposalGenerators ?? createOpenAiProposalGenerators({
       apiKey: config.openAiApiKey, model: config.openAiModel });
+    const authorizeRepository = options?.authorizeRepository
+      ?? createGitHubRepositoryAuthorization({ appId: config.githubAppId,
+        privateKey: config.githubAppPrivateKey });
     const activities = createMaintenanceWorkflowActivities({ timelineStore, timelineStream,
       reviewStore, workspaceRoot: config.workspaceRoot,
       deliverApprovedPullRequest: githubDeliveryRuntime.deliverApprovedPullRequest,
-      ...generators });
+      authorizeRepository, ...generators });
     const worker = options?.worker ?? await Worker.create({ connection,
       namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue,
       workflowsPath: WORKFLOWS_PATH, activities });

@@ -40,7 +40,8 @@ export async function createMaintainerApiDeployment(options) {
     githubReconciliationRuntime = options?.githubReconciliationRuntime
       ?? await createGitHubDeliveryReconciliationRuntime({ pool });
     const requestGitHub = options?.githubRequest ?? createGitHubAppRequest({
-      appId: config.githubAppId, privateKey: config.githubAppPrivateKey });
+      appId: config.githubAppId, privateKey: config.githubAppPrivateKey,
+      permissions: { contents: "read" } });
     const [reviewStore, timelineStore, approvalStore, runStore] = await Promise.all([
       createPostgresRunReviewStore({ pool }),
       createPostgresRunTimelineStore({ pool }),

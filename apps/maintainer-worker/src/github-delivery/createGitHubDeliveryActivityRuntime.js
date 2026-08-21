@@ -41,7 +41,8 @@ export async function createGitHubDeliveryActivityRuntime(options) {
 
 /** Creates concrete GitHub publication ports behind one authenticated request boundary. */
 function createProvider(options) {
-  const requestGitHub = createGitHubAppRequest(options);
+  const requestGitHub = createGitHubAppRequest({ ...options,
+    permissions: { contents: "write", pull_requests: "write" } });
   const publishCommit = createGitHubCommitPublisher({ requestGitHub });
   return createGitHubDeliveryAdapter({ requestGitHub, publishCommit });
 }

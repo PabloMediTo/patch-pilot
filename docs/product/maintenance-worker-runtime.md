@@ -9,7 +9,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - accepting GitHub webhooks or starting workflows
 - storing workflow control decisions outside Temporal
 - retaining repository checkouts between Activities
-- providing Git credentials for repositories that are not reachable through a credential-free URL
+- defining GitHub App permission profiles or persisting credentials
 
 ## Inputs
 
@@ -17,7 +17,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - `PATCH_PILOT_POSTGRES_URL` and `PATCH_PILOT_REDIS_URL`
 - `PATCH_PILOT_WORKSPACE_ROOT` for generated disposable checkouts
 - `PATCH_PILOT_OPENAI_API_KEY` and optional `PATCH_PILOT_OPENAI_MODEL` for structured proposal generation
-- `PATCH_PILOT_GITHUB_APP_ID` and `PATCH_PILOT_GITHUB_APP_PRIVATE_KEY` for approved publication
+- `PATCH_PILOT_GITHUB_APP_ID` and `PATCH_PILOT_GITHUB_APP_PRIVATE_KEY` for read-only checkout access and approved publication
 - persisted submitted runs delivered by Temporal
 
 ## Outputs
@@ -48,7 +48,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 
 The Workflow records the canonical submitted event, runs inspection, and then either records an explicit unsupported reproduction skip or calls the reproduction Activity. Timeline Activities use a 30-second start-to-close timeout and at most five infrastructure attempts. Inspection and reproduction use a ten-minute timeout and at most three attempts. Both use bounded exponential backoff.
 
-The inspection Activity creates a checkout at the exact recorded revision, runs deterministic Python/TypeScript project detection, removes the checkout in `finally`, and removes its machine-local path from the durable result. It currently constructs a credential-free GitHub HTTPS URL, so the executable worker can inspect only repositories reachable without a future non-interactive Git credential provider.
+The inspection Activity creates a checkout at the exact recorded revision, runs deterministic Python/TypeScript project detection, removes the checkout in `finally`, and removes its machine-local path from the durable result. The worker's repository-access role obtains a repository-scoped `contents:read` installation token and supplies its authorization header only to the bounded `git fetch` child. The token is absent from the URL, local Git configuration, Activity result, and timeline.
 
 The reproduction Activity deliberately creates another fresh checkout rather than reusing an Activity-local path. It re-detects the project and passes its standard command, workspace boundary, and the persisted expected-failure fragment through the worker's canonical safe executor. The workflow accepts only the known reproduction classifications. Every valid non-reproduced classification records an explicit terminal event, while malformed Activity evidence fails visibly.
 
@@ -62,4 +62,4 @@ The workflow registers its `reviewDecision` signal handler before orchestration 
 
 ## Lifecycle
 
-The executable worker reuses one native Temporal connection, one Postgres timeline store, one Postgres review store, one Redis timeline stream, and one delivery runtime with its own managed Postgres pool. Temporal's Worker owns polling and graceful signal handling. Cleanup waits for polling to stop before closing Redis, review and timeline stores, the delivery pool, and the native connection; repeated closure shares one promise.
+The executable worker reuses one native Temporal connection, one Postgres timeline store, one Postgres review store, one Redis timeline stream, one memory-only read-token provider, and one delivery runtime with its own managed Postgres pool and separate write-token provider. Temporal's Worker owns polling and graceful signal handling. Cleanup waits for polling to stop before closing Redis, review and timeline stores, the delivery pool, and the native connection; repeated closure shares one promise.

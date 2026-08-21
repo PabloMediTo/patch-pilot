@@ -10,6 +10,7 @@ import {
   materializeRepositoryWorkspaceDiff,
   removeRepositoryWorkspace,
 } from "./index.js";
+import { createGitExecutionEnvironment } from "./runGit.js";
 
 const execFileAsync = promisify(execFile);
 const testRoot = join(tmpdir(), `patch-pilot-repository-workspace-${Date.now()}`);
@@ -47,8 +48,14 @@ try {
   );
   assert.doesNotMatch(
     await readFile(join(workspace.workspaceDirectory, ".git", "config"), "utf8"),
-    /remote "origin"/u,
+    /remote "origin"|installation-secret/u,
   );
+  assert.deepEqual(createGitExecutionEnvironment("Basic encoded-secret",
+    "https://github.com/octo/example.git", { PATH: "git" }), {
+    PATH: "git", GIT_TERMINAL_PROMPT: "0", GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "http.https://github.com/octo/example.git.extraHeader",
+    GIT_CONFIG_VALUE_0: "Authorization: Basic encoded-secret",
+  });
   const createDiff = (replacement) => ["diff --git a/example.txt b/example.txt",
     "--- a/example.txt", "+++ b/example.txt", "@@ -1 +1 @@", "-immutable",
     `+${replacement}`].join("\n");
@@ -97,8 +104,14 @@ try {
       repositoryUrl: "https://token@example.com/owner/repository.git",
       baseRevision,
     }),
-    /credential-free repository URL/u,
+    /credential-free URL/u,
   );
+  await assert.rejects(createImmutableRepositoryWorkspace({ rootDirectory: workspaceRoot,
+    repositoryUrl: sourceDirectory, baseRevision,
+    authorizationHeader: "Basic encoded-secret" }), /HTTPS-only optional authorization/u);
+  await assert.rejects(createImmutableRepositoryWorkspace({ rootDirectory: workspaceRoot,
+    repositoryUrl: "https://github.com/octo/example.git", baseRevision,
+    authorizationHeader: "Basic secret\r\nInjected: value" }), /safe HTTPS-only/u);
   assert.deepEqual(await readdir(workspaceRoot), []);
 } finally {
   await rm(testRoot, { force: true, recursive: true });

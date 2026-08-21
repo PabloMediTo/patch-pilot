@@ -31,7 +31,7 @@ Publish one exactly approved [pull-request proposal](../DICTIONARY.md#pull-reque
 - the [maintenance workflow](maintenance-workflow.md) invokes the worker Activity only after exact approval
 - Postgres implements the atomic delivery-record port
 - the GitHub REST adapter maps commit publication to branch references and draft-pull-request creation
-- authenticated GitHub App transport supplies short-lived installation requests
+- [GitHub installation authentication](github-installation-authentication.md) supplies short-lived write-capable installation tokens
 - [GitHub delivery reconciliation](github-delivery-reconciliation.md) observes later pull-request lifecycle and provider drift without mutating this evidence
 
 ## Evidence gate
@@ -54,7 +54,7 @@ The implemented adapter publishes the approved commit through a separate commit-
 
 For pull requests, the adapter lists all candidates for the exact repository owner, head branch, and base branch. It reuses exactly one candidate only when it is still open, is still a draft, and exposes the expected GitHub URL. Otherwise it creates a pull request with `draft: true`; a concurrent `422` response is recovered through the same exact list operation. Closed, non-draft, duplicate, or differently targeted candidates are conflicts rather than reasons to create another PR. This follows GitHub's [pull-request REST contract](https://docs.github.com/en/rest/pulls/pulls).
 
-The implemented low-level request port signs an RS256 app JWT with 60 seconds of clock-drift allowance and an expiration nine minutes in the future. It exchanges that JWT for a repository-scoped [GitHub App installation token](../DICTIONARY.md#github-app-installation-token) granting only `contents:write` and `pull_requests:write`, coalesces concurrent refreshes, and reuses the token only until one minute before GitHub's expiration. Token format and length remain opaque. This follows GitHub's [JWT claims](https://docs.github.com/en/enterprise-cloud@latest/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app) and [installation-token endpoint](https://docs.github.com/en/rest/apps/apps).
+The low-level request port composes the shared [GitHub installation authentication](github-installation-authentication.md) boundary with the delivery-specific `contents:write` and `pull_requests:write` profile. Token format and length remain opaque. The authentication boundary follows GitHub's [JWT claims](https://docs.github.com/en/enterprise-cloud@latest/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-json-web-token-jwt-for-a-github-app) and [installation-token endpoint](https://docs.github.com/en/rest/apps/apps).
 
 Every repository request carries GitHub's JSON media type, a fixed user agent, and the pinned `2026-03-10` API version. Only installation-scoped repository `GET` and `POST` routes are accepted. Fetch duration defaults to 15 seconds and parsed provider output defaults to one MiB; both are configurable positive limits. Credentials are confined to authorization headers and never included in returned errors. GitHub documents the version header and support window in its [REST API versioning contract](https://docs.github.com/en/rest/about-the-rest-api/api-versions).
 

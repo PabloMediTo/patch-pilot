@@ -32,6 +32,7 @@ Authenticate bounded GitHub App webhook deliveries, extract their immutable enve
 
 - the control-plane Node server bounds the body while preserving its exact UTF-8 text
 - [GitHub delivery reconciliation](github-delivery-reconciliation.md) consumes authenticated pull-request envelopes
+- [GitHub installation authentication](github-installation-authentication.md) supplies a repository-scoped `contents:read` token
 - the GitHub revision port resolves the repository default branch to an immutable commit SHA
 - the maintenance package creates the initial run state
 - [run persistence](run-persistence.md) atomically records accepted submissions before [workflow submission](workflow-submission.md)
@@ -42,7 +43,7 @@ The signature is calculated over the untouched UTF-8 body with HMAC-SHA256 and c
 
 The implemented `POST /github/webhooks` route applies the API's 64-KiB default body limit, rejects invalid signatures with `401`, rejects malformed authenticated envelopes with `400`, and acknowledges accepted, ignored, or recorded deliveries with `202`. A reused delivery identity containing conflicting evidence returns `409`. Responses are JSON and disable caching.
 
-Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. After the HTTP handler authenticates and parses the envelope, the ingestion role routes `pull_request` events to delivery reconciliation and interprets other events only as possible issue submissions. It resolves the requested repository's default branch through the repository-scoped GitHub App transport and accepts only a successful full commit SHA before constructing the run.
+Opening or editing an issue does not start a run. A maintainer requests a run by applying the exact `patch-pilot` label. After the HTTP handler authenticates and parses the envelope, the ingestion role routes `pull_request` events to delivery reconciliation and interprets other events only as possible issue submissions. It resolves the requested repository's default branch through a GitHub App request using only `contents:read` and accepts only a successful full commit SHA before constructing the run.
 
 The opted-in issue body must contain exactly one bounded expected-failure marker pair. The trimmed text between the markers is persisted verbatim and later matched as an exact output fragment during reproduction. The remaining trimmed body becomes the bounded descriptive issue context used by later planning. Missing, empty, duplicated, or oversized title, context, or marker content is rejected as a malformed triggering payload instead of truncating evidence or inferring failure evidence from unrestricted prose.
 

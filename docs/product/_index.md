@@ -114,6 +114,13 @@
 - Read when: A task changes GitHub webhook handling, issue triggers, delivery identity, signature verification, or initial run submission.
 - Tags: product, github, webhook, ingestion, runs, security
 
+### GitHub Installation Authentication
+
+- Path: `docs/product/github-installation-authentication.md`
+- Summary: Repository-scoped GitHub App token issuance, explicit permission profiles, memory-only caching, and refresh behavior.
+- Read when: A task changes GitHub App JWT signing, installation tokens, permission scopes, token caching, or credential boundaries.
+- Tags: product, github, authentication, installation-token, permissions, security
+
 ### GitHub Delivery
 
 - Path: `docs/product/github-delivery.md`

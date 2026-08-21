@@ -113,7 +113,7 @@ The evidence-backed attempt to demonstrate the bug reported by an issue. Patch P
 
 ### GitHub App Installation Token
 
-A short-lived credential issued for one GitHub App installation. The implemented delivery transport requests a token for only the target repository and only `contents:write` plus `pull_requests:write`, treats its format as opaque, coalesces concurrent refreshes, and discards it from use one minute before GitHub's expiration. It is held in memory and sent only through authorization headers.
+A short-lived credential issued for one GitHub App installation. The implemented [GitHub installation authentication](#github-installation-authentication) boundary requests a token for only the target repository and one explicit permission profile, treats its format as opaque, coalesces concurrent refreshes, and discards it from use one minute before GitHub's expiration. Ingestion and checkout use independent `contents:read` providers; approved delivery uses `contents:write` plus `pull_requests:write`. Tokens remain in memory and are sent only through authorization headers.
 
 ### GitHub Delivery
 
@@ -122,6 +122,10 @@ The controlled publication step after an [approval decision](#approval-decision)
 ### GitHub Delivery Observation
 
 An immutable comparison between one tracked [GitHub delivery](#github-delivery) and a later `pull_request` webhook. The implemented reconciliation use case records normal lifecycle state as matched when the installation, repository, URL, head branch and revision, and base branch remain exact; otherwise it lists provider drift without changing GitHub or the original delivery. A concrete Postgres store atomically reserves each unique delivery identity and reloads the first writer for exact redelivery replay. The control-plane delivery runtime connects these ports to bounded signed HTTP ingestion with stable acknowledgement, rejection, and conflict responses; live provider and persistence verification remains planned.
+
+### GitHub Installation Authentication
+
+The credential boundary that signs bounded GitHub App JWTs and exchanges them for repository-scoped [installation tokens](#github-app-installation-token) under an explicit permission profile. Its independent in-memory providers keep read-only ingestion and checkout access separate from write-capable delivery access; no token becomes durable workflow, timeline, URL, command-argument, or repository-configuration data.
 
 ### Global Docs
 
@@ -182,7 +186,7 @@ The deterministic bounded repository text selected after accepted [failure repro
 
 ### Repository Workspace
 
-A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Proposal attempts restore and clean this exact base before checking and applying each complete bounded diff. The implemented sandbox copies the resulting workspace into a no-network, resource-limited container before an allowed command runs; live runtime proof and a future credential-injection policy remain open.
+A disposable checkout used by one maintenance run. Its Git boundary creates a unique directory, passes read-only installation authorization only through the `git fetch` child environment, fetches one full immutable commit ID, verifies Detached HEAD, removes the remote, and guards cleanup targets. Credentials never enter the URL, argument vector, repository configuration, or durable evidence. Proposal attempts restore and clean this exact base before checking and applying each complete bounded diff. The implemented sandbox copies the resulting workspace into a no-network, resource-limited container before an allowed command runs; live runtime proof remains open.
 
 ### Run Submission
 

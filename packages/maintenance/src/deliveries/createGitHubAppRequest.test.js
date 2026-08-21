@@ -10,6 +10,7 @@ let now = new Date("2026-08-15T12:00:00.000Z");
 let tokenNumber = 0;
 const calls = [];
 const requestGitHub = createGitHubAppRequest({ appId: 123, privateKey: privatePem,
+  permissions: { contents: "write", pull_requests: "write" },
   clock: () => now, fetchImpl: async (url, init) => {
     calls.push({ url: url.toString(), init });
     if (url.pathname.includes("/access_tokens")) {
@@ -52,6 +53,7 @@ await assert.rejects(requestGitHub({ installationId: 17, method: "DELETE",
   path: "/repos/octo/example/pulls/84" }), /only installation repository GET or POST/u);
 
 const boundedRequest = createGitHubAppRequest({ appId: 123, privateKey: privatePem,
+  permissions: { contents: "write", pull_requests: "write" },
   maxResponseBytes: 8, fetchImpl: async () => jsonResponse(201,
     { token: "too-large", expires_at: "2026-08-15T13:00:00.000Z" }) });
 await assert.rejects(boundedRequest({ installationId: 17, method: "GET",
@@ -63,6 +65,7 @@ let concurrentTokenCalls = 0;
 const tokenStarted = new Promise((resolve) => { markTokenStarted = resolve; });
 const tokenGate = new Promise((resolve) => { releaseToken = resolve; });
 const concurrentRequest = createGitHubAppRequest({ appId: 123, privateKey: privatePem,
+  permissions: { contents: "write", pull_requests: "write" },
   fetchImpl: async (url) => {
     if (url.pathname.includes("/access_tokens")) {
       concurrentTokenCalls += 1;

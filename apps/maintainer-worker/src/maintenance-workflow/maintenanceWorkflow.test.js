@@ -226,6 +226,7 @@ assert.equal(malformedContextEvents.at(-1).type, "run.planning.context.failed");
 
 const activityCalls = [];
 const timelineEvents = [];
+const authorizationCalls = [];
 let executionCalls = 0;
 const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "controlled-root",
   timelineStore: { append: async (event) => {
@@ -240,6 +241,10 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
   deliverApprovedPullRequest: async (input) => {
     activityCalls.push({ operation: "deliver", input });
     return { status: "created", delivery };
+  },
+  authorizeRepository: async (target) => {
+    authorizationCalls.push(target);
+    return "Bearer installation-secret";
   },
   createWorkspace: async (input) => {
     activityCalls.push({ operation: "create", input });
@@ -284,6 +289,7 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
 assert.deepEqual(await activities.inspectRepository(run), inspection);
 assert.deepEqual(activityCalls.map(({ operation }) => operation), ["create", "detect", "remove"]);
 assert.equal(activityCalls[0].input.repositoryUrl, "https://github.com/octo/example.git");
+assert.equal(activityCalls[0].input.authorizationHeader, "Bearer installation-secret");
 
 const reproduction = await activities.reproduceIssue(run);
 assert.equal(reproduction.status, "reproduced");
@@ -307,6 +313,8 @@ const attempts = await activities.executeProposalAttempts({ run, inspection, rep
   repositoryContext, proposal });
 assert.equal(attempts.status, "completed");
 assert.equal(attempts.attempts.length, 2);
+assert.equal(authorizationCalls.length, 4);
+assert.deepEqual(authorizationCalls[0], { installationId: 17, repository: "octo/example" });
 assert.deepEqual(activityCalls.slice(-8).map(({ operation }) => operation),
   ["create", "detect", "materialize", "plan", "diff", "materialize", "review", "remove"]);
 assert.equal(activityCalls.at(-5).input.revisionEvidence.verification.status, "failed");
@@ -325,7 +333,8 @@ assert.equal(activityCalls.at(-1).input.proposal.diff,
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });
 assert.equal(timelineEvents[0].eventId, "event-1");
+assert.doesNotMatch(JSON.stringify(timelineEvents), /installation-secret/u);
 assert.equal((await activities.deliverApprovedPullRequest(deliveryRequest)).status, "created");
 assert.equal(activityCalls.at(-1).operation, "deliver");
 assert.throws(() => createMaintenanceWorkflowActivities({}),
-  /timeline, review, delivery, workspace, and generator/u);
+  /timeline, review, delivery, repository authorization, workspace, and generator/u);

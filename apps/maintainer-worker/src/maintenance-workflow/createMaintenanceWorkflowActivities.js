@@ -11,7 +11,7 @@ const REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u;
 /**
  * Creates concrete timeline, repository, and proposal-generation Activities.
  *
- * @param {{ timelineStore: object, timelineStream: object, reviewStore: object, workspaceRoot: string, generatePlan: Function, generateDiff: Function, reviewProposal: Function, deliverApprovedPullRequest: Function, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, materializeDiff?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
+ * @param {{ timelineStore: object, timelineStream: object, reviewStore: object, workspaceRoot: string, authorizeRepository: Function, generatePlan: Function, generateDiff: Function, reviewProposal: Function, deliverApprovedPullRequest: Function, createWorkspace?: Function, detectProject?: Function, collectPlanningContext?: Function, materializeDiff?: Function, removeWorkspace?: Function, executeCommand?: Function }} input Provider resources and optional controlled operations.
  * @returns {{ recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, deliverApprovedPullRequest: Function }} Temporal Activities.
  */
 export function createMaintenanceWorkflowActivities(input) {
@@ -28,16 +28,20 @@ export function createMaintenanceWorkflowActivities(input) {
       stream: input.timelineStream, createId: () => event.eventId,
       clock: () => new Date(event.occurredAt) }),
     inspectRepository: (run) => inspectRepository({ run, workspaceRoot: input.workspaceRoot,
-      createWorkspace, detectProject, removeWorkspace }),
+      authorizeRepository: input.authorizeRepository, createWorkspace, detectProject,
+      removeWorkspace }),
     reproduceIssue: (run) => reproduceIssue({ run, workspaceRoot: input.workspaceRoot,
-      createWorkspace, detectProject, removeWorkspace, executeCommand }),
+      authorizeRepository: input.authorizeRepository, createWorkspace, detectProject,
+      removeWorkspace, executeCommand }),
     collectPlanningContext: (run) => collectPlanningContextActivity({ run,
-      workspaceRoot: input.workspaceRoot, createWorkspace, collectPlanningContext, removeWorkspace }),
+      workspaceRoot: input.workspaceRoot, authorizeRepository: input.authorizeRepository,
+      createWorkspace, collectPlanningContext, removeWorkspace }),
     createProposal: (request) => createProposalActivity({ ...request,
       generatePlan: input.generatePlan, generateDiff: input.generateDiff }),
     executeProposalAttempts: (request) => executeProposalAttemptsActivity({ ...request,
       workspaceRoot: input.workspaceRoot, createWorkspace, detectProject, materializeDiff,
-      removeWorkspace, executeCommand, generatePlan: input.generatePlan,
+      authorizeRepository: input.authorizeRepository, removeWorkspace, executeCommand,
+      generatePlan: input.generatePlan,
       generateDiff: input.generateDiff, reviewProposal: input.reviewProposal }),
     recordReviewSnapshot: (request) => recordRunReviewSnapshot({ ...request,
       saveSnapshot: input.reviewStore.saveSnapshot }),
@@ -102,9 +106,7 @@ async function collectPlanningContextActivity(input) {
 /** Creates, detects, sanitizes, and always removes one inspection checkout. */
 async function inspectRepository(input) {
   assertRunTarget(input.run);
-  const workspace = await input.createWorkspace({ rootDirectory: input.workspaceRoot,
-    repositoryUrl: `https://github.com/${input.run.repository}.git`,
-    baseRevision: input.run.baseRevision });
+  const workspace = await createWorkspace(input);
   try {
     return sanitizeInspection(await input.detectProject({
       workspaceDirectory: workspace.workspaceDirectory }));
@@ -127,11 +129,13 @@ async function reproduceIssue(input) {
   }
 }
 
-/** Creates one exact-revision credential-free checkout for an Activity. */
-function createWorkspace(input) {
+/** Creates one authorized exact-revision checkout without putting credentials in its URL. */
+async function createWorkspace(input) {
+  const authorizationHeader = await input.authorizeRepository({
+    installationId: input.run.installationId, repository: input.run.repository });
   return input.createWorkspace({ rootDirectory: input.workspaceRoot,
     repositoryUrl: `https://github.com/${input.run.repository}.git`,
-    baseRevision: input.run.baseRevision });
+    baseRevision: input.run.baseRevision, authorizationHeader });
 }
 
 /** Removes one generated Activity workspace through the canonical guard. */
@@ -155,10 +159,11 @@ function assertPorts(input) {
     || typeof input?.timelineStream?.publish !== "function"
     || typeof input?.reviewStore?.saveSnapshot !== "function"
     || typeof input.workspaceRoot !== "string" || input.workspaceRoot.trim() === ""
+    || typeof input.authorizeRepository !== "function"
     || typeof input.generatePlan !== "function" || typeof input.generateDiff !== "function"
     || typeof input.reviewProposal !== "function"
     || typeof input.deliverApprovedPullRequest !== "function") {
-    throw new Error("Maintenance workflow Activities require timeline, review, delivery, workspace, and generator resources.");
+    throw new Error("Maintenance workflow Activities require timeline, review, delivery, repository authorization, workspace, and generator resources.");
   }
 }
 
