@@ -8,9 +8,9 @@ const VALIDATED_VALUES = Object.freeze({
   PATCH_PILOT_API_BEARER_TOKEN: (value) => value.length >= 32,
   PATCH_PILOT_GITHUB_APP_ID: (value) => /^[1-9][0-9]*$/u.test(value),
   PATCH_PILOT_PYTHON_PILOT_REPOSITORY: isRepository,
-  PATCH_PILOT_PYTHON_PILOT_ISSUE: isPositiveInteger,
+  PATCH_PILOT_PYTHON_PILOT_ISSUE: isPositiveIssueNumber,
   PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY: isRepository,
-  PATCH_PILOT_TYPESCRIPT_PILOT_ISSUE: isPositiveInteger,
+  PATCH_PILOT_TYPESCRIPT_PILOT_ISSUE: isPositiveIssueNumber,
 });
 
 /**
@@ -107,7 +107,9 @@ function normalizeRepository(value) {
   return hasValue(value) && isRepository(value.trim()) ? value.trim().toLowerCase() : null;
 }
 
-/** Validates one decimal positive integer without coercion. */
-function isPositiveInteger(value) {
-  return /^[1-9][0-9]*$/u.test(value);
+/** Validates one positive issue number that fits the durable Postgres integer column. */
+function isPositiveIssueNumber(value) {
+  if (!/^[1-9][0-9]*$/u.test(value)) return false;
+  const issueNumber = Number(value);
+  return Number.isSafeInteger(issueNumber) && issueNumber <= 2_147_483_647;
 }

@@ -60,4 +60,17 @@ assert.deepEqual(duplicateTargets.configuration.invalidVariables, [
 ]);
 assert.equal(JSON.stringify(duplicateTargets).includes("Shared-Repository"), false);
 
+const maximumIssueNumber = await assessPilotReadiness({ environment: {
+  ...environment, PATCH_PILOT_PYTHON_PILOT_ISSUE: "2147483647",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(maximumIssueNumber.status, "ready");
+
+const oversizedIssueNumber = await assessPilotReadiness({ environment: {
+  ...environment, PATCH_PILOT_TYPESCRIPT_PILOT_ISSUE: "2147483648",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(oversizedIssueNumber.status, "blocked");
+assert.deepEqual(oversizedIssueNumber.configuration.invalidVariables,
+  ["PATCH_PILOT_TYPESCRIPT_PILOT_ISSUE"]);
+assert.equal(JSON.stringify(oversizedIssueNumber).includes("2147483648"), false);
+
 await assert.rejects(assessPilotReadiness({}), /environment, project directory/u);

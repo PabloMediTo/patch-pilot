@@ -41,6 +41,7 @@ Deliver **Run end-to-end pilot on Python and TypeScript repositories** within th
 - Added `npm run pilot:readiness` as a shell-free sanitized preflight for Docker engine, Compose configuration, provider/runtime variable names, and both repository/issue targets.
 - The preflight has focused ready/blocked tests and never emits configuration values. On the current machine it correctly remains blocked because Docker and provider configuration are absent.
 - The preflight now rejects case-insensitive reuse of one repository for both language roles, reports only both invalid variable names, and has focused coverage proving the repository value is not emitted.
+- Pilot issue identities are now bounded to the positive Postgres `integer` range before live execution; focused tests cover the exact maximum, reject the first oversized value, and prove it is not emitted.
 - The documented live sequence prevents a readiness result from being mistaken for completed end-to-end evidence; this task stays `draft` until both real runs are retained.
 
 ## References
