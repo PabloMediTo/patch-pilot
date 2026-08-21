@@ -5,6 +5,8 @@
  * @returns {Promise<object>} Publish, subscribe, and close operations.
  */
 export async function createRedisRunTimelineStream(options = {}) {
+  const ownsPublisher = options.publisher === undefined;
+  const ownsSubscriber = options.subscriber === undefined;
   const publisher = options.publisher ?? await createRedisClient(options.url, options.createClient);
   const subscriber = options.subscriber ?? publisher.duplicate();
   attachRedisErrorListener(publisher);
@@ -32,8 +34,8 @@ export async function createRedisRunTimelineStream(options = {}) {
       return async () => subscriber.unsubscribe(channel);
     },
     close: async () => {
-      await closeClient(subscriber);
-      await closeClient(publisher);
+      if (ownsSubscriber) await closeClient(subscriber);
+      if (ownsPublisher) await closeClient(publisher);
     },
   });
 }

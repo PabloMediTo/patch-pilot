@@ -142,6 +142,41 @@ await runTest("publishes and subscribes through one run-scoped Redis channel", a
   ]);
   assert.deepEqual(received, createRedisTimelineEvent());
   assert.equal(hasUnsubscribed, true);
+  assert.equal(calls.includes("close"), false);
+});
+
+await runTest("closes only Redis clients owned by the adapter", async () => {
+  const publisherCalls = [];
+  const subscriberCalls = [];
+  const publisher = createRedisClientStub(publisherCalls);
+  const subscriber = createRedisClientStub(subscriberCalls);
+  publisher.isOpen = true;
+  subscriber.isOpen = true;
+  publisher.duplicate = () => subscriber;
+  const stream = await createRedisRunTimelineStream({ publisher });
+
+  await stream.close();
+
+  assert.deepEqual(subscriberCalls, ["close"]);
+  assert.deepEqual(publisherCalls, []);
+});
+
+await runTest("closes both Redis clients created by the adapter", async () => {
+  const publisherCalls = [];
+  const subscriberCalls = [];
+  const publisher = createRedisClientStub(publisherCalls);
+  const subscriber = createRedisClientStub(subscriberCalls);
+  publisher.isOpen = true;
+  subscriber.isOpen = true;
+  publisher.duplicate = () => subscriber;
+  const stream = await createRedisRunTimelineStream({
+    createClient: () => publisher,
+  });
+
+  await stream.close();
+
+  assert.deepEqual(subscriberCalls, ["close"]);
+  assert.deepEqual(publisherCalls, ["close"]);
 });
 
 await runTest("discards malformed and cross-run Redis timeline messages", async () => {
