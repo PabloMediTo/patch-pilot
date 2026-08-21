@@ -1,12 +1,14 @@
 /**
  * Creates the Redis live timeline publisher and subscriber adapter.
  *
- * @param {{ url?: string, publisher?: object, subscriber?: object }} [options] Redis URL or injected clients.
+ * @param {{ url?: string, publisher?: object, subscriber?: object, createClient?: Function }} [options] Redis URL, clients, or client factory.
  * @returns {Promise<object>} Publish, subscribe, and close operations.
  */
 export async function createRedisRunTimelineStream(options = {}) {
-  const publisher = options.publisher ?? await createRedisClient(options.url);
+  const publisher = options.publisher ?? await createRedisClient(options.url, options.createClient);
   const subscriber = options.subscriber ?? publisher.duplicate();
+  attachRedisErrorListener(publisher);
+  attachRedisErrorListener(subscriber);
   let publisherConnection;
   let subscriberConnection;
 
@@ -34,14 +36,38 @@ export async function createRedisRunTimelineStream(options = {}) {
 }
 
 /**
+ * Prevents the provider's parallel error event from bypassing rejected operation promises.
+ *
+ * @param {object} client Redis client.
+ */
+function attachRedisErrorListener(client) {
+  if (typeof client.on === "function") client.on("error", handleRedisClientError);
+}
+
+/** Leaves operation failures to connect, publish, and subscribe promises. */
+function handleRedisClientError() {
+  return undefined;
+}
+
+/**
  * Loads the Redis provider only for a concrete runtime connection.
  *
  * @param {string | undefined} url Redis connection URL.
+ * @param {Function | undefined} clientFactory Optional provider factory.
  * @returns {Promise<object>} Redis client.
  */
-async function createRedisClient(url) {
-  const { createClient } = await import("redis");
-  return createClient({ url });
+async function createRedisClient(url, clientFactory) {
+  const factory = clientFactory ?? (await import("redis")).createClient;
+  return factory({ url, socket: {
+    connectTimeout: 5_000,
+    reconnectStrategy: createReconnectStrategy,
+  } });
+}
+
+/** Bounds provider reconnection so unavailable Redis cannot hang startup indefinitely. */
+function createReconnectStrategy(retries) {
+  return retries >= 5 ? new Error("Timeline Redis connection retry limit reached.")
+    : Math.min(100 * (retries + 1), 500);
 }
 
 /**

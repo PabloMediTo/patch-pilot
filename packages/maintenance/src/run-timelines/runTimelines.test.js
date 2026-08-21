@@ -123,15 +123,49 @@ await runTest("publishes and subscribes through one run-scoped Redis channel", a
   assert.equal(hasUnsubscribed, true);
 });
 
+await runTest("contains Redis error events while operation promises remain visible", async () => {
+  const errorListeners = [];
+  const publisher = createRedisClientStub([], errorListeners);
+  const subscriber = createRedisClientStub([], errorListeners);
+  publisher.connect = async () => {
+    errorListeners[0](new Error("provider event"));
+    throw new Error("Redis unavailable");
+  };
+  const stream = await createRedisRunTimelineStream({ publisher, subscriber });
+
+  assert.equal(errorListeners.length, 2);
+  await assert.rejects(stream.publish({ runId: "run-8", sequence: 1 }), /Redis unavailable/u);
+  assert.doesNotThrow(() => errorListeners[1](new Error("subscriber event")));
+});
+
+await runTest("bounds Redis connection and reconnect behavior", async () => {
+  let clientConfiguration;
+  const publisher = createRedisClientStub([]);
+  publisher.duplicate = () => createRedisClientStub([]);
+  const stream = await createRedisRunTimelineStream({ url: "redis://controlled",
+    createClient: (configuration) => {
+      clientConfiguration = configuration;
+      return publisher;
+    } });
+
+  assert.equal(clientConfiguration.url, "redis://controlled");
+  assert.equal(clientConfiguration.socket.connectTimeout, 5_000);
+  assert.deepEqual([0, 1, 4].map(clientConfiguration.socket.reconnectStrategy), [100, 200, 500]);
+  assert.match(clientConfiguration.socket.reconnectStrategy(5).message, /retry limit reached/u);
+  await stream.close();
+});
+
 /**
  * Creates a small Redis client test double.
  *
  * @param {string[]} calls Captured operations.
+ * @param {Function[]} [errorListeners] Captured provider error listeners.
  * @returns {object} Redis client stub.
  */
-function createRedisClientStub(calls) {
+function createRedisClientStub(calls, errorListeners = []) {
   return {
     isOpen: false,
+    on: (event, listener) => { if (event === "error") errorListeners.push(listener); },
     connect: async function connect() { this.isOpen = true; calls.push("connect"); },
     publish: async (channel) => { calls.push(`publish:${channel}`); },
     subscribe: async (channel, receiver) => {
