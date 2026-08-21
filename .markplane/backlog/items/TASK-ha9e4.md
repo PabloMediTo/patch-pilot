@@ -93,7 +93,7 @@ Deliver **Build diff, evidence, and approval review screen** within the document
 - Added the executable API deployment with one shared Postgres pool, one Redis stream, environment validation, listener startup, and idempotent HTTP/provider shutdown.
 - Pull-request webhooks now reach the persisted reconciliation path from the real main-process composition; issue-to-Temporal dispatch remains a separate workflow milestone.
 - The API main process handles `SIGINT` and `SIGTERM`, closes long-lived SSE connections, and reports provider cleanup failures through its exit code.
-- Focused runtime proof covers signed webhook dispatch, configured listener startup, approved-delivery exposure, repeated shutdown, and exactly-once Redis/Postgres closure.
+- Focused runtime proof covers signed webhook dispatch, configured listener startup, repeated shutdown, and exactly-once Redis/Postgres closure; approved publication is now exclusively worker-owned.
 - Completed after the review UI, authenticated API, canonical evidence composition, environment-backed stores, executable lifecycle, architecture/docs alignment, and all checks passed. Live timeline persistence verification remains tracked by `TASK-r7q5a`.
 
 ## References

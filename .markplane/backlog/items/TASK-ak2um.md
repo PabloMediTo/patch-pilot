@@ -18,7 +18,7 @@ tags:
 - delivery
 position: a7
 created: 2026-08-14
-updated: 2026-08-16
+updated: 2026-08-21
 ---
 
 # Publish approved branch and draft pull request idempotently
@@ -52,9 +52,10 @@ Deliver **Publish approved branch and draft pull request idempotently** within t
 - Added exact `node:buffer`, `node:timers`, and `node:url` permissions to `deliveries` and test-only `node:buffer`; the worker sandbox retains only its prior `node:crypto` permission and no cross-module edge or exception was added.
 - Added a deterministic GitHub Git-database commit publisher that rechecks the approved diff hash, reads the exact base commit/tree/blobs, strictly applies regular UTF-8 text hunks, and creates a base-derived tree plus single-parent commit using the persisted approval time.
 - Publisher tests cover modified, new, and deleted files, exact request bodies, deterministic retry payloads, pre-request hash rejection, changed base context, truncated trees, and binary content. No new provider permission, module edge, or architecture exception was required.
-- Added a control-plane API delivery runtime that composes one managed Postgres pool, approval and delivery stores, GitHub App transport, deterministic commit publisher, branch/PR adapter, and delivery use case behind caller-safe ports and idempotent shutdown.
-- The full-path test exercises JWT/token exchange, approval loading, Git objects, branch, draft PR, durable delivery creation, replay without provider calls, invalid identities, and one-time pool closure against controlled boundaries.
-- Registered `github-delivery` as an API application role and granted the API index only the exact new module dependency; no core provider, external package, module edge, or exception was added to the role.
-- Completed after the provider-free use case, stores, authenticated GitHub adapters, deterministic commit publication, API runtime composition, focused checks, and complete controlled-boundary test passed. Live provider proof remains part of the end-to-end pilot rather than this implementation task.
+- Added a worker-owned GitHub delivery Activity runtime that composes one managed Postgres pool, canonical approval loading, the delivery store, GitHub App transport, deterministic commit publisher, branch/PR adapter, and delivery use case behind caller-safe ports and idempotent shutdown.
+- The Temporal workflow now invokes that Activity only after exact approval, records bounded delivery evidence, treats created and replayed publication as delivered, and keeps rejection side-effect free.
+- The API delivery role now owns only pull-request webhook reconciliation, removing the competing direct publication operation.
+- Registered `github-delivery` as a worker application role with only the existing maintenance workspace access and exact `pg` provider permission; no technical exception or cross-module edge was introduced.
+- Completed after the provider-free use case, stores, authenticated GitHub adapters, deterministic commit publication, workflow Activity composition, focused checks, and controlled-boundary tests passed. Live provider proof remains part of the end-to-end pilot rather than this implementation task.
 
 ## References

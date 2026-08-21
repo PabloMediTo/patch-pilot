@@ -18,7 +18,7 @@ Current reality:
 - Supported Python/pytest and TypeScript/npm roots can be detected, and bounded command evidence can be matched against an issue's expected failure without executing untrusted commands on the host.
 - Bounded repository planning context now selects safe issue-relevant text without following symlinks or publishing full source content to the live timeline.
 - Canonical MVP command and change policy is enforced before a sandbox port. A Docker adapter selects pinned runtimes, applies the fixed limits, copies the workspace into the quota-controlled container layer, and guarantees cleanup. The worker composes it with bounded shell-free Docker process execution; only live Docker proof remains required before target-repository commands can be enabled in deployment.
-- The worker has an executable Temporal deployment and bundled maintenance workflow that records replay-safe inspection, reproduction, planning-context, proposal, and attempt events, uses fresh disposable exact-revision checkouts for all four repository phases, invokes the safe executor for reproduction and verification, generates strict structured plan/diff/critique candidates through a worker-owned OpenAI adapter, independently validates proposals and at most two full revisions, terminates blocked/rejected/exhausted outcomes explicitly, and closes Temporal, Postgres, and Redis resources deterministically. Live OpenAI and Docker proof remain open.
+- The worker has an executable Temporal deployment and bundled maintenance workflow that records replay-safe inspection through delivery events, uses fresh disposable exact-revision checkouts for all four repository phases, invokes the safe executor for reproduction and verification, generates strict structured plan/diff/critique candidates through a worker-owned OpenAI adapter, independently validates proposals and at most two full revisions, waits for exact human approval, publishes approved evidence through an idempotent GitHub Activity, terminates rejected or blocked outcomes explicitly, and closes Temporal, Postgres, Redis, and delivery resources deterministically. Live provider proof remains open.
 - Bounded change proposals now tie a versioned plan to an independently measured unified diff and canonical safety decision.
 - Proposal review now records standard verification evidence, structured critique outcomes, immutable attempt history, and no more than two modification retries.
 - Run timelines now have concrete Postgres persistence, Redis live-stream adapters, a gap-free API catch-up feed, resumable SSE sessions, and an authenticated Node-compatible route handler; live service verification remains open because Docker is unavailable locally.
@@ -30,9 +30,9 @@ Current reality:
 - Markplane 0.1.2 manages version-controlled project work under `.markplane/`; its generated indexes and context summaries remain untracked and are regenerated with `npm run markplane:sync`.
 - Markplane includes the canonical `docs/` tree when generating project context.
 - `docs/product/` defines the Autonomous GitHub Maintainer product and its MVP boundaries.
-- Product implementation is underway through the maintenance package and application shells; later workflow phases and remaining live provider verification remain open in Markplane.
+- The controlled issue-to-tested-draft-PR workflow path is implemented through the maintenance package and application shells; remaining live provider and runtime verification stays open in Markplane.
 
 Open questions:
 
 - Destination repositories still need to decide which template workflow terms to keep, rename, or replace with their own repository vocabulary.
-- The repository role, deployment units, and conceptual workspace boundaries remain open until the first concrete project is added.
+- Production hosting, credential rotation, and the supported container runtime remain deployment decisions.

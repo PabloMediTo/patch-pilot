@@ -1,6 +1,7 @@
 export { createMaintainerWorkerApplication,
   createMaintainerWorkerDeployment } from "./application/index.js";
 export { createDockerCliExecutor } from "./docker-cli/index.js";
+export { createGitHubDeliveryActivityRuntime } from "./github-delivery/index.js";
 export { createSandboxCommandExecutor } from "./sandbox-execution/index.js";
 export { createMaintenanceWorkflowActivities,
   orchestrateMaintenanceRun } from "./maintenance-workflow/index.js";

@@ -1,9 +1,10 @@
 import { awaitRunApproval } from "./awaitRunApproval.js";
+import { deliverApprovedProposal } from "./deliverApprovedProposal.js";
 
 /**
  * Orchestrates durable inspection, reproduction, context, and proposal phases.
  *
- * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, waitForApproval: Function, now: Function }} input Persisted run and deterministic workflow ports.
+ * @param {{ run: object, recordTimelineEvent: Function, inspectRepository: Function, reproduceIssue: Function, collectPlanningContext: Function, createProposal: Function, executeProposalAttempts: Function, recordReviewSnapshot: Function, waitForApproval: Function, deliverApprovedPullRequest: Function, now: Function }} input Persisted run and deterministic workflow ports.
  * @returns {Promise<object>} Proposal or terminal workflow outcome.
  */
 export async function orchestrateMaintenanceRun(input) {
@@ -66,14 +67,22 @@ async function finishPlanning(input, evidence) {
 async function finishAcceptedAttempts(input, evidence, attemptResult) {
   const review = await runReviewPhase(input, attemptResult);
   const approval = await awaitRunApproval({ ...input, review });
-  const result = Object.freeze({ status: approval.status === "approved"
-    ? "approved" : "approval-rejected", runId: input.run.id,
-    ...evidence, proposal: attemptResult.proposal,
-    attempts: attemptResult.attempts, review, approval });
   if (approval.status === "rejected") {
     await recordTerminalOutcome(input, "approval-rejected", approval.reason);
+    return Object.freeze({ status: "approval-rejected", runId: input.run.id,
+      ...evidence, proposal: attemptResult.proposal,
+      attempts: attemptResult.attempts, review, approval });
   }
-  return result;
+  const delivery = await deliverApprovedProposal({ ...input, attemptResult, review, approval,
+    recordEvent: (step, payload) => recordEvent(input, step, payload) });
+  const status = ["created", "replayed"].includes(delivery.status)
+    ? "delivered" : `delivery-${delivery.status}`;
+  if (status !== "delivered") {
+    await recordTerminalOutcome(input, status, delivery.reason);
+  }
+  return Object.freeze({ status, runId: input.run.id, ...evidence,
+    proposal: attemptResult.proposal, attempts: attemptResult.attempts,
+    review, approval, delivery });
 }
 
 /** Persists the accepted final attempt as the immutable approval gate. */
@@ -195,7 +204,9 @@ function createTarget(run) {
 /** Requires the canonical Postgres row supplied by workflow submission. */
 function assertPersistedRun(run) {
   const hasIdentity = typeof run?.id === "string" && run.id.trim() !== ""
+    && Number.isInteger(run.installationId) && run.installationId > 0
     && typeof run.repository === "string" && run.repository.trim() !== ""
+    && typeof run.defaultBranch === "string" && run.defaultBranch.trim() !== ""
     && typeof run.baseRevision === "string" && /^[0-9a-f]{40}$/u.test(run.baseRevision)
     && typeof run.issueTitle === "string" && run.issueTitle.trim() !== ""
     && run.issueTitle.length <= 500 && typeof run.issueContext === "string"

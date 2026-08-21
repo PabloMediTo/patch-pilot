@@ -17,6 +17,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - `PATCH_PILOT_POSTGRES_URL` and `PATCH_PILOT_REDIS_URL`
 - `PATCH_PILOT_WORKSPACE_ROOT` for generated disposable checkouts
 - `PATCH_PILOT_OPENAI_API_KEY` and optional `PATCH_PILOT_OPENAI_MODEL` for structured proposal generation
+- `PATCH_PILOT_GITHUB_APP_ID` and `PATCH_PILOT_GITHUB_APP_PRIVATE_KEY` for approved publication
 - persisted submitted runs delivered by Temporal
 
 ## Outputs
@@ -30,6 +31,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - immutable proposal-attempt history after apply, verify, critique, and bounded revision
 - one atomically persisted immutable review snapshot after an accepted final attempt
 - one durable approval wait that resolves only an exactly bound persisted decision
+- one idempotent delivery Activity after approval, or no provider call after rejection
 - deterministic provider cleanup after worker polling stops
 
 ## Adjacent parts
@@ -40,7 +42,7 @@ Run `maintenanceRunWorkflow` and its Activities on the configured Temporal task 
 - [supported project detection](project-detection.md) classifies the checked-out root
 - [repository planning context](repository-planning-context.md) selects safe relevant text evidence
 - [proposal generation](proposal-generation.md) owns the provider adapter and credential boundary
-- the control-plane API will signal persisted decisions and later workflow phases will compose delivery
+- the control-plane API signals persisted decisions and reconciles later pull-request webhooks
 
 ## Implemented workflow phases
 
@@ -56,8 +58,8 @@ A separate 30-minute Activity creates a fourth exact-revision checkout and execu
 
 After an accepted final attempt, a short retryable Activity creates and atomically persists the canonical review snapshot through the worker-owned Postgres review store. An exact retry returns the existing first-writer evidence; a different row for the same run fails visibly. The workflow records `run.review.started`, then publishes `run.review.ready` with only the exact binding, persistence classification, and recording time.
 
-The workflow registers its `reviewDecision` signal handler before orchestration and then records `run.approval.waiting`. Temporal's durable condition resolves only for an approved or rejected decision whose run identity and complete review binding match the persisted snapshot. Invalid signals remain non-terminal. A valid approval advances the workflow to `approved`; rejection records the reason and terminates as `approval-rejected`. The worker closes its review store together with the timeline and Redis resources. Dependency installation, API-to-Temporal decision signaling, and delivery are not yet orchestrated. Live Docker safety verification remains required before enabling target command execution for untrusted deployed repositories.
+The workflow registers its `reviewDecision` signal handler before orchestration and then records `run.approval.waiting`. Temporal's durable condition resolves only for an approved or rejected decision whose run identity and complete review binding match the persisted snapshot. Invalid signals remain non-terminal. Rejection records the reason, terminates as `approval-rejected`, and never schedules delivery. A valid approval schedules a separately retried 30-minute delivery Activity. The worker-owned `github-delivery` role reloads the canonical approval, applies the existing exact-evidence gate, publishes only a deterministic branch and draft pull request, and persists or replays the delivery. Created and replayed outcomes finish as `delivered`; blocked and conflicting outcomes stay explicit. Live GitHub, Postgres, Temporal, and Docker verification remains required.
 
 ## Lifecycle
 
-The executable worker reuses one native Temporal connection, one Postgres timeline store, one Postgres review store, and one Redis timeline stream. Temporal's Worker owns polling and graceful signal handling. Cleanup waits for polling to stop before closing Redis, both Postgres stores, and the native connection; repeated closure shares one promise.
+The executable worker reuses one native Temporal connection, one Postgres timeline store, one Postgres review store, one Redis timeline stream, and one delivery runtime with its own managed Postgres pool. Temporal's Worker owns polling and graceful signal handling. Cleanup waits for polling to stop before closing Redis, review and timeline stores, the delivery pool, and the native connection; repeated closure shares one promise.

@@ -8,7 +8,7 @@ import {
 } from "@patch-pilot/maintenance";
 import pg from "pg";
 
-import { createGitHubDeliveryRuntime } from "../github-delivery/index.js";
+import { createGitHubDeliveryReconciliationRuntime } from "../github-delivery/index.js";
 import { createGitHubWebhookIngestion } from "../github-ingestion/index.js";
 import { createTemporalApprovalNotifier } from "../workflow-approval/index.js";
 import { createTemporalRunDispatcher } from "../workflow-submission/index.js";
@@ -24,22 +24,21 @@ const DEFAULT_TEMPORAL_TASK_QUEUE = "patch-pilot-maintenance";
 /**
  * Composes all stateful API adapters behind one deployment lifecycle.
  *
- * @param {{ environment: object, pool?: object, timelineStream?: object, githubDeliveryRuntime?: object, githubRequest?: Function, temporalResource?: object }} options Environment and optional controlled test resources.
- * @returns {Promise<{ server: object, listen: Function, deliverApprovedPullRequest: Function, close: Function }>} API deployment operations.
+ * @param {{ environment: object, pool?: object, timelineStream?: object, githubReconciliationRuntime?: object, githubRequest?: Function, temporalResource?: object }} options Environment and optional controlled test resources.
+ * @returns {Promise<{ server: object, listen: Function, close: Function }>} API deployment operations.
  */
 export async function createMaintainerApiDeployment(options) {
   const config = createDeploymentConfig(options?.environment);
   const pool = options?.pool ?? new pg.Pool({ connectionString: config.postgresUrl });
-  let timelineStream, githubDeliveryRuntime, temporalResource;
+  let timelineStream, githubReconciliationRuntime, temporalResource;
 
   try {
     timelineStream = options?.timelineStream
       ?? await createRedisRunTimelineStream({ url: config.redisUrl });
     temporalResource = await createWorkflowCommandResource({
       resource: options?.temporalResource, config });
-    githubDeliveryRuntime = options?.githubDeliveryRuntime
-      ?? await createGitHubDeliveryRuntime({ pool, appId: config.githubAppId,
-        privateKey: config.githubAppPrivateKey });
+    githubReconciliationRuntime = options?.githubReconciliationRuntime
+      ?? await createGitHubDeliveryReconciliationRuntime({ pool });
     const requestGitHub = options?.githubRequest ?? createGitHubAppRequest({
       appId: config.githubAppId, privateKey: config.githubAppPrivateKey });
     const [reviewStore, timelineStore, approvalStore, runStore] = await Promise.all([
@@ -51,7 +50,7 @@ export async function createMaintainerApiDeployment(options) {
     const ingestWebhook = createGitHubWebhookIngestion({ requestGitHub,
       saveSubmittedRun: runStore.saveSubmittedRun,
       dispatchRun: temporalResource.dispatchRun,
-      reconcilePullRequestWebhook: githubDeliveryRuntime.reconcilePullRequestWebhook });
+      reconcilePullRequestWebhook: githubReconciliationRuntime.reconcilePullRequestWebhook });
     const runtime = createMaintainerApiRuntime({ environment: options.environment,
       githubWebhook: { secret: config.githubWebhookSecret,
         ingestWebhook },
@@ -59,13 +58,12 @@ export async function createMaintainerApiDeployment(options) {
       notifyApprovalDecision: temporalResource.notifyApprovalDecision });
     const lifecycle = createDeploymentLifecycle({ ...runtime, timelineStream,
       temporalResource,
-      githubDeliveryRuntime, host: config.host, port: config.port });
+      githubReconciliationRuntime, host: config.host, port: config.port });
     return Object.freeze({ server: runtime.server, listen: lifecycle.listen,
-      deliverApprovedPullRequest: githubDeliveryRuntime.deliverApprovedPullRequest,
       close: lifecycle.close });
   } catch (error) {
     await closeFailedComposition({ pool, timelineStream, temporalResource,
-      githubDeliveryRuntime });
+      githubReconciliationRuntime });
     throw error;
   }
 }
@@ -146,7 +144,7 @@ async function closeDeploymentResources(resources) {
   const providerResults = await Promise.allSettled([
     resources.timelineStream.close(),
     resources.temporalResource.close(),
-    resources.githubDeliveryRuntime.close(),
+    resources.githubReconciliationRuntime.close(),
   ]);
   const failures = [...ingressResult, ...providerResults]
     .filter((result) => result.status === "rejected")
@@ -170,7 +168,9 @@ async function closeFailedComposition(resources) {
   if (resources.temporalResource !== undefined) {
     operations.push(resources.temporalResource.close());
   }
-  if (resources.githubDeliveryRuntime !== undefined) operations.push(resources.githubDeliveryRuntime.close());
+  if (resources.githubReconciliationRuntime !== undefined) {
+    operations.push(resources.githubReconciliationRuntime.close());
+  }
   else operations.push(resources.pool.end());
   await Promise.allSettled(operations);
 }

@@ -18,7 +18,7 @@ tags:
 - pilot
 position: a4
 created: 2026-08-14
-updated: 2026-08-14
+updated: 2026-08-21
 ---
 
 # Run end-to-end pilot on Python and TypeScript repositories
@@ -35,6 +35,8 @@ Deliver **Run end-to-end pilot on Python and TypeScript repositories** within th
 
 ## Notes
 
-[Reference material, links, additional context.]
+- The controlled workflow path now reaches an idempotent draft-pull-request delivery after exact human approval.
+- Rejection terminates without a GitHub provider call; delivery conflicts and blocked evidence remain explicit outcomes.
+- The remaining pilot requires live Temporal, Postgres, Redis, OpenAI, GitHub App, and container-runtime access for representative Python and TypeScript repositories.
 
 ## References

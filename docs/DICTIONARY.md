@@ -73,7 +73,7 @@ The executable `boundaries.config.mjs` file that canonically declares production
 
 ### Change Proposal
 
-The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented workflow produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, records the canonical safety decision, advances ready proposals through bounded verification and critique attempts, and persists the accepted final result as a [review snapshot](#review-snapshot). Pull-request description and workflow delivery orchestration remain later stages.
+The reviewable result of a maintenance run: the implementation plan, source diff, verification evidence, critique outcome, and proposed pull-request description. The implemented workflow produces a versioned plan and independently measured unified diff only after failure reproduction, requires exact agreement between planned and changed files, records the canonical safety decision, advances ready proposals through bounded verification and critique attempts, and persists the accepted final result as a [review snapshot](#review-snapshot). After exact approval, the workflow derives bounded deterministic pull-request content from that same final proposal for delivery.
 
 ### Co-Located Docs
 
@@ -93,7 +93,7 @@ A non-deployable monorepo workspace that owns a coherent product or application 
 
 ### Control-Plane API
 
-The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, one reusable Temporal client resource, GitHub ingestion, workflow submission and approval notification, pull-request reconciliation, and deterministic signal-driven shutdown. It starts persisted issue runs and signals persisted decisions but does not execute worker Activities.
+The deployable application boundary that authenticates users, accepts commands, and serves durable run evidence and live progress without executing target-repository tools. Its executable Node deployment dispatches review evidence, human approval, timeline SSE, and GitHub webhook routes; constructs the shared single-operator bearer policy; and composes one Postgres pool, the review-snapshot/timeline/approval stores and query, one Redis stream, one reusable Temporal client resource, GitHub ingestion, workflow submission and approval notification, pull-request reconciliation, and deterministic signal-driven shutdown. It starts persisted issue runs and signals persisted decisions but neither executes worker Activities nor publishes approved changes directly.
 
 ### Critique Decision
 
@@ -113,7 +113,7 @@ A short-lived credential issued for one GitHub App installation. The implemented
 
 ### GitHub Delivery
 
-The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its authenticated GitHub App transport supplies repository-scoped [installation tokens](#github-app-installation-token); its commit publisher strictly applies the exact approved UTF-8 text diff to the immutable base and creates deterministic Git objects; and its REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. The control-plane API composes the approval store and all delivery ports behind the environment-backed shared-pool lifecycle. Live proof remains planned; automatic merge is prohibited.
+The controlled publication step after an [approval decision](#approval-decision). The implemented provider-free use case recomputes the source-diff hash, requires an exact passed approval binding, derives a deterministic branch, requests only a linked draft pull request, and treats matching durable or concurrent retries as replays. Its Postgres store atomically retains complete evidence and constrains provider identities against collisions. Its authenticated GitHub App transport supplies repository-scoped [installation tokens](#github-app-installation-token); its commit publisher strictly applies the exact approved UTF-8 text diff to the immutable base and creates deterministic Git objects; and its REST adapter exactly creates or replays the branch ref and open draft PR without force-updating changed provider state. The maintenance worker composes those parts as a retryable Activity, reloads canonical approval before the gate, and makes rejection side-effect free; the API separately reconciles later webhooks. Live proof remains planned, and automatic merge is prohibited.
 
 ### GitHub Delivery Observation
 
@@ -142,7 +142,7 @@ One durable execution of the Autonomous GitHub Maintainer for a specific reposit
 
 ### Maintenance Workflow
 
-The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, planning-context, proposal, attempt, review, and approval events, use fresh exact-revision disposable checkouts, reproduce and verify through the canonical safe executor, and permit no more than two full proposal revisions. It atomically records an accepted [review snapshot](#review-snapshot), waits durably for an exactly bound [approval decision](#approval-decision), advances approval, and terminates human rejection explicitly. Unsupported, policy-blocked, critique-rejected, exhausted, and malformed outcomes also terminate visibly. Approved GitHub delivery orchestration remains planned.
+The Temporal-owned durable orchestration of one [maintenance run](#maintenance-run). The executable worker registers `maintenanceRunWorkflow`; its implemented phases record submitted, inspection, reproduction, planning-context, proposal, attempt, review, approval, and delivery events, use fresh exact-revision disposable checkouts, reproduce and verify through the canonical safe executor, and permit no more than two full proposal revisions. It atomically records an accepted [review snapshot](#review-snapshot), waits durably for an exactly bound [approval decision](#approval-decision), terminates human rejection without provider calls, and delivers approval through a separately retried idempotent [GitHub delivery](#github-delivery) Activity. Unsupported, policy-blocked, critique-rejected, exhausted, delivery-blocked, conflicting, and malformed outcomes also terminate visibly.
 
 ### Monorepo
 
@@ -186,7 +186,7 @@ An authenticated request to begin one [maintenance run](#maintenance-run). The e
 
 ### Run Timeline
 
-The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, planning-context, proposal, attempt, review, approval waiting, and approval outcome; source context and unified diffs are deliberately omitted while paths, metrics, verification, critique, and bounded decision evidence remain visible. Live local-service verification remains open.
+The ordered audit history of one [maintenance run](#maintenance-run). Postgres is canonical and assigns each stored event a run-local increasing sequence; Redis republishes that already-persisted event for low-latency viewers but is not a source of truth. Deterministic event IDs replay the canonical first evidence and reject conflicting reuse, making Temporal Activity retries safe. Implemented workflow events include inspection, reproduction, planning-context, proposal, attempt, review, approval, and delivery; source context, unified diffs, credentials, and idempotency keys are deliberately omitted while paths, metrics, verification, critique, decisions, and bounded branch/pull-request evidence remain visible. Live local-service verification remains open.
 
 ### Supported Project
 

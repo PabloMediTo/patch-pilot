@@ -28,7 +28,7 @@ Publish one exactly approved [pull-request proposal](../DICTIONARY.md#pull-reque
 ## Adjacent parts
 
 - [GitHub run ingestion](github-ingestion.md) retains the installation, repository, default branch, issue, and immutable base revision
-- the [maintenance workflow](maintenance-workflow.md) invokes delivery only after approval
+- the [maintenance workflow](maintenance-workflow.md) invokes the worker Activity only after exact approval
 - Postgres implements the atomic delivery-record port
 - the GitHub REST adapter maps commit publication to branch references and draft-pull-request creation
 - authenticated GitHub App transport supplies short-lived installation requests
@@ -66,6 +66,6 @@ Keeping patch application separate from authentication and REST branch/PR replay
 
 The concrete Postgres store creates its schema idempotently and records the complete delivery, approval binding, immutable head, and draft-pull-request identity in one row per run. Database checks reinforce positive identifiers and plan versions, full revision and evidence-hash lengths, passed verification, and `draft: true`. Repository/branch and repository/pull-request uniqueness protect deterministic provider identities. An insert conflict reloads the run record for a matching replay; a conflicting provider identity belonging to another run remains an explicit conflict.
 
-The control-plane API now composes one managed Postgres pool with the approval and delivery stores, authenticated GitHub App request transport, safe text-commit publisher, GitHub reference/draft-PR adapter, and provider-free use case. Callers can supply only delivery evidence, not replace the internally composed ports. Shutdown closes the pool once and prevents later delivery calls. A full composition test proves creation and durable replay through the complete path with controlled Postgres and GitHub boundaries.
+The worker's `github-delivery` application role composes one managed Postgres pool with the approval and delivery stores, authenticated GitHub App request transport, safe text-commit publisher, GitHub reference/draft-PR adapter, and provider-free use case. The workflow supplies only delivery evidence, not replacement ports. Shutdown closes the pool once and prevents later Activity calls. The API's separate `github-delivery` role now owns only persisted pull-request webhook reconciliation, so publication has one executable owner.
 
-The provider-free use case, Postgres store, authenticated transport, commit publisher, reference/draft-PR adapter, API runtime composition, and focused tests are implemented. The executable [control-plane runtime](control-plane-runtime.md) supplies its shared environment-backed Postgres pool and lifecycle; live Postgres/GitHub verification remains planned.
+The provider-free use case, Postgres store, authenticated transport, commit publisher, reference/draft-PR adapter, worker Activity composition, API reconciliation composition, and focused tests are implemented. Live Postgres/GitHub verification remains planned.

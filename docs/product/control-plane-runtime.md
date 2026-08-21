@@ -27,7 +27,7 @@ Compose and operate the executable [control-plane API](../DICTIONARY.md#control-
 - one Redis connection pair for live timeline subscriptions
 - one reusable Temporal client connection for deterministic [workflow submission](workflow-submission.md) and persisted [workflow approval](workflow-approval.md) signals
 - idempotent closure of the listener, active SSE connections, Redis clients, Temporal connection, and Postgres pool
-- the existing approved pull-request delivery operation behind the same managed lifecycle
+- persisted pull-request webhook reconciliation behind the same managed lifecycle
 
 ## Adjacent parts
 
@@ -40,7 +40,7 @@ Compose and operate the executable [control-plane API](../DICTIONARY.md#control-
 
 ## Lifecycle and failure rules
 
-Configuration is validated before a listener starts. The deployment creates a single `pg` pool and passes it to every Postgres-backed store rather than allowing each adapter to create an independent pool. It also owns one Temporal client resource shared by run submission and approval notification. The delivery runtime owns final pool closure, while the deployment owns Temporal, Redis, and HTTP closure.
+Configuration is validated before a listener starts. The deployment creates a single `pg` pool and passes it to every Postgres-backed store rather than allowing each adapter to create an independent pool. It also owns one Temporal client resource shared by run submission and approval notification. The reconciliation runtime owns final pool closure, while the deployment owns Temporal, Redis, and HTTP closure. Approved publication is a worker Activity and is not exposed as an API deployment operation.
 
 Startup rejects listener errors. Shutdown stops HTTP ingress first, force-closes long-lived connections such as SSE, and then attempts both Redis and Postgres cleanup even if one provider fails. Repeated shutdown requests share the same promise. `main.js` installs this operation for `SIGINT` and `SIGTERM` and reports cleanup failure through the process exit code.
 

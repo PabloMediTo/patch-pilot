@@ -3,6 +3,7 @@ import { createPostgresRunReviewStore, createPostgresRunTimelineStore,
 import { NativeConnection, Worker } from "@temporalio/worker";
 import { fileURLToPath, URL } from "node:url";
 
+import { createGitHubDeliveryActivityRuntime } from "../github-delivery/index.js";
 import { createMaintenanceWorkflowActivities } from "../maintenance-workflow/index.js";
 import { createOpenAiProposalGenerators } from "../proposal-generation/index.js";
 
@@ -14,12 +15,12 @@ const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
 /**
  * Composes one executable Temporal worker and its Activity provider lifecycle.
  *
- * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, reviewStore?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
+ * @param {{ environment: object, connection?: object, timelineStore?: object, timelineStream?: object, reviewStore?: object, githubDeliveryRuntime?: object, proposalGenerators?: object, worker?: object }} options Environment and optional controlled resources.
  * @returns {Promise<{ run: Function, close: Function }>} Worker deployment lifecycle.
  */
 export async function createMaintainerWorkerDeployment(options) {
   const config = createConfig(options?.environment);
-  let connection, timelineStore, timelineStream, reviewStore;
+  let connection, timelineStore, timelineStream, reviewStore, githubDeliveryRuntime;
   try {
     connection = options?.connection ?? await NativeConnection.connect({
       address: config.temporalAddress });
@@ -29,16 +30,23 @@ export async function createMaintainerWorkerDeployment(options) {
       connectionString: config.postgresUrl });
     timelineStream = options?.timelineStream ?? await createRedisRunTimelineStream({
       url: config.redisUrl });
+    githubDeliveryRuntime = options?.githubDeliveryRuntime
+      ?? await createGitHubDeliveryActivityRuntime({ connectionString: config.postgresUrl,
+        appId: config.githubAppId, privateKey: config.githubAppPrivateKey });
     const generators = options?.proposalGenerators ?? createOpenAiProposalGenerators({
       apiKey: config.openAiApiKey, model: config.openAiModel });
     const activities = createMaintenanceWorkflowActivities({ timelineStore, timelineStream,
-      reviewStore, workspaceRoot: config.workspaceRoot, ...generators });
+      reviewStore, workspaceRoot: config.workspaceRoot,
+      deliverApprovedPullRequest: githubDeliveryRuntime.deliverApprovedPullRequest,
+      ...generators });
     const worker = options?.worker ?? await Worker.create({ connection,
       namespace: config.temporalNamespace, taskQueue: config.temporalTaskQueue,
       workflowsPath: WORKFLOWS_PATH, activities });
-    return createLifecycle({ worker, connection, timelineStore, timelineStream, reviewStore });
+    return createLifecycle({ worker, connection, timelineStore, timelineStream, reviewStore,
+      githubDeliveryRuntime });
   } catch (error) {
-    await closeResources({ connection, timelineStore, timelineStream, reviewStore });
+    await closeResources({ connection, timelineStore, timelineStream, reviewStore,
+      githubDeliveryRuntime });
     throw error;
   }
 }
@@ -54,9 +62,11 @@ function createConfig(environment) {
     workspaceRoot: environment?.PATCH_PILOT_WORKSPACE_ROOT ?? ".patch-pilot/workspaces",
     openAiApiKey: environment?.PATCH_PILOT_OPENAI_API_KEY,
     openAiModel: environment?.PATCH_PILOT_OPENAI_MODEL ?? "gpt-5.4-mini-2026-03-17",
+    githubAppId: environment?.PATCH_PILOT_GITHUB_APP_ID,
+    githubAppPrivateKey: environment?.PATCH_PILOT_GITHUB_APP_PRIVATE_KEY,
   });
   if (Object.values(config).some((value) => typeof value !== "string" || value.trim() === "")) {
-    throw new Error("Worker deployment requires valid Temporal, storage, workspace, and OpenAI values.");
+    throw new Error("Worker deployment requires valid Temporal, storage, workspace, OpenAI, and GitHub values.");
   }
   return config;
 }
@@ -84,7 +94,8 @@ function createLifecycle(resources) {
 /** Closes every created provider and reports all cleanup failures together. */
 async function closeResources(resources) {
   const operations = [resources.timelineStream?.close?.(), resources.timelineStore?.close?.(),
-    resources.reviewStore?.close?.(), resources.connection?.close?.()]
+    resources.reviewStore?.close?.(), resources.githubDeliveryRuntime?.close?.(),
+    resources.connection?.close?.()]
     .filter((operation) => operation !== undefined);
   const results = await Promise.allSettled(operations);
   const failures = results.filter((result) => result.status === "rejected")

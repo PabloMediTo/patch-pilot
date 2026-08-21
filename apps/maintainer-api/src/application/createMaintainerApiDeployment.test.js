@@ -25,9 +25,8 @@ const temporalResource = { closeCalls: 0, client: { workflow: {
   } }; },
 } },
   async close() { this.closeCalls += 1; } };
-const githubDeliveryRuntime = {
+const githubReconciliationRuntime = {
   closeCalls: 0,
-  deliverApprovedPullRequest: async () => ({ status: "created" }),
   reconcilePullRequestWebhook: async (envelope) => {
     reconciled.push(envelope);
     return Object.freeze({ status: "recorded" });
@@ -36,7 +35,7 @@ const githubDeliveryRuntime = {
 };
 const port = await reservePort();
 const deployment = await createMaintainerApiDeployment({ environment: createEnvironment(port),
-  pool, timelineStream, githubDeliveryRuntime,
+  pool, timelineStream, githubReconciliationRuntime,
   temporalResource,
   githubRequest: async () => ({ statusCode: 200, body: { object: { sha: "a".repeat(40) } } }) });
 
@@ -59,18 +58,16 @@ assert.equal(dispatchedRuns[0].id, "github:issue-delivery-1");
 assert.equal(dispatchedRuns[0].submittedAt, "2026-08-16T14:00:00.000Z");
 assert.equal(dispatchedRuns[0].issueTitle, "Correct the reported assertion");
 assert.equal(dispatchedRuns[0].issueContext, "The calculation is incorrect.");
-assert.deepEqual(await deployment.deliverApprovedPullRequest({}), { status: "created" });
-
 await deployment.close();
 await deployment.close();
 assert.equal(timelineStream.closeCalls, 1);
 assert.equal(temporalResource.closeCalls, 1);
 assert.deepEqual(approvalSignals, []);
-assert.equal(githubDeliveryRuntime.closeCalls, 1);
+assert.equal(githubReconciliationRuntime.closeCalls, 1);
 assert.equal(pool.endCalls, 1);
 
 await assert.rejects(createMaintainerApiDeployment({ environment: {}, pool,
-  timelineStream, temporalResource, githubDeliveryRuntime }), /valid listener/u);
+  timelineStream, temporalResource, githubReconciliationRuntime }), /valid listener/u);
 
 const failedPool = { endCalls: 0, async query() { return { rows: [] }; },
   async end() { this.endCalls += 1; } };

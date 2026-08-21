@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { createMaintenanceWorkflowActivities, orchestrateMaintenanceRun } from "./index.js";
 
 const run = Object.freeze({ id: "github:delivery-1", repository: "octo/example",
-  issueNumber: 42, baseRevision: "a".repeat(40), status: "submitted",
+  installationId: 17, issueNumber: 42, defaultBranch: "main",
+  baseRevision: "a".repeat(40), status: "submitted",
   issueTitle: "Fix incorrect addition result",
   issueContext: "Addition returns the wrong value.",
   expectedFailure: "expected 2 but received 3",
@@ -18,7 +19,8 @@ const times = ["2026-08-16T16:01:00.000Z", "2026-08-16T16:02:00.000Z",
   "2026-08-16T16:11:00.000Z", "2026-08-16T16:12:00.000Z",
   "2026-08-16T16:13:00.000Z", "2026-08-16T16:14:00.000Z",
   "2026-08-16T16:15:00.000Z", "2026-08-16T16:16:00.000Z",
-  "2026-08-16T16:17:00.000Z", "2026-08-16T16:18:00.000Z"];
+  "2026-08-16T16:17:00.000Z", "2026-08-16T16:18:00.000Z",
+  "2026-08-16T16:19:00.000Z", "2026-08-16T16:20:00.000Z"];
 const inspection = Object.freeze({ status: "supported", language: "typescript",
   command: Object.freeze({ executable: "npm", args: Object.freeze(["test"]) }) });
 const readyProposal = Object.freeze({ status: "ready",
@@ -42,6 +44,12 @@ const reviewBinding = Object.freeze({ baseRevision: run.baseRevision,
 const approvalDecision = Object.freeze({ runId: run.id, actorId: "operator:pablo",
   idempotencyKey: "approval-1", status: "approved", reason: null,
   decidedAt: "2026-08-16T16:17:30.000Z", reviewBinding });
+const delivery = Object.freeze({ runId: run.id, repository: run.repository,
+  branchName: "patch-pilot/1234567890abcdef12345678", headRevision: "d".repeat(40),
+  pullRequest: Object.freeze({ number: 7,
+    url: "https://github.com/octo/example/pull/7", draft: true }),
+  deliveredAt: "2026-08-16T16:19:30.000Z" });
+let deliveryRequest;
 const successfulInput = { run,
   recordTimelineEvent: async (event) => { events.push(event); },
   inspectRepository: async () => inspection,
@@ -59,12 +67,21 @@ const successfulInput = { run,
     assert.deepEqual(binding, reviewBinding);
     return approvalDecision;
   },
+  deliverApprovedPullRequest: async (request) => {
+    deliveryRequest = request;
+    return Object.freeze({ status: "created", delivery });
+  },
   now: () => times.shift() };
 const result = await orchestrateMaintenanceRun(successfulInput);
 
-assert.equal(result.status, "approved");
+assert.equal(result.status, "delivered");
 assert.deepEqual(result.review.reviewBinding, reviewBinding);
 assert.deepEqual(result.approval, approvalDecision);
+assert.deepEqual(result.delivery, { status: "created", delivery });
+assert.equal(deliveryRequest.installationId, run.installationId);
+assert.equal(deliveryRequest.baseBranch, run.defaultBranch);
+assert.equal(deliveryRequest.proposal.sourceDiff, readyProposal.sourceDiff.unifiedDiff);
+assert.deepEqual(deliveryRequest.proposal.verification, reviewBinding.verification);
 assert.equal(result.reproduction.status, "reproduced");
 assert.equal(result.repositoryContext.relevantFiles[0].path, "src/math.ts");
 assert.equal(events[6].payload.repositoryContext.relevantFiles[0].content, undefined);
@@ -106,18 +123,26 @@ assert.deepEqual(events.map(({ eventId, type, occurredAt }) => ({ eventId, type,
     occurredAt: "2026-08-16T16:17:00.000Z" },
   { eventId: `${run.id}:timeline:approval-approved`, type: "run.approval.approved",
     occurredAt: "2026-08-16T16:18:00.000Z" },
+  { eventId: `${run.id}:timeline:delivery-started`, type: "run.delivery.started",
+    occurredAt: "2026-08-16T16:19:00.000Z" },
+  { eventId: `${run.id}:timeline:delivery-completed`, type: "run.delivery.completed",
+    occurredAt: "2026-08-16T16:20:00.000Z" },
 ]);
-assert.equal(events.at(-3).payload.recordedAt, "2026-08-16T16:15:00.000Z");
-assert.equal(events.at(-2).payload.reviewBinding.diffHash, "b".repeat(64));
-assert.equal(events.at(-1).payload.idempotencyKey, undefined);
+assert.equal(events.at(-5).payload.recordedAt, "2026-08-16T16:15:00.000Z");
+assert.equal(events.at(-4).payload.reviewBinding.diffHash, "b".repeat(64));
+assert.equal(events.at(-3).payload.idempotencyKey, undefined);
+assert.equal(events.at(-1).payload.pullRequest.number, 7);
 
 const rejectionEvents = [];
+let rejectedDeliveryCalls = 0;
 const rejectedApproval = await orchestrateMaintenanceRun({ ...successfulInput,
   recordTimelineEvent: async (event) => { rejectionEvents.push(event); },
   waitForApproval: async () => ({ ...approvalDecision, status: "rejected",
     reason: "Needs a narrower fix" }),
+  deliverApprovedPullRequest: async () => { rejectedDeliveryCalls += 1; },
   now: () => "2026-08-16T17:00:00.000Z" });
 assert.equal(rejectedApproval.status, "approval-rejected");
+assert.equal(rejectedDeliveryCalls, 0);
 assert.equal(rejectionEvents.at(-2).type, "run.approval.rejected");
 assert.equal(rejectionEvents.at(-1).type, "run.terminal");
 assert.equal(rejectionEvents.at(-1).payload.outcome, "approval-rejected");
@@ -212,6 +237,10 @@ const activities = createMaintenanceWorkflowActivities({ workspaceRoot: "control
     activityCalls.push({ operation: "save-review", input: snapshot });
     return { status: "created", snapshot };
   } },
+  deliverApprovedPullRequest: async (input) => {
+    activityCalls.push({ operation: "deliver", input });
+    return { status: "created", delivery };
+  },
   createWorkspace: async (input) => {
     activityCalls.push({ operation: "create", input });
     return { workspaceDirectory: "controlled-root/repository-1" };
@@ -296,5 +325,7 @@ assert.equal(activityCalls.at(-1).input.proposal.diff,
 await activities.recordTimelineEvent({ eventId: "event-1", runId: run.id,
   type: "run.submitted", occurredAt: run.submittedAt, payload: { status: "submitted" } });
 assert.equal(timelineEvents[0].eventId, "event-1");
+assert.equal((await activities.deliverApprovedPullRequest(deliveryRequest)).status, "created");
+assert.equal(activityCalls.at(-1).operation, "deliver");
 assert.throws(() => createMaintenanceWorkflowActivities({}),
-  /timeline, review, workspace, and generator/u);
+  /timeline, review, delivery, workspace, and generator/u);

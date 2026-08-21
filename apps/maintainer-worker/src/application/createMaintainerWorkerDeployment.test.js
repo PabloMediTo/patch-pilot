@@ -9,14 +9,18 @@ const connection = createCloseable();
 const timelineStore = { append: async () => undefined, ...createCloseable() };
 const timelineStream = { publish: async () => undefined, ...createCloseable() };
 const reviewStore = { saveSnapshot: async () => undefined, ...createCloseable() };
+const githubDeliveryRuntime = { deliverApprovedPullRequest: async () => undefined,
+  ...createCloseable() };
 const worker = { runCalls: 0, shutdownCalls: 0,
   async run() { this.runCalls += 1; },
   shutdown() { this.shutdownCalls += 1; } };
 const proposalGenerators = { generatePlan: async () => undefined,
   generateDiff: async () => undefined, reviewProposal: async () => undefined };
-const environment = { PATCH_PILOT_OPENAI_API_KEY: "private-test-key" };
+const environment = { PATCH_PILOT_OPENAI_API_KEY: "private-test-key",
+  PATCH_PILOT_GITHUB_APP_ID: "123",
+  PATCH_PILOT_GITHUB_APP_PRIVATE_KEY: "controlled-private-key" };
 const deployment = await createMaintainerWorkerDeployment({ environment, connection,
-  timelineStore, timelineStream, reviewStore, proposalGenerators, worker });
+  timelineStore, timelineStream, reviewStore, githubDeliveryRuntime, proposalGenerators, worker });
 
 await deployment.run();
 await deployment.close();
@@ -27,14 +31,17 @@ assert.equal(connection.closeCalls, 1);
 assert.equal(timelineStore.closeCalls, 1);
 assert.equal(timelineStream.closeCalls, 1);
 assert.equal(reviewStore.closeCalls, 1);
+assert.equal(githubDeliveryRuntime.closeCalls, 1);
 assert.throws(() => deployment.run(), /closing/u);
 
 await assert.rejects(createMaintainerWorkerDeployment({
   environment: { PATCH_PILOT_TEMPORAL_TASK_QUEUE: " " }, connection,
-  timelineStore, timelineStream, reviewStore, proposalGenerators, worker }), /valid Temporal/u);
+  timelineStore, timelineStream, reviewStore, githubDeliveryRuntime,
+  proposalGenerators, worker }), /valid Temporal/u);
 
 await assert.rejects(createMaintainerWorkerDeployment({ environment: {}, connection,
-  timelineStore, timelineStream, reviewStore, proposalGenerators, worker }), /OpenAI values/u);
+  timelineStore, timelineStream, reviewStore, githubDeliveryRuntime,
+  proposalGenerators, worker }), /OpenAI, and GitHub values/u);
 
 const workflowsPath = fileURLToPath(new URL("../maintenance-workflow/maintenanceRunWorkflow.js",
   import.meta.url));

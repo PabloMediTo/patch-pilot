@@ -3,7 +3,9 @@ export { createMaintainerApiApplication, createMaintainerApiDeployment,
 export { createApiBearerAuthentication } from "./api-authentication/index.js";
 export { handleMaintainerApiRequest } from "./api-http/index.js";
 export { createMaintainerApiServer } from "./api-server/index.js";
-export { createGitHubDeliveryRuntime } from "./github-delivery/index.js";
+export {
+  createGitHubDeliveryReconciliationRuntime,
+} from "./github-delivery/index.js";
 export { createGitHubIssueRunSubmission, createGitHubWebhookIngestion,
   handleGitHubWebhookRequest } from "./github-ingestion/index.js";
 export { handleRunApprovalRequest } from "./run-approval-http/index.js";
