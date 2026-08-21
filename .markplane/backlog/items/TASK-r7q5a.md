@@ -21,7 +21,7 @@ tags:
 - redis
 position: a2
 created: 2026-08-14
-updated: 2026-08-15
+updated: 2026-08-21
 ---
 
 # Persist run timeline and stream live progress
@@ -53,6 +53,8 @@ Deliver **Persist run timeline and stream live progress** within the documented 
 - Composed the timeline route into the concrete Node API dispatcher and server without buffering, with transport-owned repeating heartbeat scheduling.
 - Made deterministic event IDs replay the canonical first Postgres evidence while rejecting identity reuse with different evidence, allowing Temporal Activity retries to remain idempotent.
 - Connected the first worker workflow phase to submitted and inspection lifecycle events; Redis may republish an exact replay, while API and browser consumers deduplicate its canonical sequence.
+- Extracted a provider-free integration evidence verifier that requires both writes to persist and stream, exact canonical Postgres and Redis ordering and payloads, and matching unique provider event IDs.
+- Added focused verifier tests for the passing report, partial streaming failure, Postgres ordering drift, missing Redis delivery, and provider identity mismatch. The live runner now emits only sanitized successful check names.
 - Remaining before completion: run an integration check against the local Postgres and Redis services. Docker is not installed on the current machine, so the task remains `draft` and continues to block the review screen.
 
 ## References
