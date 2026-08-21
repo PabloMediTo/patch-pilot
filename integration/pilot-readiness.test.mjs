@@ -48,6 +48,19 @@ assert.deepEqual(blocked.tooling.checks.map(({ status, reason }) => ({ status, r
 ]);
 assert.equal(JSON.stringify(blocked).includes("controlled-private-key"), false);
 
+const invalidAuthentication = await assessPilotReadiness({ environment: {
+  ...environment,
+  PATCH_PILOT_API_BEARER_TOKEN: " controlled-bearer-token-with-32-characters ",
+  PATCH_PILOT_API_ACTOR_ID: "unsafe actor",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(invalidAuthentication.status, "blocked");
+assert.deepEqual(invalidAuthentication.configuration.invalidVariables, [
+  "PATCH_PILOT_API_BEARER_TOKEN",
+  "PATCH_PILOT_API_ACTOR_ID",
+]);
+assert.equal(JSON.stringify(invalidAuthentication).includes("unsafe actor"), false);
+assert.equal(JSON.stringify(invalidAuthentication).includes("controlled-bearer"), false);
+
 const duplicateTargets = await assessPilotReadiness({ environment: {
   ...environment,
   PATCH_PILOT_PYTHON_PILOT_REPOSITORY: "Pilot/Shared-Repository",
