@@ -64,4 +64,14 @@ The maintenance package maps the canonical specification to Docker without expos
 
 ## Current enforcement boundary
 
-Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, the bounded Docker CLI process port, and their worker composition are implemented and unit-tested. The maintenance workflow now invokes this composed executor for reproduction in a fresh exact-revision workspace and supplies the workspace boundary required by policy. The executor creates unpredictable container names internally, invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape. Execution against a real Docker runtime remains necessary to prove that every resource and network limit behaves as expected. Until that live proof exists, untrusted target-repository commands remain disabled in deployed environments.
+Policy decisions, the sandbox specification, Docker command construction, failure handling, forced cleanup, the bounded Docker CLI process port, and their worker composition are implemented and unit-tested. The maintenance workflow now invokes this composed executor for reproduction in a fresh exact-revision workspace and supplies the workspace boundary required by policy. The executor creates unpredictable container names internally, invokes Docker without a shell, applies the requested timeout and output bound, and returns the common command-evidence shape.
+
+Run the live verifier with:
+
+```powershell
+npm run test:sandbox-integration
+```
+
+The command copies a controlled Node fixture into a temporary host workspace and executes its exact `npm test` command through the real worker sandbox composition. Assertions inside the container read effective cgroup CPU, memory, writable-filesystem capacity, and PID limits; verify dropped capabilities, `no-new-privileges`, disabled outbound HTTPS, the `/workspace` working directory, and copied input; and write one container-only marker. The outer verifier requires bounded success evidence, proves that marker never reached the host, and confirms forced container removal. Its JSON report contains only fixed check names and statuses.
+
+The command intentionally fails when Docker is unavailable, container creation rejects a configured limit, or any observed invariant differs. A successful live run must still be retained before this safety work is complete; the current machine fails at Docker container creation. Until that live proof exists, untrusted target-repository commands remain disabled in deployed environments.

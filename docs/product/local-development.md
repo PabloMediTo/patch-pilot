@@ -43,6 +43,14 @@ npm run test:timeline-integration
 
 The integration command fails when either service is unavailable. Override the defaults with `PATCH_PILOT_POSTGRES_URL` and `PATCH_PILOT_REDIS_URL` when the services do not use the documented local addresses.
 
+Exercise the real worker sandbox and verify its effective container limits:
+
+```powershell
+npm run test:sandbox-integration
+```
+
+The command uses a disposable fixture and container, emits only fixed check names, and fails rather than skipping when Docker or any required runtime invariant is unavailable.
+
 Stop containers while retaining local database volumes:
 
 ```powershell

@@ -101,7 +101,7 @@ The evidence-backed result of reviewing a ready [change proposal](#change-propos
 
 ### End-to-End Pilot
 
-The live acceptance exercise for the complete MVP path on one representative Python repository and one representative TypeScript repository. The implemented `npm run pilot:readiness` preflight checks local Docker/Compose availability, required configuration names, and both repository/issue identities while never printing values. A ready report is only permission to begin the live exercise; the pilot completes only after durable run evidence and rejection or linked draft-pull-request outcomes are observed.
+The live acceptance exercise for the complete MVP path on one representative Python repository and one representative TypeScript repository. The implemented `npm run pilot:readiness` preflight checks local Docker/Compose availability, required configuration names, and both repository/issue identities while never printing values. Separate timeline and sandbox integration commands retain live service and execution evidence. A ready report is only permission to begin the live exercise; the pilot completes only after both integration checks and durable run rejection or linked draft-pull-request outcomes are observed.
 
 ### Expected Failure Fragment
 
@@ -158,7 +158,7 @@ One source-control repository containing multiple declared application or packag
 
 ### MVP Safety Policy
 
-The fixed rules that decide which repository commands, planning-context files, and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, bounds and filters [repository planning context](#repository-planning-context), and rejects oversized or sensitive changes. Its Docker adapter maps execution rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup. Live runtime proof is still required before untrusted commands can be enabled in deployment.
+The fixed rules that decide which repository commands, planning-context files, and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, bounds and filters [repository planning context](#repository-planning-context), and rejects oversized or sensitive changes. Its Docker adapter maps execution rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup. The `npm run test:sandbox-integration` command verifies effective runtime invariants without skipping missing Docker, but a successful live result is still required before untrusted commands can be enabled in deployment.
 
 ### Pull-Request Proposal
 

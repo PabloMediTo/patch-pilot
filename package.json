@@ -11,6 +11,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "node --test",
     "pilot:readiness": "node integration/run-pilot-readiness.mjs",
+    "test:sandbox-integration": "node integration/run-sandbox.integration.mjs",
     "test:timeline-integration": "node integration/run-timeline.integration.mjs",
     "check": "npm run lint && npm run test",
     "infra:up": "docker compose up -d --wait",

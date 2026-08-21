@@ -51,8 +51,9 @@ The JSON result is `ready` only when every check passes. A blocked result exits 
 1. Run `npm run pilot:readiness` and resolve every reported blocker.
 2. Start the pinned local services with `npm run infra:up`.
 3. Run `npm run test:timeline-integration` to retain real Postgres/Redis ordering and fan-out proof.
-4. Start the API, worker, and web deployments with the same configured task queue and provider identities.
-5. Submit the explicitly marked issue in each configured pilot repository and observe the full timeline.
-6. Verify reproduction, plan, diff, verification, critique, and exact review binding before approving or rejecting.
-7. Confirm that rejection creates no provider mutation and that approval creates or exactly replays one linked draft pull request.
-8. Retain the run identities and outcomes in `TASK-eankx`; only then may the live pilot acceptance boxes be completed.
+4. Run `npm run test:sandbox-integration` to retain real cgroup, filesystem, network, privilege, and cleanup proof.
+5. Start the API, worker, and web deployments with the same configured task queue and provider identities.
+6. Submit the explicitly marked issue in each configured pilot repository and observe the full timeline.
+7. Verify reproduction, plan, diff, verification, critique, and exact review binding before approving or rejecting.
+8. Confirm that rejection creates no provider mutation and that approval creates or exactly replays one linked draft pull request.
+9. Retain the run identities and outcomes in `TASK-eankx`; only then may the live pilot acceptance boxes be completed.
