@@ -6,7 +6,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import { createSandboxCommandExecutor } from "@patch-pilot/maintainer-worker";
+import { createDockerCliExecutor,
+  createSandboxCommandExecutor } from "@patch-pilot/maintainer-worker";
 
 import { verifySandboxIntegration } from "./sandbox-integration.mjs";
 
@@ -15,13 +16,16 @@ const fixtureDirectory = join(dirname(fileURLToPath(import.meta.url)), "fixtures
 const integrationRoot = await mkdtemp(join(tmpdir(), "patch-pilot-sandbox-integration-"));
 const workspaceDirectory = join(integrationRoot, "workspace");
 const containerId = "sandbox-integration";
-const containerName = `patch-pilot-${containerId}`;
+const containerNames = Object.freeze({ sandbox: `patch-pilot-${containerId}`,
+  output: "patch-pilot-sandbox-output-integration",
+  timeout: "patch-pilot-sandbox-timeout-integration" });
 
 try {
   await cp(fixtureDirectory, workspaceDirectory, { recursive: true });
   const executeSandbox = createSandboxCommandExecutor({ createId: () => containerId });
-  const report = await verifySandboxIntegration({ workspaceDirectory, containerName,
-    executeSandbox, hasHostMutation: () => pathExists(join(workspaceDirectory,
+  const report = await verifySandboxIntegration({ workspaceDirectory, containerNames,
+    executeSandbox, executeDocker: createDockerCliExecutor(),
+    hasHostMutation: () => pathExists(join(workspaceDirectory,
       "container-only.txt")), isContainerPresent });
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 } finally {

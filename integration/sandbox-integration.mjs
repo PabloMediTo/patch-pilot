@@ -2,11 +2,14 @@ const EVIDENCE_PREFIX = "PATCH_PILOT_SANDBOX_EVIDENCE:";
 const EXPECTED_MEMORY_BYTES = 2_147_483_648;
 const EXPECTED_DISK_BYTES = 5_368_709_120;
 const EXPECTED_PIDS = 256;
+const PROCESS_OUTPUT_BYTES = 65_536;
+const PROCESS_TIMEOUT_MS = 1_000;
+const PROCESS_IMAGE = "node:24.18.0-bookworm-slim";
 
 /**
  * Executes and verifies one real canonical sandbox probe without exposing raw command output.
  *
- * @param {{ workspaceDirectory: string, containerName: string, executeSandbox: Function, hasHostMutation: Function, isContainerPresent: Function }} input Workspace and controlled runtime ports.
+ * @param {{ workspaceDirectory: string, containerNames: object, executeSandbox: Function, executeDocker: Function, hasHostMutation: Function, isContainerPresent: Function }} input Workspace and controlled runtime ports.
  * @returns {Promise<object>} Sanitized live-proof report.
  */
 export async function verifySandboxIntegration(input) {
@@ -16,28 +19,87 @@ export async function verifySandboxIntegration(input) {
   const evidence = parseProbeEvidence(result);
   assertProbeEvidence(evidence);
   const [hasHostMutation, isContainerPresent] = await Promise.all([
-    input.hasHostMutation(), input.isContainerPresent(input.containerName),
+    input.hasHostMutation(), input.isContainerPresent(input.containerNames.sandbox),
   ]);
   if (hasHostMutation || isContainerPresent) {
     throw new Error("Sandbox integration detected host mutation or retained container state.");
   }
+  await verifyDockerProcessProbe({ input, kind: "output",
+    containerName: input.containerNames.output });
+  await verifyDockerProcessProbe({ input, kind: "timeout",
+    containerName: input.containerNames.timeout });
   return Object.freeze({ status: "passed", checks: Object.freeze([
     createPassedCheck("cpu-limit"), createPassedCheck("memory-limit"),
     createPassedCheck("disk-limit"), createPassedCheck("pid-limit"),
     createPassedCheck("network-disabled"), createPassedCheck("capabilities-dropped"),
     createPassedCheck("no-new-privileges"), createPassedCheck("workspace-isolated"),
-    createPassedCheck("container-cleanup"),
+    createPassedCheck("container-cleanup"), createPassedCheck("output-limit"),
+    createPassedCheck("output-probe-cleanup"), createPassedCheck("timeout-limit"),
+    createPassedCheck("timeout-probe-cleanup"),
   ]) });
 }
 
 /** Requires exact runner ports and identities. */
 function assertInput(input) {
+  const hasContainerNames = ["sandbox", "output", "timeout"].every((key) =>
+    typeof input?.containerNames?.[key] === "string" && input.containerNames[key].trim() !== "");
   if (typeof input?.workspaceDirectory !== "string" || input.workspaceDirectory.trim() === ""
-    || typeof input.containerName !== "string" || input.containerName.trim() === ""
+    || !hasContainerNames
     || typeof input.executeSandbox !== "function" || typeof input.hasHostMutation !== "function"
-    || typeof input.isContainerPresent !== "function") {
+    || typeof input.executeDocker !== "function" || typeof input.isContainerPresent !== "function") {
     throw new Error("Sandbox integration requires workspace, container, and runtime ports.");
   }
+}
+
+/** Verifies one deliberately short Docker CLI timeout or output-bound probe. */
+async function verifyDockerProcessProbe(probe) {
+  const createResult = await probe.input.executeDocker(createProcessRequest(probe));
+  assertProcessSuccess(createResult, "creation");
+  try {
+    const result = await probe.input.executeDocker(createStartRequest(probe));
+    assertExpectedProcessLimit(result, probe.kind);
+  } finally {
+    const removeResult = await probe.input.executeDocker({
+      args: ["container", "rm", "--force", probe.containerName],
+      timeoutMs: 30_000, maxOutputBytes: PROCESS_OUTPUT_BYTES,
+    });
+    assertProcessSuccess(removeResult, "cleanup");
+  }
+  if (await probe.input.isContainerPresent(probe.containerName)) {
+    throw new Error("Sandbox process-limit probe retained container state.");
+  }
+}
+
+/** Creates the exact bounded Docker create request for one process probe. */
+function createProcessRequest(probe) {
+  const script = probe.kind === "output"
+    ? `process.stdout.write("x".repeat(${PROCESS_OUTPUT_BYTES * 2}))`
+    : "setTimeout(() => {}, 60000)";
+  return { args: ["container", "create", "--name", probe.containerName,
+    "--network", "none", PROCESS_IMAGE, "node", "-e", script],
+  timeoutMs: 60_000, maxOutputBytes: PROCESS_OUTPUT_BYTES };
+}
+
+/** Creates the short, test-only Docker start request for one process probe. */
+function createStartRequest(probe) {
+  return { args: ["container", "start", "--attach", probe.containerName],
+    timeoutMs: probe.kind === "timeout" ? PROCESS_TIMEOUT_MS : 30_000,
+    maxOutputBytes: PROCESS_OUTPUT_BYTES };
+}
+
+/** Requires successful setup or cleanup without retaining provider output. */
+function assertProcessSuccess(result, phase) {
+  if (result?.exitCode !== 0 || result.hasTimedOut || result.hasTruncatedOutput) {
+    throw new Error(`Sandbox process-limit probe ${phase} failed.`);
+  }
+}
+
+/** Requires the live Docker CLI port to classify the intended process bound. */
+function assertExpectedProcessLimit(result, kind) {
+  const isExpected = kind === "output"
+    ? result?.hasTruncatedOutput === true && result.hasTimedOut === false
+    : result?.hasTimedOut === true && result.hasTruncatedOutput === false;
+  if (!isExpected) throw new Error(`Sandbox ${kind} limit was not enforced.`);
 }
 
 /** Extracts bounded structured evidence from npm's command output. */

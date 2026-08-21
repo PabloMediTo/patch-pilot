@@ -158,7 +158,7 @@ One source-control repository containing multiple declared application or packag
 
 ### MVP Safety Policy
 
-The fixed rules that decide which repository commands, planning-context files, and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, bounds and filters [repository planning context](#repository-planning-context), and rejects oversized or sensitive changes. Its Docker adapter maps execution rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup. The `npm run test:sandbox-integration` command verifies effective runtime invariants without skipping missing Docker, but a successful live result is still required before untrusted commands can be enabled in deployment.
+The fixed rules that decide which repository commands, planning-context files, and proposed changes may continue. The implemented policy allows only standard MVP test commands, binds execution to one repository workspace, specifies mandatory sandbox resources with no network, bounds and filters [repository planning context](#repository-planning-context), and rejects oversized or sensitive changes. Its Docker adapter maps execution rules to pinned runtime containers with a quota-controlled workspace copy and forced cleanup. The `npm run test:sandbox-integration` command verifies effective runtime invariants plus controlled timeout and output-bound behavior through the real Docker CLI port without skipping missing Docker, but a successful live result is still required before untrusted commands can be enabled in deployment.
 
 ### Pull-Request Proposal
 

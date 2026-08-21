@@ -51,7 +51,8 @@ Deliver **Enforce MVP execution and change safety limits** within the documented
 - Registered only the required worker-to-maintenance workspace edge, `sandbox-execution` to `docker-cli` module edge, and `node:crypto` provider permission.
 - The Temporal reproduction Activity now consumes the composed executor with the required workspace boundary; unit tests cover this wiring without claiming live runtime enforcement.
 - Added `npm run test:sandbox-integration`, which drives a disposable Node fixture through the real worker executor and validates effective cgroup CPU, memory, disk and PID limits, disabled network, dropped capabilities, `no-new-privileges`, workspace copy isolation, bounded evidence, and forced cleanup.
-- The provider-free verifier has focused pass/failure tests and emits only fixed check names. It intentionally fails instead of skipping when Docker or a required invariant is unavailable.
-- Remaining before completion: retain one successful live result from this command and complete any additional timeout/output runtime probes required by deployment. On the current machine the runner reaches the expected Docker-create failure because Docker is unavailable.
+- Extended the runner with short controlled output-overflow and timeout probes through the real bounded Docker CLI port; both require exact evidence classification and forced container cleanup without weakening the canonical production limits.
+- The provider-free verifier has focused pass/failure tests, validates the exact test-only process bounds, and emits only fixed check names. It intentionally fails instead of skipping when Docker or a required invariant is unavailable.
+- Remaining before completion: retain one successful live result from this command. On the current machine the runner reaches the expected Docker-create failure because Docker is unavailable.
 
 ## References

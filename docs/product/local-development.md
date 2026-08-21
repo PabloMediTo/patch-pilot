@@ -49,7 +49,7 @@ Exercise the real worker sandbox and verify its effective container limits:
 npm run test:sandbox-integration
 ```
 
-The command uses a disposable fixture and container, emits only fixed check names, and fails rather than skipping when Docker or any required runtime invariant is unavailable.
+The command uses disposable fixtures and containers, verifies the canonical runtime invariants plus controlled timeout and output-overflow classification through the real Docker CLI port, emits only fixed check names, and fails rather than skipping when Docker or any required invariant is unavailable.
 
 Stop containers while retaining local database volumes:
 
