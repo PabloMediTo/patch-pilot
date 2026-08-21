@@ -60,6 +60,20 @@ assert.deepEqual(malformedPrivateKey.configuration.invalidVariables,
   ["PATCH_PILOT_GITHUB_APP_PRIVATE_KEY"]);
 assert.equal(JSON.stringify(malformedPrivateKey).includes("controlled-invalid"), false);
 
+const invalidOverrides = await assessPilotReadiness({ environment: {
+  ...environment,
+  PATCH_PILOT_API_PORT: "70000",
+  PATCH_PILOT_API_ORIGIN: "ftp://controlled.invalid",
+  PATCH_PILOT_TEMPORAL_TASK_QUEUE: " ",
+}, projectDirectory: "C:/pilot", runCommand: async () => {} });
+assert.equal(invalidOverrides.status, "blocked");
+assert.deepEqual(invalidOverrides.configuration.invalidVariables, [
+  "PATCH_PILOT_API_PORT",
+  "PATCH_PILOT_API_ORIGIN",
+  "PATCH_PILOT_TEMPORAL_TASK_QUEUE",
+]);
+assert.equal(JSON.stringify(invalidOverrides).includes("controlled.invalid"), false);
+
 const invalidAuthentication = await assessPilotReadiness({ environment: {
   ...environment,
   PATCH_PILOT_API_BEARER_TOKEN: " controlled-bearer-token-with-32-characters ",

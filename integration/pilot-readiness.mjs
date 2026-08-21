@@ -1,4 +1,5 @@
 import { createPrivateKey } from "node:crypto";
+import { URL } from "node:url";
 
 const REQUIRED_VALUES = Object.freeze([
   "PATCH_PILOT_OPENAI_API_KEY",
@@ -13,6 +14,20 @@ const VALIDATED_VALUES = Object.freeze({
   PATCH_PILOT_PYTHON_PILOT_ISSUE: (value) => isPositiveIssueNumber(value.trim()),
   PATCH_PILOT_TYPESCRIPT_PILOT_REPOSITORY: (value) => isRepository(value.trim()),
   PATCH_PILOT_TYPESCRIPT_PILOT_ISSUE: (value) => isPositiveIssueNumber(value.trim()),
+});
+const OPTIONAL_VALUES = Object.freeze({
+  PATCH_PILOT_API_HOST: hasValue,
+  PATCH_PILOT_API_PORT: isTcpPort,
+  PATCH_PILOT_API_ORIGIN: isHttpOrigin,
+  PATCH_PILOT_WEB_HOST: hasValue,
+  PATCH_PILOT_WEB_PORT: isTcpPort,
+  PATCH_PILOT_TEMPORAL_ADDRESS: hasValue,
+  PATCH_PILOT_TEMPORAL_NAMESPACE: hasValue,
+  PATCH_PILOT_TEMPORAL_TASK_QUEUE: hasValue,
+  PATCH_PILOT_POSTGRES_URL: hasValue,
+  PATCH_PILOT_REDIS_URL: hasValue,
+  PATCH_PILOT_WORKSPACE_ROOT: hasValue,
+  PATCH_PILOT_OPENAI_MODEL: hasValue,
 });
 
 /**
@@ -66,8 +81,13 @@ function assessConfiguration(environment) {
     .filter(([name, validator]) => hasValue(environment[name])
       && !validator(environment[name]))
     .map(([name]) => name);
+  const invalidOptionalVariables = Object.entries(OPTIONAL_VALUES)
+    .filter(([name, validator]) => environment[name] !== undefined
+      && !validator(environment[name]))
+    .map(([name]) => name);
   const invalidVariables = [...new Set([
-    ...individuallyInvalidVariables, ...findConflictingPilotTargets(environment),
+    ...individuallyInvalidVariables, ...invalidOptionalVariables,
+    ...findConflictingPilotTargets(environment),
   ])];
   const hasFailure = missingVariables.length > 0 || invalidVariables.length > 0;
   return Object.freeze({ status: hasFailure ? "blocked" : "ready",
@@ -121,6 +141,22 @@ function isPrivateKey(value) {
   try {
     createPrivateKey(value);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Matches the API and web listener's finite TCP port boundary. */
+function isTcpPort(value) {
+  const port = Number(value);
+  return Number.isSafeInteger(port) && port >= 1 && port <= 65_535;
+}
+
+/** Requires the same upstream protocols accepted by the web server. */
+function isHttpOrigin(value) {
+  try {
+    const origin = new URL(value);
+    return origin.protocol === "http:" || origin.protocol === "https:";
   } catch {
     return false;
   }

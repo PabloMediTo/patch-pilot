@@ -44,6 +44,7 @@ Deliver **Run end-to-end pilot on Python and TypeScript repositories** within th
 - Pilot issue identities are now bounded to the positive Postgres `integer` range before live execution; focused tests cover the exact maximum, reject the first oversized value, and prove it is not emitted.
 - The preflight now mirrors the API's whitespace-free bearer-token and safe bounded actor-identity contracts instead of accepting values that would fail deployment startup; focused tests expose only invalid variable names.
 - GitHub App private-key material must now parse locally before readiness can pass, matching both deployment startup paths without claiming that GitHub accepts the credential; failure evidence contains only the variable name.
+- Explicit API, web, Temporal, storage, workspace, and model overrides are now checked against their local deployment startup boundaries while absent overrides continue to select defaults; invalid reports remain value-free.
 - The documented live sequence prevents a readiness result from being mistaken for completed end-to-end evidence; this task stays `draft` until both real runs are retained.
 
 ## References
